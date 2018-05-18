@@ -1,0 +1,29 @@
+{
+  "name": "evolvus-platform-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "evolvus-applicationentity": "0.0.8",
+    "express": "^4.16.3",
+    "mongoose": "^5.0.17"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-http": "^4.0.0",
+    "grunt": "^1.0.2",
+    "grunt-contrib-jshint": "^1.1.0",
+    "grunt-contrib-watch": "^1.0.1",
+    "grunt-env": "^0.4.4",
+    "grunt-mocha-test": "^0.13.3",
+    "mocha": "^5.1.1",
+    "randomstring": "^1.1.5"
+  }
+}
