@@ -35,6 +35,20 @@ module.exports = (router) => {
       }
     });
 
+  router.route('/findByCodeAndEnabled')
+    .get((req, res, next) => {
+        try {
+          let codeValue = _.pick(req.body, ['code','enable']);
+          application.findByCodeAndEnabled(codeValue,enable).then((app) => {
+            res.send(app);
+          }).catch((e) => {
+            res.status(400).send(e);
+          });
+        }catch (e) {
+          res.send(e);
+        }
+      });
+
   router.route('/getAllApplications')
     .get((req, res, next) => {
       try {

@@ -16,7 +16,7 @@ let should = chai.should();
 
 chai.use(chaiHttp);
 
-var serverUrl = "http://192.168.1.115:" + PORT;
+var serverUrl = "http://localhost:" + PORT;
 
 
 describe("Testing routes", () => {
@@ -67,5 +67,72 @@ describe("Testing routes", () => {
           }
         });
     });
+  });
+
+  describe("Testing getAll application api", () => {
+
+    it("Should return all the applications" , (done) => {
+      chai.request(serverUrl)
+      .get("/getAllApplications")
+      .end((err,res) => {
+        if(err){
+          debug(`error in test ${err}`);
+          done(err);
+        }else{
+          res.should.have.status(200);
+          done();
+        }
+      });
+    });
+
+    it("Should return no application found", (done) => {
+      chai.request(serverUrl)
+      .get("/getAllApplications")
+      .end((err,res) => {
+        if(err){
+          debug(`error in test ${err}`);
+          done(err);
+        }else{
+          res.should.have.status(200);
+          done();
+        }
+      });
+    });
+  });
+
+  describe("Testing findByCode application api", () => {
+
+    it("Should return a application identified by code" , (done) => {
+      chai.request(serverUrl)
+      .get("/findByCode/:applicationCode")
+      .end((err,res) => {
+        if(err){
+          debug(`error in test ${err}`);
+          done(err);
+        }else{
+          res.should.have.status(200);
+          done();
+        }
+      });
+    });
+  });
+
+  describe("Testing findByCodeAndEnabled apllication api" , () => {
+
+    it("Should return application identified by code and enabled" , (done) => {
+      chai.request(serverUrl)
+      .get("/findByCodeAndEnabled")
+      .end((err,res) => {
+        if(err){
+          debug(`error in test ${err}`);
+          done(err);
+        }else{
+          res.should.have.status(200);
+          done();
+        }
+      });
+    });
+
+
   });
 });

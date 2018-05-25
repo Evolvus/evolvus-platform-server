@@ -45,7 +45,7 @@ require("./routes/api")(router);
 
 app.use("/", router);
 
-const server = app.listen(PORT, "192.168.1.115", () => {
+const server = app.listen(PORT, () => {
   debug("server started: ", PORT);
   app.emit('application_started');
 });
