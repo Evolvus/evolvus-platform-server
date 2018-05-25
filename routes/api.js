@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api");
 const _ = require("lodash");
-const application = require("evolvus-applicationentity");
+const application = require("evolvus-application");
 
 const applicationAttributes = ["applicationName", "applicationId", "description", "enabled", "applicationCode", "createdBy", "createdDate", "logo", "favicon"];
 
@@ -21,10 +21,10 @@ module.exports = (router) => {
       }
     });
 
-  router.route('/findByCode')
+  router.route('/findByCode/:applicationCode')
     .get((req, res, next) => {
       try {
-        let codeValue = _.pick(req.body, ['code']);
+        let codeValue = req.params.applicationCode;
         application.FindByCode(codeValue).then((app) => {
           res.send(app);
         }).catch((e) => {
@@ -49,6 +49,19 @@ module.exports = (router) => {
         });
       } catch (e) {
         res.status(400).send(e.message);
+      }
+    });
+
+  router.route("/updateApplication/:id")
+    .put((req, res, next) => {
+      try {
+        application.updateApplication(req.params.id, req.body).then((response) => {
+          res.send(response);
+        }).catch((e) => {
+          res.status(400).send(e);
+        });
+      } catch (e) {
+        res.status(400).send(e);
       }
     });
 };
