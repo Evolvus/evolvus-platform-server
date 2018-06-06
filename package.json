@@ -11,7 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.18.2",
-    "evolvus-application": "0.0.5",
+    "evolvus-application": "0.0.7",
+    "evolvus-menu": "^1.0.0",
     "express": "^4.16.3",
     "mongoose": "^5.0.17"
   },
@@ -25,5 +26,8 @@
     "grunt-mocha-test": "^0.13.3",
     "mocha": "^5.1.1",
     "randomstring": "^1.1.5"
+  },
+  "publishConfig": {
+    "registry": "http://10.10.69.203:8081/repository/npm-private/"
   }
 }
