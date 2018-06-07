@@ -5,6 +5,7 @@ const menu = require("evolvus-menu");
 
 const applicationAttributes = ["applicationName", "applicationId", "description", "enabled", "applicationCode", "createdBy", "createdDate", "logo", "favicon"];
 const menuGroupAttributes = ["menuGroupId", "menuGroupCode", "title", "icon", "menuGroupType", "applicationCode"];
+const menuItemAttributes = ["menuItemCode", "title", "icon", "menuItemType", "applicationCode","tenantId"];
 
 module.exports = (router) => {
   router.route('/saveApplication')
@@ -81,31 +82,91 @@ module.exports = (router) => {
       }
     });
 
-  router.route("/saveMenuGroup")
+  router.route("/saveMenuItem")
     .post((req, res, next) => {
       try {
-        let body = _.pick(req.body, menuGroupAttributes);
+        let body = _.pick(req.body, menuItemAttributes);
+        console.log(body);
+        body.createdBy = "SYSTEM";
+        body.creationDate = new Date().toISOString();
         application.FindByCode(body.applicationCode).then((app) => {
           if (_.isEmpty(app)) {
             throw new Error(`No Application with ${body.applicationCode} found`);
           } else {
-            menu.saveMenuGroup(body).then((menu) => {
+            menu.saveMenuItem(body).then((menu) => {
+              console.log(menu);
               res.send(menu);
             }).catch((e) => {
+              console.log(e);
               res.status(400).send({
                 error: e.message
               });
             });
           }
         }).catch((e) => {
+          console.log(e);
           res.status(400).send({
             error: e.message
           });
         })
       } catch (e) {
+        console.log(e);
         res.status(400).send({
           error: e.message
         });
       }
     });
+
+    // router.route('/findByCode/:menuGroupCode')
+    //   .get((req, res, next) => {
+    //     try {
+    //       let codeValue = req.params.menuGroupCode;
+    //       menuGroup.FindByCode(codeValue).then((app) => {
+    //         res.send(app);
+    //       }).catch((e) => {
+    //         res.status(400).send(e);
+    //       });
+    //     } catch (e) {
+    //       res.send(e);
+    //     }
+    //   });
+    // router.route("/saveMenuGroupItemMap")
+    // .post((req, res, next)=>{
+    //   try{
+    //     let body = _.pick(req.body, menuGroupItemMapAttributes);
+    //     application.FindByCode(body.applicationCode).then((app) => {
+    //       if (_.isEmpty(app)) {
+    //         throw new Error(`No Application with ${body.applicationCode} found`);
+    //   }
+    // }
+    // })
+
+    router.route("/saveMenuGroup")
+      .post((req, res, next) => {
+        try {
+          let body = _.pick(req.body, menuGroupAttributes);
+          application.FindByCode(body.applicationCode).then((app) => {
+            if (_.isEmpty(app)) {
+              throw new Error(`No Application with ${body.applicationCode} found`);
+            } else {
+              menu.saveMenuGroup(body).then((menu) => {
+                res.send(menu);
+              }).catch((e) => {
+                res.status(400).send({
+                  error: e.message
+                });
+              });
+            }
+          }).catch((e) => {
+            res.status(400).send({
+              error: e.message
+            });
+          })
+        } catch (e) {
+          res.status(400).send({
+            error: e.message
+          });
+        }
+      });
+
 };
