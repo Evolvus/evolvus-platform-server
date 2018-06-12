@@ -1,7 +1,7 @@
 var PORT = process.env.PORT || 8080;
 const mongoose = require("mongoose");
 
-process.env.MONGO_DB_URL = "mongodb://localhost:27017/TestPlatform";
+process.env.MONGO_DB_URL = "mongodb://10.10.69.204:27017/TestPlatform_Dev";
 /*
  ** Test /api/audit API's
  */
@@ -18,7 +18,6 @@ chai.use(chaiHttp);
 
 var serverUrl = "http://localhost:" + PORT;
 
-
 describe("Testing routes", () => {
   var applicationCode;
   before((done) => {
@@ -28,7 +27,8 @@ describe("Testing routes", () => {
 
   describe("Testing save application api", () => {
     let application = {
-      applicationName: "FLUX-CDA",
+      tenantId: "ID",
+      applicationName: "FLUX CDA",
       applicationId: 100,
       applicationCode: randomstring.generate(4),
       description: "flux-cda"
@@ -71,68 +71,38 @@ describe("Testing routes", () => {
 
   describe("Testing getAll application api", () => {
 
-    it("Should return all the applications" , (done) => {
+    it("Should return all the applications", (done) => {
       chai.request(serverUrl)
-      .get("/getAllApplications")
-      .end((err,res) => {
-        if(err){
-          debug(`error in test ${err}`);
-          done(err);
-        }else{
-          res.should.have.status(200);
-          done();
-        }
-      });
+        .get("/getAllApplications")
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            done();
+          }
+        });
     });
 
-    it("Should return no application found", (done) => {
-      chai.request(serverUrl)
-      .get("/getAllApplications")
-      .end((err,res) => {
-        if(err){
-          debug(`error in test ${err}`);
-          done(err);
-        }else{
-          res.should.have.status(200);
-          done();
-        }
-      });
-    });
   });
 
   describe("Testing findByCode application api", () => {
 
-    it("Should return a application identified by code" , (done) => {
+    it("Should return 204 as no application identified by code", (done) => {
       chai.request(serverUrl)
-      .get("/findByCode/:applicationCode")
-      .end((err,res) => {
-        if(err){
-          debug(`error in test ${err}`);
-          done(err);
-        }else{
-          res.should.have.status(200);
-          done();
-        }
-      });
-    });
-  });
-
-  describe("Testing findByCodeAndEnabled apllication api" , () => {
-
-    it("Should return application identified by code and enabled" , (done) => {
-      chai.request(serverUrl)
-      .get("/findByCodeAndEnabled")
-      .end((err,res) => {
-        if(err){
-          debug(`error in test ${err}`);
-          done(err);
-        }else{
-          res.should.have.status(200);
-          done();
-        }
-      });
+        .get("/findByCode/CDA")
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(204);
+            done();
+          }
+        });
     });
 
-
   });
+
 });
