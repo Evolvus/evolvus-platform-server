@@ -110,7 +110,7 @@ module.exports = (router) => {
       } catch (e) {
         debug(`caught exception ${e}`);
         res.status(400).json({
-          error: e.toString()         
+          error: e.toString()
         });
       }
     });
@@ -394,6 +394,30 @@ module.exports = (router) => {
         });
       }
     });
-
+    router.route('/getAllRoleTypes')
+    .get((req, res, next) => {
+      try {
+        role.getAll(-1).then((roles) => {
+          if (roles.length > 0) {
+            var codes = _.uniq(_.map(roles, 'roleType'));
+            res.send(codes);
+          } else {
+            res.status(204).json({
+              message: "No roleType found"
+            });
+          }
+        }).catch((e) => {
+          debug(`failed to fetch all roleType Codes ${e}`);
+          res.status(400).json({
+            error: e.toString()
+          });
+        });
+      } catch (e) {
+        debug(`caught exception ${e}`);
+        res.status(400).json({
+          error: e.toString()
+        });
+      }
+    });
 
 };
