@@ -105,4 +105,109 @@ describe("Testing routes", () => {
 
   });
 
+  describe("Testing save menuGroup api", () => {
+    let menuGroup = {
+      tenantId: "name",
+      menuGroupCode: randomstring.generate(5),
+      applicationCode: "269i",
+      title: "fifth menugroup"
+    };
+
+    it("should save menuGroup and return same attribute values", (done) => {
+      chai.request(serverUrl)
+        .post("/saveMenuGroup")
+        .send(menuGroup)
+        .end((err, res) => {
+          if (err) {
+            debug(`error in the test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            res.body.should.have.property('menuGroupCode')
+              .eql(menuGroup.menuGroupCode);
+            done();
+          }
+        });
+    });
+  });
+
+  describe("Testing getAllMenuGroup by applicationCode api", () => {
+
+    it("Should return menuGroups identified by code", (done) => {
+      chai.request(serverUrl)
+        .get("/getAllMenuGroup/:applicationCode")
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            done();
+          }
+        });
+    });
+  });
+
+  describe("Testing save role api", () => {
+    let role = {
+      tenantId: "tid",
+      applicationCode: "269i",
+      roleName: "CDA",
+      roleType: "IT",
+      description: "role",
+      activationStatus: "active",
+      processingStatus: "authorized",
+      associatedUsers: 3,
+      menuItems: [{
+        tenantId: "name",
+        menuItemType: "quicklink",
+        applicationCode: "CDA",
+        menuItemCode: "mi4",
+        createdBy: "user2",
+        title: "menu item4"
+      }, {
+        tenantId: "name",
+        menuItemType: "queues",
+        applicationCode: "CDA",
+        menuItemCode: "mi5",
+        createdBy: "user3",
+        title: "menu item5"
+      }]
+    };
+
+    it("should save role and return same attribute values", (done) => {
+      chai.request(serverUrl)
+        .post("/saveRole")
+        .send(role)
+        .end((err, res) => {
+          if (err) {
+            debug(`error in the test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            res.body.should.have.property("roleName")
+              .eql(role.roleName);
+            done();
+          }
+        });
+    });
+
+    it("should not save role and return status 400", (done) => {
+      chai.request(serverUrl)
+        .post("/saveRole")
+        .send({
+          roleName: "admin"
+        })
+        .end((err, res) => {
+          if (err) {
+            debug(`error in the test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(400);
+            done();
+          }
+        });
+    });
+  });
+
 });
