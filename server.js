@@ -3,7 +3,7 @@
 //  defaults to 8080
 
 const PORT = process.env.PORT || 8080;
-var dbUrl = process.env.MONGO_DB_URL || "mongodb://10.10.69.204:27017/TestPlatform_Dev";
+var dbUrl = process.env.MONGO_DB_URL || "mongodb://10.10.69.204:27017/Platform_Dev";
 
 /*
  ** Get all the required libraries

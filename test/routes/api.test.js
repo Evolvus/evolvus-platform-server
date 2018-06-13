@@ -25,86 +25,86 @@ describe("Testing routes", () => {
   });
 
 
-  // describe("Testing save application api", () => {
-  //   let application = {
-  //     tenantId: "ID",
-  //     applicationName: "FLUX CDA",
-  //     applicationId: 100,
-  //     applicationCode: randomstring.generate(4),
-  //     description: "flux-cda"
-  //   };
-  //
-  //   it("should save application and return same attribute values", (done) => {
-  //     chai.request(serverUrl)
-  //       .post("/saveApplication")
-  //       .send(application)
-  //       .end((err, res) => {
-  //         if (err) {
-  //           debug(`error in the test ${err}`);
-  //           done(err);
-  //         } else {
-  //           res.should.have.status(200);
-  //           res.body.should.have.property('applicationName')
-  //             .eql(application.applicationName);
-  //           done();
-  //         }
-  //       });
-  //   });
-  //
-  //   it("should not save application and return status 400", (done) => {
-  //     chai.request(serverUrl)
-  //       .post("/saveApplication")
-  //       .send({
-  //         applicationName: "Docket"
-  //       })
-  //       .end((err, res) => {
-  //         if (err) {
-  //           debug(`error in the test ${err}`);
-  //           done(err);
-  //         } else {
-  //           res.should.have.status(400);
-  //           done();
-  //         }
-  //       });
-  //   });
-  // });
-  //
-  // describe("Testing getAll application api", () => {
-  //
-  //   it("Should return all the applications", (done) => {
-  //     chai.request(serverUrl)
-  //       .get("/getAllApplications")
-  //       .end((err, res) => {
-  //         if (err) {
-  //           debug(`error in test ${err}`);
-  //           done(err);
-  //         } else {
-  //           res.should.have.status(200);
-  //           done();
-  //         }
-  //       });
-  //   });
-  //
-  // });
-  //
-  // describe("Testing findByCode application api", () => {
-  //
-  //   it("Should return 204 as no application identified by code", (done) => {
-  //     chai.request(serverUrl)
-  //       .get("/findByCode/CDA")
-  //       .end((err, res) => {
-  //         if (err) {
-  //           debug(`error in test ${err}`);
-  //           done(err);
-  //         } else {
-  //           res.should.have.status(204);
-  //           done();
-  //         }
-  //       });
-  //   });
-  //
-  // });
-  //
+  describe("Testing save application api", () => {
+    let application = {
+      tenantId: "ID",
+      applicationName: "FLUX CDA",
+      applicationId: 100,
+      applicationCode: randomstring.generate(4),
+      description: "flux-cda"
+    };
+
+    it("should save application and return same attribute values", (done) => {
+      chai.request(serverUrl)
+        .post("/saveApplication")
+        .send(application)
+        .end((err, res) => {
+          if (err) {
+            debug(`error in the test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            res.body.should.have.property('applicationName')
+              .eql(application.applicationName);
+            done();
+          }
+        });
+    });
+
+    it("should not save application and return status 400", (done) => {
+      chai.request(serverUrl)
+        .post("/saveApplication")
+        .send({
+          applicationName: "Docket"
+        })
+        .end((err, res) => {
+          if (err) {
+            debug(`error in the test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(400);
+            done();
+          }
+        });
+    });
+  });
+
+  describe("Testing getAll application api", () => {
+
+    it("Should return all the applications", (done) => {
+      chai.request(serverUrl)
+        .get("/getAllApplications")
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            done();
+          }
+        });
+    });
+
+  });
+
+  describe("Testing findByCode application api", () => {
+
+    it("Should return 204 as no application identified by code", (done) => {
+      chai.request(serverUrl)
+        .get("/findByCode/CDA")
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(204);
+            done();
+          }
+        });
+    });
+
+  });
+
   describe("Testing save menuGroup api", () => {
     let menuGroup = {
       tenantId: "name",
@@ -165,7 +165,7 @@ describe("Testing routes", () => {
   });
   describe("Testing save menuItem api", () => {
     let menuItemObj = {
-      "tenantId":"name",
+      "tenantId": "name",
       "menuItemType": "quicklink",
       "applicationCode": "269i",
       "menuItemCode": "mi1",
@@ -191,22 +191,22 @@ describe("Testing routes", () => {
         });
     });
 
-        it("should not save menuItem and return status 400", (done) => {
-          chai.request(serverUrl)
-            .post("/saveMenuItem")
-            .send({
-              menuItemCode: 278568347
-            })
-            .end((err, res) => {
-              if (err) {
-                debug(`error in the test ${err}`);
-                done(err);
-              } else {
-                res.should.have.status(400);
-                done();
-              }
-            });
+    it("should not save menuItem and return status 400", (done) => {
+      chai.request(serverUrl)
+        .post("/saveMenuItem")
+        .send({
+          menuItemCode: 278568347
+        })
+        .end((err, res) => {
+          if (err) {
+            debug(`error in the test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(400);
+            done();
+          }
         });
+    });
   });
 
   describe("Testing getAll menuItem api", () => {
@@ -258,7 +258,7 @@ describe("Testing routes", () => {
   });
 
 
-   describe("Testing save role api", () => {
+  describe("Testing save role api", () => {
     let role = {
       tenantId: "tid",
       applicationCode: "269i",
@@ -268,6 +268,9 @@ describe("Testing routes", () => {
       activationStatus: "active",
       processingStatus: "authorized",
       associatedUsers: 3,
+      createdDate: new Date().toISOString(),
+      createdBy: "kamalarani",
+      lastUpdatedDate: new Date().toISOString(),
       menuItems: [{
         tenantId: "name",
         menuItemType: "quicklink",
@@ -352,18 +355,18 @@ describe("Testing routes", () => {
   });
   describe("Testing findMenuItemsByRoleName  api", () => {
 
-      it("Should return a menuItems identified by roleName", (done) => {
-        chai.request(serverUrl)
-          .get('/findMenuItemsByRoleName/:roleName')
-          .end((err, res) => {
-            if (err) {
-              debug(`error in test ${err}`);
-              done(err);
-            } else {
-              res.should.have.status(200);
-              done();
-            }
-          });
-      });
+    it("Should return a menuItems identified by roleName", (done) => {
+      chai.request(serverUrl)
+        .get('/findMenuItemsByRoleName/:roleName')
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            done();
+          }
+        });
     });
+  });
 });
