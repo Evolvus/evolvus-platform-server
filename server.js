@@ -12,6 +12,7 @@ const debug = require("debug")("evolvus-platform-server:server");
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const path = require("path");
 
 const app = express();
 const router = express.Router();
@@ -31,6 +32,10 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Credentials", "true");
   next();
 });
+app.use(express.static(path.join(__dirname, "public")));
+app.set("view engine", "html");
+app.set("views", path.join(__dirname, "views"));
+
 
 app.use(bodyParser.urlencoded({
   limit: '1mb',
