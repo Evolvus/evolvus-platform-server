@@ -1,8 +1,8 @@
 // Get all the environment variables
 //  The PORT env variable is not set in docker so
-//  defaults to 8080
+//  defaults to 8086
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8086;
 var dbUrl = process.env.MONGO_DB_URL || "mongodb://10.10.69.204:27017/Platform_Dev";
 
 /*
