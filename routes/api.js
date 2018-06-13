@@ -89,6 +89,31 @@ module.exports = (router) => {
       }
     });
 
+    router.route('/getAllApplicationCodes')
+    .get((req, res, next) => {
+      try {
+        application.getAll(-1).then((applications) => {
+          if (applications.length > 0) {
+            var codes = _.uniq(_.map(applications, 'applicationCode'));
+            res.send(codes);
+          } else {
+            res.status(204).json({
+              message: "No applications found"
+            });
+          }
+        }).catch((e) => {
+          debug(`failed to fetch all application Codes ${e}`);
+          res.status(400).json({
+            error: e.toString()
+          });
+        });
+      } catch (e) {
+        debug(`caught exception ${e}`);
+        res.status(400).json({
+          error: e.toString()         
+        });
+      }
+    });
   router.route("/updateApplication/:id")
     .put((req, res, next) => {
       try {
@@ -313,5 +338,62 @@ module.exports = (router) => {
         res.status(400).send(e);
       }
     });
+
+    router.route("/modifyRole")
+    .put((req, res, next) => {
+      try {
+        let body = _.pick(req.body, roleAttributes);
+        application.getOne("applicationCode", body.applicationCode).then((app) => {
+          if (_.isEmpty(app)) {
+            throw new Error(`No Application found for the code ${body.applicationCode}`);
+          } else {
+            role.getOne("roleName", body.roleName).then((roleObj) => {
+              if (!_.isEmpty(roleObj)) {
+                throw new Error(`RoleName ${body.roleName} already exists`);
+              } else {
+                var object = {
+                  applicationCode: req.body.applicationCode,
+                  roleName: req.body.roleName,
+                  roleType: req.body.roleType,
+                  menuItems: req.body.menuItems
+                }
+                roleTypeMenuItemMap.getOne("roleType", object.roleType).then((obj) => {
+                  roleTypeMenuItemMap.update(obj._id, object).then((updatedObj) => {
+                    role.update(body).then((roleObj) => {
+                      res.json(roleObj);
+                    }).catch((e) => {
+                      res.status(400).json({
+                        error: e
+                      });
+                    });
+                  }).catch((e) => {
+                    res.status(400).json({
+                      error: e
+                    });
+                  });
+                }).catch((e) => {
+                  res.status(400).json({
+                    error: e
+                  });
+                });
+              }
+            }).catch((e) => {
+              res.status(400).json({
+                error: e
+              });
+            });
+          }
+        }).catch((e) => {
+          res.status(400).json({
+            error: e
+          });
+        });
+      } catch (e) {
+        res.status(400).json({
+          error: e
+        });
+      }
+    });
+
 
 };
