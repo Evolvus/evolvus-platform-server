@@ -59,10 +59,6 @@ module.exports = (router) => {
     router.route('/menuItem/find/:applicationCode')
         .get((req, res, next) => {
             try {
-                console.log("kavya ");
-                
-                console.log(req.params.applicationCode);
-                
                 let codeValue = req.params.applicationCode;
                 menuItem.getMany("applicationCode", codeValue).then((app) => {
                     res.json(app);
@@ -74,21 +70,19 @@ module.exports = (router) => {
             }
         });
 
-    // router.route('/findMenuItemsByRoleName/:roleName')
-    //     .get((req, res, next) => {
-    //         try {
-    //             let codeValue = req.params.roleName;
-    //             roleTypeMenuItemMap.getMany("roleName", codeValue).then((app) => {
-    //                 res.send(app);
-    //             }).catch((e) => {
-    //                 console.log(e);
-    //                 res.status(400).send(e);
-    //             });
-    //         } catch (e) {
-    //             console.log(e);
-    //             res.status(400).send(e);
-    //         }
-    //     });
+    router.route('/findMenuItemsByRoleName/:roleName')
+        .get((req, res, next) => {
+            try {
+                let codeValue = req.params.roleName;
+                roleTypeMenuItemMap.getMany("roleName", codeValue).then((app) => {
+                    res.send(app);
+                }).catch((e) => {
+                    res.status(400).send(e);
+                });
+            } catch (e) {
+                res.status(400).send(e);
+            }
+        });
 
 };
 

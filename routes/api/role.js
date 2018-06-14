@@ -39,13 +39,11 @@ module.exports = (router) => {
                                     role.save(body).then((roleObj) => {
                                         res.send(roleObj);
                                     }).catch((e) => {
-                                        console.log(e);
                                         res.status(400).send({
                                             error: e.message
                                         });
                                     });
                                 }).catch((e) => {
-                                    console.log(e);
                                     res.status(400).send({
                                         error: e.message
                                     });
@@ -53,20 +51,17 @@ module.exports = (router) => {
 
                             }
                         }).catch((e) => {
-                            console.log(e);
                             res.status(400).send({
                                 error: e.message
                             });
                         });
                     }
                 }).catch((e) => {
-                    console.log(e);
                     res.status(400).send({
                         error: e.message
                     });
                 });
             } catch (e) {
-                console.log(e);
                 res.status(400).send({
                     error: e.message
                 });
