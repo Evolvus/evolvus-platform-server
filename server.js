@@ -46,11 +46,11 @@ app.use(bodyParser.json({
   limit: '1mb'
 }));
 
-require("./routes/api")(router);
+require("./routes/main")(router);
 
-app.use("/", router);
+app.use("/api", router);
 
-const server = app.listen(PORT, "192.168.1.97",() => {
+const server = app.listen(PORT,() => {
   debug("server started: ", PORT);
   app.emit('application_started');
 });
