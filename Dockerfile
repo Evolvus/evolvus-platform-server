@@ -8,6 +8,7 @@ WORKDIR /usr/ng-sandstorm/evolvus-sandstorm-ng-ui/
 RUN npm install -g @angular/cli typescript uws
 RUN npm  i --save
 RUN ng build --prod --build-optimizer
+RUN ls -a
 
 
 WORKDIR /usr/ng-sandstorm/
@@ -17,7 +18,7 @@ RUN npm install --only=production
 
 COPY . .
 
-RUN cp /usr/ng-sandstorm/evolvus-sandstorm-ng-ui/dist/*.* /usr/ng-sandstorm/public
+RUN cp -r /usr/ng-sandstorm/evolvus-sandstorm-ng-ui/dist/ui-console/*.* /usr/ng-sandstorm/public
 
 #default environment variables
 ENV NODE_ENV production
