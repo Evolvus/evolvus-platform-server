@@ -1,26 +1,23 @@
-const debug = require("debug")("evolvus-platform-server:routes:api");
+const debug = require("debug")("evolvus-platform-server:routes:api:menu");
 const _ = require("lodash");
-const menuItem = require("evolvus-menu-item");
+const menu = require("evolvus-menu");
 const application = require("evolvus-application");
-const roleTypeMenuItemMap=require("evolvus-role-type-menu-item-map");
 
-
-const menuItemAttributes = ["menuItemCode", "title", "icon", "menuItemType", "applicationCode", "tenantId"];
+const menuAttributes = ["menuGroupCode", "title", "applicationCode", "tenantId","menuItems","createdBy","createdDate","updatedBy","lastUpdatedDate"];
 
 module.exports = (router) => {
     router.route("/menuItem")
         .post((req, res, next) => {
             try {
-                let body = _.pick(req.body, menuItemAttributes);
+                let body = _.pick(req.body, menuAttributes);
                 body.createdBy = "SYSTEM";
-                body.creationDate = new Date().toISOString();
+                body.createdDate = new Date().toISOString();
                 application.getOne("applicationCode", body.applicationCode).then((app) => {
-
                     if (_.isEmpty(app)) {
                         throw new Error(`No Application with ${body.applicationCode} found`);
                     } else {
-                        menuItem.save(body).then((menuItemObj) => {
-                            res.send(menuItemObj);
+                        menu.save(body).then((menuObj) => {
+                            res.send(menuObj);
                         }).catch((e) => {
                             res.status(400).send({
                                 error: e.message
@@ -70,19 +67,6 @@ module.exports = (router) => {
             }
         });
 
-    router.route('/findMenuItemsByRoleName/:roleName')
-        .get((req, res, next) => {
-            try {
-                let codeValue = req.params.roleName;
-                roleTypeMenuItemMap.getMany("roleName", codeValue).then((app) => {
-                    res.send(app);
-                }).catch((e) => {
-                    res.status(400).send(e);
-                });
-            } catch (e) {
-                res.status(400).send(e);
-            }
-        });
+
 
 };
-

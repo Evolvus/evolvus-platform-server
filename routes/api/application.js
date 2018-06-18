@@ -60,6 +60,8 @@ module.exports = (router) => {
     router.route('/application')
         .get((req, res, next) => {
             try {
+                console.log(req.query);
+                
                 application.getAll(-1).then((applications) => {
                     if (applications.length > 0) {
                         res.send(applications);
