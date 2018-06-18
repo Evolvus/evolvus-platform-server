@@ -1,22 +1,23 @@
-const debug = require("debug")("evolvus-platform-server:routes:api");
+const debug = require("debug")("evolvus-platform-server:routes:api:role");
 const _ = require("lodash");
 const role = require("evolvus-role");
 const application = require("evolvus-application");
-const roleTypeMenuItemMap = require("evolvus-role-type-menu-item-map");
 
-const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate"];
+const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup"];
 
 module.exports = (router) => {
   router.route("/role")
     .post((req, res, next) => {
       try {
         let body = _.pick(req.body, roleAttributes);
+        var MenuObj = new menu(body);
         body.tenantId = "IVL";
         body.associatedUsers = 5;
         body.processingStatus = "unauthorized";
         body.createdBy = "SYSTEM";
         body.createdDate = new Date().toISOString();
-        // body.lastUpdatedDate = new Date().toISOString();
+        body.activationStatus = "active";
+
         application.getOne("applicationCode", body.applicationCode).then((app) => {
           if (_.isEmpty(app)) {
             throw new Error(`No Application with ${body.applicationCode} found`);
@@ -61,10 +62,14 @@ module.exports = (router) => {
             res.send("No roles found");
           }
         }).catch((e) => {
-          res.status(400).send(e.message);
+          res.status(400).json({
+            error: e.message
+          });
         });
       } catch (e) {
-        res.status(400).send(e.message);
+        res.status(400).json({
+          error: e.message
+        });
       }
     });
 
@@ -111,7 +116,7 @@ module.exports = (router) => {
       try {
         let roleName = req.query.roleName;
         role.getOne("roleName", roleName).then((role) => {
-          let codeValue = req.params.roleName;
+          res.json(role);
         }).catch((e) => {
           res.status(400).json({
             error: e

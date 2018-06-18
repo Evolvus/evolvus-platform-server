@@ -3,69 +3,79 @@ const _ = require("lodash");
 const menu = require("evolvus-menu");
 const application = require("evolvus-application");
 
-const menuAttributes = ["menuGroupCode", "title", "applicationCode", "tenantId","menuItems","createdBy","createdDate","updatedBy","lastUpdatedDate"];
+const menuAttributes = ["menuGroupCode", "title", "applicationCode", "tenantId", "menuItems", "createdBy", "createdDate"];
 
 module.exports = (router) => {
-    router.route("/menuItem")
-        .post((req, res, next) => {
-            try {
-                let body = _.pick(req.body, menuAttributes);
-                body.createdBy = "SYSTEM";
-                body.createdDate = new Date().toISOString();
-                application.getOne("applicationCode", body.applicationCode).then((app) => {
-                    if (_.isEmpty(app)) {
-                        throw new Error(`No Application with ${body.applicationCode} found`);
-                    } else {
-                        menu.save(body).then((menuObj) => {
-                            res.send(menuObj);
-                        }).catch((e) => {
-                            res.status(400).send({
-                                error: e.message
-                            });
-                        });
-                    }
-                }).catch((e) => {
-                    res.status(400).send({
-                        error: e.message
-                    });
-                });
-            } catch (e) {
-                res.status(400).send({
-                    error: e.message
-                });
-            }
+  router.route("/menu")
+    .post((req, res, next) => {
+      try {
+        let body = _.pick(req.body, menuAttributes);
+        body.createdBy = "SYSTEM";
+        body.createdDate = new Date().toISOString();
+        application.getOne("applicationCode", body.applicationCode).then((app) => {
+          if (_.isEmpty(app)) {
+            throw new Error(`No Application with ${body.applicationCode} found`);
+          } else {
+            menu.save(body).then((menuObj) => {
+              res.send(menuObj);
+            }).catch((e) => {
+              res.status(400).json({
+                error: e.message
+              });
+            });
+          }
+        }).catch((e) => {
+          res.status(400).json({
+            error: e.message
+          });
         });
+      } catch (e) {
+        res.status(400).json({
+          error: e.message
+        });
+      }
+    });
 
-    router.route('/menuItem')
-        .get((req, res, next) => {
-            try {
-                menuItem.getAll(-1).then((menuItems) => {
-                    if (menuItems.length > 0) {
-                        res.send(menuItems);
-                    } else {
-                        res.send("No menuItem found");
-                    }
-                }).catch((e) => {
-                    res.status(400).send(e.message);
-                });
-            } catch (e) {
-                res.status(400).send(e.message);
-            }
+  router.route('/menu')
+    .get((req, res, next) => {
+      try {
+        menu.getAll(-1).then((menus) => {
+          if (menus.length > 0) {
+            res.json(menus);
+          } else {
+            res.status(203).json({
+              message: "No menus found"
+            });
+          }
+        }).catch((e) => {
+          res.status(400).json({
+            error: e.message
+          });
         });
+      } catch (e) {
+        res.status(400).json({
+          error: e.message
+        });
+      }
+    });
 
-    router.route('/menuItem/find/:applicationCode')
-        .get((req, res, next) => {
-            try {
-                let codeValue = req.params.applicationCode;
-                menuItem.getMany("applicationCode", codeValue).then((app) => {
-                    res.json(app);
-                }).catch((e) => {
-                    res.status(400).send(e);
-                });
-            } catch (e) {
-                res.status(400).send(e);
-            }
+  router.route('/menuItem/find')
+    .get((req, res, next) => {
+      try {
+        let codeValue = req.query.applicationCode;
+        menuItem.getMany("applicationCode", codeValue).then((app) => {
+          res.json(app);
+        }).catch((e) => {
+          res.status(400).json({
+            error: e.message
+          });
         });
+      } catch (e) {
+        res.status(400).json({
+          error: e.message
+        });
+      }
+    });
 
 
 

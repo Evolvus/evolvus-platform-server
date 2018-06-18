@@ -3,7 +3,7 @@
 //  defaults to 8086
 
 const PORT = process.env.PORT || 8086;
-var dbUrl = process.env.MONGO_DB_URL || "mongodb://10.10.69.204:27017/Platform_Dev";
+var dbUrl = process.env.MONGO_DB_URL || "mongodb://localhost:27017/Platform_Dev";
 
 /*
  ** Get all the required libraries
@@ -20,10 +20,11 @@ const router = express.Router();
 mongoose.connect(dbUrl, (err, db) => {
   if (err) {
     debug("Failed to connect to the database");
-  } else {
+ } else {
     debug("connected to mongodb");
   }
-});
+});    
+ 
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Request-Headers", "*");
