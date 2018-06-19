@@ -10,7 +10,6 @@ module.exports = (router) => {
     .post((req, res, next) => {
       try {
         let body = _.pick(req.body, roleAttributes);
-        var MenuObj = new menu(body);
         body.tenantId = "IVL";
         body.associatedUsers = 5;
         body.processingStatus = "unauthorized";
@@ -18,33 +17,27 @@ module.exports = (router) => {
         body.createdDate = new Date().toISOString();
         body.activationStatus = "active";
 
-        application.getOne("applicationCode", body.applicationCode).then((app) => {
-          if (_.isEmpty(app)) {
-            throw new Error(`No Application with ${body.applicationCode} found`);
-          } else {
-            role.getOne("roleName", body.roleName).then((roleObj) => {
-              if (!_.isEmpty(roleObj)) {
-                throw new Error(`RoleName ${body.roleName} is already exists`);
-              } else {
-                role.save(body).then((obj) => {
-                  res.json(obj);
-                }).catch((e) => {
-                  res.status(400).json({
-                    error: e.toString()
-                  });
-                });
-              }
+        Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
+          .then((result) => {
+            if (_.isEmpty(result[0])) {
+              throw new Error(`No Application with ${body.applicationCode} found`);
+            }
+            if (!_.isEmpty(result[1])) {
+              throw new Error(`RoleName ${body.roleName} already exists`);
+            }
+            role.save(body).then((obj) => {
+              res.json(obj);
             }).catch((e) => {
               res.status(400).json({
                 error: e.toString()
               });
             });
-          }
-        }).catch((e) => {
-          res.status(400).json({
-            error: e.toString()
+          }).catch((e) => {
+            console.log(e);
+            res.status(400).json({
+              error: e.toString()
+            });
           });
-        });
       } catch (e) {
         res.status(400).json({
           error: e.toString()
@@ -77,33 +70,27 @@ module.exports = (router) => {
     .put((req, res, next) => {
       try {
         let body = _.pick(req.body, roleAttributes);
-        application.getOne("applicationCode", body.applicationCode).then((app) => {
-          if (_.isEmpty(app)) {
-            throw new Error(`No Application found for the code ${body.applicationCode}`);
-          } else {
-            role.getOne("roleName", body.roleName).then((roleObj) => {
-              if (!_.isEmpty(roleObj)) {
-                throw new Error(`RoleName ${body.roleName} already exists`);
-              } else {
-                role.update(req.params.id, body).then((roleObj) => {
-                  res.json(roleObj);
-                }).catch((e) => {
-                  res.status(400).json({
-                    error: e
-                  });
-                });
-              }
+        Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
+          .then((result) => {
+            if (_.isEmpty(result[0])) {
+              throw new Error(`No Application with ${body.applicationCode} found`);
+            }
+            if ((!_.isEmpty(result[1])) && (result[1]._id != req.params.id)) {
+              throw new Error(`RoleName ${body.roleName} already exists`);
+            }
+            role.update(req.params.id, body).then((updatedRole) => {
+              res.json(updatedRole);
             }).catch((e) => {
               res.status(400).json({
-                error: e
+                error: e.toString()
               });
             });
-          }
-        }).catch((e) => {
-          res.status(400).json({
-            error: e
+          }).catch((e) => {
+            console.log(e);
+            res.status(400).json({
+              error: e.toString()
+            });
           });
-        });
       } catch (e) {
         res.status(400).json({
           error: e
