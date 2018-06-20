@@ -63,7 +63,7 @@ module.exports = (router) => {
     .get((req, res, next) => {
       try {
         let codeValue = req.query.applicationCode;
-        menuItem.getMany("applicationCode", codeValue).then((app) => {
+        menu.getMany("applicationCode", codeValue).then((app) => {
           res.json(app);
         }).catch((e) => {
           res.status(400).json({
