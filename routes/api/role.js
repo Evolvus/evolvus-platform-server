@@ -52,16 +52,18 @@ module.exports = (router) => {
           if (roles.length > 0) {
             res.send(roles);
           } else {
-            res.send("No roles found");
+            res.status(204).json({
+              message: "No roles found"
+            });
           }
         }).catch((e) => {
           res.status(400).json({
-            error: e.message
+            error:  e.toString()
           });
         });
       } catch (e) {
         res.status(400).json({
-          error: e.message
+          error: e.toString()
         });
       }
     });
@@ -93,7 +95,7 @@ module.exports = (router) => {
           });
       } catch (e) {
         res.status(400).json({
-          error: e
+          error: e.toString()
         });
       }
     });
@@ -106,51 +108,13 @@ module.exports = (router) => {
           res.json(role);
         }).catch((e) => {
           res.status(400).json({
-            error: e
+            error: e.toString()
           });
         });
       } catch (e) {
         res.status(400).json({
-          error: e
+          error: e.toString()
         });
       }
     });
-
-  router.route("/role/:id")
-    .delete((req, res, next) => {
-      try {
-        let body = _.pick(req.body, roleAttributes);
-        body.updatedBy = "SYSTEM";
-        body.lastUpdatedDate = new Date().toISOString();
-        Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
-          .then((result) => {
-            if (_.isEmpty(result[0])) {
-              throw new Error(`No Application with ${body.applicationCode} found`);
-            }
-            if ((!_.isEmpty(result[1])) && (result[1]._id != req.params.id)) {
-              throw new Error(`RoleName ${body.roleName} already exists`);
-            }
-            var obj = {
-              deletedFlag: 1
-            }
-            role.update(req.params.id, obj).then((updatedRole) => {
-              res.json(updatedRole);
-            }).catch((e) => {
-              res.status(400).json({
-                error: e.toString()
-              });
-            });
-          }).catch((e) => {
-            console.log(e);
-            res.status(400).json({
-              error: e.toString()
-            });
-          });
-      } catch (e) {
-        res.status(400).json({
-          error: e
-        });
-      }
-    });
-
 }

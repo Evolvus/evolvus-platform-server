@@ -3,7 +3,7 @@ const _ = require("lodash");
 const menu = require("evolvus-menu");
 const application = require("evolvus-application");
 
-const menuAttributes = ["menuGroupCode", "title", "applicationCode", "tenantId", "menuItems", "createdBy", "createdDate"];
+const menuAttributes = ["menuGroupCode", "title", "applicationCode", "tenantId", "menuItems", "createdBy", "createdDate","menuGroupOrder"];
 
 module.exports = (router) => {
   router.route("/menu")
@@ -18,20 +18,20 @@ module.exports = (router) => {
           } else {
             menu.save(body).then((menuObj) => {
               res.send(menuObj);
-            }).catch((e) => {
+            }).catch((e) => {              
               res.status(400).json({
-                error: e.message
+                error: e.toString()
               });
             });
           }
         }).catch((e) => {
           res.status(400).json({
-            error: e.message
+            error: e.toString()
           });
         });
       } catch (e) {
         res.status(400).json({
-          error: e.message
+          error:  e.toString()
         });
       }
     });
@@ -43,23 +43,23 @@ module.exports = (router) => {
           if (menus.length > 0) {
             res.json(menus);
           } else {
-            res.status(203).json({
+            res.status(204).json({
               message: "No menus found"
             });
           }
         }).catch((e) => {
           res.status(400).json({
-            error: e.message
+            error: e.toString()
           });
         });
       } catch (e) {
         res.status(400).json({
-          error: e.message
+          error: e.toString()
         });
       }
     });
 
-  router.route('/menuItem/find')
+  router.route('/menu/find')
     .get((req, res, next) => {
       try {
         let codeValue = req.query.applicationCode;
@@ -67,12 +67,12 @@ module.exports = (router) => {
           res.json(app);
         }).catch((e) => {
           res.status(400).json({
-            error: e.message
+            error:e.toString()
           });
         });
-      } catch (e) {
+      } catch (e) {        
         res.status(400).json({
-          error: e.message
+          error:e.toString()
         });
       }
     });
