@@ -13,6 +13,7 @@
     "body-parser": "^1.18.2",
     "debug": "^3.1.0",
     "evolvus-application": "^0.1.1",
+    "evolvus-entity": "0.0.4",
     "evolvus-menu": "^1.0.6",
     "evolvus-role": "^0.1.1",
     "express": "^4.16.3",
