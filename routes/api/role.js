@@ -45,28 +45,7 @@ module.exports = (router) => {
       }
     });
 
-  router.route('/role')
-    .get((req, res, next) => {
-      try {
-        role.getAll(-1).then((roles) => {
-          if (roles.length > 0) {
-            res.send(roles);
-          } else {
-            res.status(204).json({
-              message: "No roles found"
-            });
-          }
-        }).catch((e) => {
-          res.status(400).json({
-            error:  e.toString()
-          });
-        });
-      } catch (e) {
-        res.status(400).json({
-          error: e.toString()
-        });
-      }
-    });
+
 
   router.route("/role/:id")
     .put((req, res, next) => {
@@ -152,4 +131,31 @@ module.exports = (router) => {
           });
         }
       });
+
+      router.route('/role')
+    .get((req, res, next) => {
+      try {
+        role.getAll(-1).then((roles) => {
+          var newRole = [];
+          roles.forEach((role) => {
+            if (role.deletedFlag === 0) {
+              newRole.push(role);
+            }
+          })
+          if (newRole.length > 0) {
+            res.send(newRole);
+          }else {
+            res.send("No Roles Found");
+          }
+        }).catch((e) => {
+          res.status(400).json({
+            error: e.toString()
+          });
+        });
+      } catch (e) {
+        res.status(400).json({
+          error: e.toString()
+        });
+      }
+    });
 }
