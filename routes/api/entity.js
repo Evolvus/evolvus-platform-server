@@ -30,7 +30,7 @@ module.exports = (router) => {
             throw new Error(`ParentEntity is disabled`);
           }
         }).catch((e) => {
-          res.status.send(JSON.stringify({
+          res.status(400).send(JSON.stringify({
             error: e.message
           }));
         });
@@ -60,6 +60,23 @@ module.exports = (router) => {
         });
       } catch (e) {
         debug(`caught exception ${e}`);
+        res.status(400).send(JSON.stringify({
+          error: e.toString()
+        }));
+      }
+    });
+
+  router.route('/entity/filterByEntityDetails')
+    .get((req, res, next) => {
+      try {
+        entity.filterByBranchDetails(req.query).then((docs) => {
+          res.send(JSON.stringify(docs));
+        }).catch((e) => {
+          res.status(400).send(JSON.stringify({
+            error: e.toString()
+          }));
+        });
+      } catch (error) {
         res.status(400).send(JSON.stringify({
           error: e.toString()
         }));

@@ -4,18 +4,21 @@ const role = require("evolvus-role");
 const application = require("evolvus-application");
 
 const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup"];
-
+const headerAttributes = ["tenantid", "entitycode", "accesslevel"];
 module.exports = (router) => {
   router.route("/role")
     .post((req, res, next) => {
       try {
         let body = _.pick(req.body, roleAttributes);
-        body.tenantId = "IVL";
+        let header = _.pick(req.headers, headerAttributes);
+        body.tenantId = header.tenantid;
+        body.entityCode = header.entitycode;
+        body.accessLevel = header.accesslevel;
+        body.processingStatus = "PENDING_AUTHORIZATION";
         body.associatedUsers = 5;
-        body.processingStatus = "unauthorized";
         body.createdBy = "SYSTEM";
         body.createdDate = new Date().toISOString();
-        body.activationStatus = "active";
+        body.lastUpdatedDate = body.createdDate;
 
         Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
           .then((result) => {
@@ -26,21 +29,26 @@ module.exports = (router) => {
               throw new Error(`RoleName ${body.roleName} already exists`);
             }
             role.save(body).then((obj) => {
-              res.json(obj);
+              res.json({
+                savedRoleObject: obj,
+                message: `New role ${obj.roleName} has been added successfully for the application ${obj.applicationCode} and sent for the supervisor authorization.`
+              });
             }).catch((e) => {
               res.status(400).json({
-                error: e.toString()
+                error: e.toString(),
+                message: `Unable to add new role ${obj.roleName}. Due to ${e.message}`
               });
             });
           }).catch((e) => {
-            console.log(e);
             res.status(400).json({
-              error: e.toString()
+              error: e.toString(),
+              message: `Unable to add new role ${obj.roleName}. Due to ${e.message}`
             });
           });
       } catch (e) {
         res.status(400).json({
-          error: e.toString()
+          error: e.toString(),
+          message: `Unable to add new role ${obj.roleName}. Due to ${e.message}`
         });
       }
     });
@@ -48,7 +56,8 @@ module.exports = (router) => {
   router.route('/role')
     .get((req, res, next) => {
       try {
-        role.getAll(-1).then((roles) => {
+        let header = _.pick(req.headers, headerAttributes);
+        role.getAll(header.tenantid, header.entitycode, header.accesslevel).then((roles) => {
           if (roles.length > 0) {
             res.send(roles);
           } else {
@@ -58,7 +67,7 @@ module.exports = (router) => {
           }
         }).catch((e) => {
           res.status(400).json({
-            error:  e.toString()
+            error: e.toString()
           });
         });
       } catch (e) {
@@ -71,7 +80,7 @@ module.exports = (router) => {
   router.route("/role/:id")
     .put((req, res, next) => {
       try {
-        let body = _.pick(req.body, roleAttributes);
+        let body = _.pick(req.body.roleData, roleAttributes);
         Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
           .then((result) => {
             if (_.isEmpty(result[0])) {
@@ -81,21 +90,26 @@ module.exports = (router) => {
               throw new Error(`RoleName ${body.roleName} already exists`);
             }
             role.update(req.params.id, body).then((updatedRole) => {
-              res.json(updatedRole);
+              res.json({
+                updatedRoleObject: updatedRole,
+                message: `${updatedRole.roleName} role has been modified successfully for the application ${updatedRole.applicationCode} and sent for the supervisor authorization.`
+              });
             }).catch((e) => {
               res.status(400).json({
-                error: e.toString()
+                error: e.toString(),
+                message: `Unable to modify role ${updatedRole.roleName}. Due to ${e.message}`
               });
             });
           }).catch((e) => {
-            console.log(e);
             res.status(400).json({
-              error: e.toString()
+              error: e.toString(),
+              message: `Unable to modify role ${updatedRole.roleName}. Due to ${e.message}`
             });
           });
       } catch (e) {
         res.status(400).json({
-          error: e.toString()
+          error: e.toString(),
+          message: `Unable to modify role ${updatedRole.roleName}. Due to ${e.message}`
         });
       }
     });
@@ -118,38 +132,54 @@ module.exports = (router) => {
       }
     });
 
-    router.route("/roleDelete/:id")
-      .put((req, res, next) => {
-        try {
-          let body = _.pick(req.body, roleAttributes);
-          Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
-            .then((result) => {
-              if (_.isEmpty(result[0])) {
-                throw new Error(`No Application with ${body.applicationCode} found`);
-              }
-              if ((!_.isEmpty(result[1])) && (result[1]._id != req.params.id)) {
-                throw new Error(`RoleName ${body.roleName} already exists`);
-              }
-              let updated = {
-                deletedFlag: 1
-              };
-              role.update(req.params.id, updated).then((updatedRole) => {
-                res.json(updatedRole);
-              }).catch((e) => {
-                res.status(400).json({
-                  error: e.toString()
-                });
-              });
+  router.route("/role/delete/:id")
+    .put((req, res, next) => {
+      try {
+        let body = _.pick(req.body.roleData, roleAttributes);
+        Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
+          .then((result) => {
+            if (_.isEmpty(result[0])) {
+              throw new Error(`No Application with ${body.applicationCode} found`);
+            }
+            if ((!_.isEmpty(result[1])) && (result[1]._id != req.params.id)) {
+              throw new Error(`RoleName ${body.roleName} already exists`);
+            }
+            let updated = {
+              deletedFlag: "1"
+            };
+            role.update(req.params.id, updated).then((updatedRole) => {
+              res.json(updatedRole);
             }).catch((e) => {
-              console.log(e);
               res.status(400).json({
                 error: e.toString()
               });
             });
-        } catch (e) {
-          res.status(400).json({
-            error: e
+          }).catch((e) => {
+            res.status(400).json({
+              error: e.toString()
+            });
           });
-        }
-      });
-}
+      } catch (e) {
+        res.status(400).json({
+          error: e
+        });
+      }
+    });
+
+  router.route('/role/filter')
+    .get((req, res, next) => {
+      try {
+        role.filterByRoleDetails(req.query).then((roles) => {
+          res.send(roles);
+        }).catch((e) => {
+          res.status(400).send(JSON.stringify({
+            error: e.toString()
+          }));
+        });
+      } catch (e) {
+        res.status(400).send(JSON.stringify({
+          error: e.toString()
+        }));
+      }
+    });
+};
