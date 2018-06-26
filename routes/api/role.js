@@ -19,7 +19,6 @@ module.exports = (router) => {
         body.createdBy = "SYSTEM";
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-
         Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
           .then((result) => {
             if (_.isEmpty(result[0])) {
@@ -31,24 +30,24 @@ module.exports = (router) => {
             role.save(body).then((obj) => {
               res.json({
                 savedRoleObject: obj,
-                message: `New role ${obj.roleName} has been added successfully for the application ${obj.applicationCode} and sent for the supervisor authorization.`
+                message: `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`
               });
             }).catch((e) => {
               res.status(400).json({
                 error: e.toString(),
-                message: `Unable to add new role ${obj.roleName}. Due to ${e.message}`
+                message: `Unable to add new role ${body.roleName}. Due to ${e.message}`
               });
             });
           }).catch((e) => {
             res.status(400).json({
               error: e.toString(),
-              message: `Unable to add new role ${obj.roleName}. Due to ${e.message}`
+              message: `Unable to add new role ${body.roleName}. Due to ${e.message}`
             });
           });
       } catch (e) {
         res.status(400).json({
           error: e.toString(),
-          message: `Unable to add new role ${obj.roleName}. Due to ${e.message}`
+          message: `Unable to add new role ${body.roleName}. Due to ${e.message}`
         });
       }
     });
@@ -59,11 +58,9 @@ module.exports = (router) => {
         let header = _.pick(req.headers, headerAttributes);
         role.getAll(header.tenantid, header.entitycode, header.accesslevel).then((roles) => {
           if (roles.length > 0) {
-            res.send(roles);
+            res.json(roles);
           } else {
-            res.status(204).json({
-              message: "No roles found"
-            });
+            res.send([]);       
           }
         }).catch((e) => {
           res.status(400).json({
@@ -92,24 +89,24 @@ module.exports = (router) => {
             role.update(req.params.id, body).then((updatedRole) => {
               res.json({
                 updatedRoleObject: updatedRole,
-                message: `${updatedRole.roleName} role has been modified successfully for the application ${updatedRole.applicationCode} and sent for the supervisor authorization.`
+                message: `${body.roleName} role has been modified successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`
               });
             }).catch((e) => {
               res.status(400).json({
                 error: e.toString(),
-                message: `Unable to modify role ${updatedRole.roleName}. Due to ${e.message}`
+                message: `Unable to modify role ${body.roleName}. Due to ${e.message}`
               });
             });
           }).catch((e) => {
             res.status(400).json({
               error: e.toString(),
-              message: `Unable to modify role ${updatedRole.roleName}. Due to ${e.message}`
+              message: `Unable to modify role ${body.roleName}. Due to ${e.message}`
             });
           });
       } catch (e) {
         res.status(400).json({
           error: e.toString(),
-          message: `Unable to modify role ${updatedRole.roleName}. Due to ${e.message}`
+          message: `Unable to modify role ${body.roleName}. Due to ${e.message}`
         });
       }
     });
