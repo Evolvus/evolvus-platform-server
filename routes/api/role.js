@@ -3,7 +3,7 @@ const _ = require("lodash");
 const role = require("evolvus-role");
 const application = require("evolvus-application");
 
-const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup"];
+const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup","lastUpdatedDate"];
 const headerAttributes = ["tenantid", "entitycode", "accesslevel"];
 module.exports = (router) => {
   router.route("/role")
@@ -78,6 +78,9 @@ module.exports = (router) => {
     .put((req, res, next) => {
       try {
         let body = _.pick(req.body.roleData, roleAttributes);
+        body.lastUpdatedDate=new Date().toISOString();
+        body.updatedBy="SYSTEM";
+        body.processingStatus="PENDING_AUTHORIZATION";
         Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
           .then((result) => {
             if (_.isEmpty(result[0])) {
