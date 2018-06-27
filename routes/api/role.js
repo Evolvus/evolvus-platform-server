@@ -5,6 +5,7 @@ const application = require("evolvus-application");
 
 const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup","lastUpdatedDate"];
 const headerAttributes = ["tenantid", "entitycode", "accesslevel"];
+
 module.exports = (router) => {
   router.route("/role")
     .post((req, res, next) => {
@@ -60,7 +61,7 @@ module.exports = (router) => {
           if (roles.length > 0) {
             res.json(roles);
           } else {
-            res.send([]);       
+            res.send([]);
           }
         }).catch((e) => {
           res.status(400).json({

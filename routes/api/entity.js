@@ -1,56 +1,69 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:entity");
 const _ = require("lodash");
 const entity = require("evolvus-entity");
-const entityAttributes = ["tenantId", "name", "entityCode", "enable", "description", "createdBy", "createdDate", "processingStatus", "parent", "level"];
-
-var limit = process.env.LIMIT || -1;
+const randomString = require("randomstring");
+const entityAttributes = ["tenantId", "name", "entityCode", "entityId", "description", "processingStatus", "enableFlag", "createdBy", "createdDate", "parent", "acessLevel","lastUpdatedDate"];
+const headerAttributes = ["tenantid", "entitycode", "accesslevel"];
 
 module.exports = (router) => {
   router.route('/entity')
     .post((req, res, next) => {
       try {
         let body = _.pick(req.body, entityAttributes);
-        body.tenantId = "IVL";
+        let header = _.pick(req.headers, headerAttributes);
+        body.tenantId = header.tenantid;
+        body.accessLevel = header.accesslevel;
+        body.entityCode = header.entitycode;
         body.createdBy = "User";
         body.createdDate = new Date().toISOString();
-        entity.getOne("entityCode", body.parent).then((result) => {
+        body.lastUpdatedDate=body.createdDate;
+        entity.getOne("name", body.parent).then((result) => {
           if (_.isEmpty(result)) {
             throw new Error(`No ParentEntity found with ${body.parent}`);
           }
-          if (result.enable) {
-            body.level = result.level + 1;
+          var randomId = randomString.generate(5);
+          if (result.enableFlag) {
+            var aces = parseInt(result.accessLevel) + 1;
+            body.accessLevel = JSON.stringify(aces);
+            body.entityId = result.entityId + randomId;
             entity.save(body).then((ent) => {
-              res.send(JSON.stringify(ent));
+              res.json({
+                savedEntityObject: ent,
+                message: `New Entity ${body.name.toUpperCase()} has been added successfully and sent for the supervisor authorization.`
+              });
             }).catch((e) => {
-              res.status(400).send(JSON.stringify({
-                error: e.toString()
-              }));
+              res.status(400).json({
+                error: e.toString(),
+                message: `Unable to add new Entity ${body.name}. Due to ${e.message}`
+              });
             });
           } else {
             throw new Error(`ParentEntity is disabled`);
           }
         }).catch((e) => {
-          res.status(400).send(JSON.stringify({
-            error: e.message
-          }));
+          res.status(400).json({
+            error: e.toString(),
+            message: `Unable to add new Entity ${body.name}. Due to ${e.message}`
+          });
         });
       } catch (e) {
-        res.status(400).send(JSON.stringify({
-          error: e.toString()
-        }));
+        res.status(400).json({
+          error: e.toString(),
+          message: `Unable to add new Entity ${body.name}. Due to ${e.message}`
+        });
       }
     });
+
 
   router.route('/entity')
     .get((req, res, next) => {
       try {
-        entity.getAll(limit).then((entities) => {
+        let header = _.pick(req.headers, headerAttributes);
+        entity.getAll(header.tenantid, header.entitycode, header.accesslevel).then((entities) => {
           if (entities.length > 0) {
             res.send(entities);
           } else {
-            res.status(204).send(JSON.stringify({
-              message: "No Entities found"
-            }));
+            res.send([]);
           }
         }).catch((e) => {
           debug(`failed to fetch entities ${e}`);
@@ -66,21 +79,63 @@ module.exports = (router) => {
       }
     });
 
-  router.route('/entity/filterByEntityDetails')
+  router.route("/entity/:id")
+    .put((req, res, next) => {
+      try {
+        let body = _.pick(req.body, entityAttributes);
+        body.updatedBy = "User";
+        body.lastUpdatedDate = new Date().toISOString();
+        entity.update(req.params.id, body).then((updatedEntity) => {
+          res.json({
+            updatedEntityObject: updatedEntity,
+            message: `${body.name} Entity has been modified successful and sent for the supervisor authorization.`
+          });
+        }).catch((e) => {
+          res.status(400).json({
+            error: e.toString(),
+            message: `Unable to modify entity ${body.name}. Due to ${e.message}`
+          });
+        });
+      } catch (e) {
+        res.status(400).json({
+          error: e.toString(),
+          message: `Unable to modify entity ${body.name}. Due to ${e.message}`
+        });
+      }
+    });
+
+  router.route('/entity/filter')
     .get((req, res, next) => {
       try {
-        entity.filterByBranchDetails(req.query).then((docs) => {
-          res.send(JSON.stringify(docs));
+        entity.filterByEntityDetails(req.query).then((entity) => {
+          res.send(entity);
         }).catch((e) => {
           res.status(400).send(JSON.stringify({
             error: e.toString()
           }));
         });
-      } catch (error) {
+      } catch (e) {
         res.status(400).send(JSON.stringify({
           error: e.toString()
         }));
       }
     });
 
+  router.route('/entity/find')
+    .get((req, res, next) => {
+      try {
+        let entityName = req.query.name;
+        entity.getOne("name", entityName).then((entity) => {
+          res.json(entity);
+        }).catch((e) => {
+          res.status(400).json({
+            error: e.toString()
+          });
+        });
+      } catch (e) {
+        res.status(400).json({
+          error: e.toString()
+        });
+      }
+    });
 }
