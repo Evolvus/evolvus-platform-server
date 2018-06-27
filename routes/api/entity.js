@@ -3,7 +3,7 @@ const _ = require("lodash");
 const entity = require("evolvus-entity");
 const randomString = require("randomstring");
 const entityAttributes = ["tenantId", "name", "entityCode", "entityId", "description", "processingStatus", "enableFlag", "createdBy", "createdDate", "parent", "acessLevel", "lastUpdatedDate"];
-const headerAttributes = ["tenantid", "entitycode", "accesslevel"];
+const headerAttributes = ["tenantid", "entityid", "accesslevel"];
 
 module.exports = (router) => {
   router.route('/entity')
@@ -13,7 +13,6 @@ module.exports = (router) => {
         let header = _.pick(req.headers, headerAttributes);
         body.tenantId = header.tenantid;
         body.accessLevel = header.accesslevel;
-        body.entityCode = header.entitycode;
         body.createdBy = "User";
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
@@ -59,7 +58,7 @@ module.exports = (router) => {
     .get((req, res, next) => {
       try {
         let header = _.pick(req.headers, headerAttributes);
-        entity.getAll(header.tenantid, header.entitycode, header.accesslevel).then((entities) => {
+        entity.getAll(header.tenantid, header.entityid, header.accesslevel).then((entities) => {
           if (entities.length > 0) {
             res.send(entities);
           } else {
