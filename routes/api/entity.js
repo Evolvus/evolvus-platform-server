@@ -144,7 +144,7 @@ module.exports = (router) => {
     .get((req, res, next) => {
       try {
         let header = _.pick(req.headers, headerAttributes);
-        entity.getAll(header.tenantid, header.entitycode, header.accesslevel).then((entity) => {
+        entity.getAll(header.tenantid, header.entityid, header.accesslevel).then((entity) => {
           if (entity.length > 0) {
             var codes = _.uniq(_.map(entity, 'name'));
             res.send(codes);
