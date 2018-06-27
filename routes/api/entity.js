@@ -2,7 +2,7 @@ const debug = require("debug")("evolvus-platform-server:routes:api:entity");
 const _ = require("lodash");
 const entity = require("evolvus-entity");
 const randomString = require("randomstring");
-const entityAttributes = ["tenantId", "name", "entityCode", "entityId", "description", "processingStatus", "enableFlag", "createdBy", "createdDate", "parent", "acessLevel","lastUpdatedDate"];
+const entityAttributes = ["tenantId", "name", "entityCode", "entityId", "description", "processingStatus", "enableFlag", "createdBy", "createdDate", "parent", "acessLevel", "lastUpdatedDate"];
 const headerAttributes = ["tenantid", "entitycode", "accesslevel"];
 
 module.exports = (router) => {
@@ -16,7 +16,7 @@ module.exports = (router) => {
         body.entityCode = header.entitycode;
         body.createdBy = "User";
         body.createdDate = new Date().toISOString();
-        body.lastUpdatedDate=body.createdDate;
+        body.lastUpdatedDate = body.createdDate;
         entity.getOne("name", body.parent).then((result) => {
           if (_.isEmpty(result)) {
             throw new Error(`No ParentEntity found with ${body.parent}`);
@@ -133,6 +133,33 @@ module.exports = (router) => {
           });
         });
       } catch (e) {
+        res.status(400).json({
+          error: e.toString()
+        });
+      }
+    });
+
+  router.route('/entityNames')
+    .get((req, res, next) => {
+      try {
+        let header = _.pick(req.headers, headerAttributes);
+        entity.getAll(header.tenantid, header.entitycode, header.accesslevel).then((entity) => {
+          if (entity.length > 0) {
+            var codes = _.uniq(_.map(entity, 'name'));
+            res.send(codes);
+          } else {
+            res.status(204).json({
+              message: "No entity found"
+            });
+          }
+        }).catch((e) => {
+          debug(`failed to fetch all entity names ${e}`);
+          res.status(400).json({
+            error: e.toString()
+          });
+        });
+      } catch (e) {
+        debug(`caught exception ${e}`);
         res.status(400).json({
           error: e.toString()
         });
