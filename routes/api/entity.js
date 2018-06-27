@@ -121,23 +121,25 @@ module.exports = (router) => {
       }
     });
 
-  router.route('/entity/find')
-    .get((req, res, next) => {
-      try {
-        let entityName = req.query.name;
-        entity.getOne("name", entityName).then((entity) => {
-          res.json(entity);
-        }).catch((e) => {
-          res.status(400).json({
-            error: e.toString()
-          });
-        });
-      } catch (e) {
-        res.status(400).json({
-          error: e.toString()
-        });
-      }
-    });
+
+    router.route('/entity/find')
+     .get((req, res, next) => {
+       try {
+         let entityId = req.query.entityId;
+         entity.getOne("entityId", entityId).then((entity) => {
+           res.json(entity);
+         }).catch((e) => {
+           res.status(400).json({
+             error: e.toString()
+           });
+         });
+       } catch (e) {
+         res.status(400).json({
+           error: e.toString()
+         });
+       }
+     });
+
 
   router.route('/entityNames')
     .get((req, res, next) => {
