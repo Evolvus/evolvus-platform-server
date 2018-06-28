@@ -16,6 +16,7 @@
     "evolvus-entity": "^0.1.2",
     "evolvus-menu": "^1.0.8",
     "evolvus-role": "^0.1.4",
+    "evolvus-user": "0.0.2",
     "express": "^4.16.3",
     "mongoose": "^5.1.5"
   },

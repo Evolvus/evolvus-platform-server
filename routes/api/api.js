@@ -4,5 +4,6 @@ module.exports = (router) => {
   require("./role")(router);
   require("./menu")(router);
   require("./entity")(router);
+  require("./user")(router);
 
 };
