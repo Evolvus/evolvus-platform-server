@@ -25,17 +25,32 @@ module.exports = (router) => {
             var aces = parseInt(result.accessLevel) + 1;
             body.accessLevel = JSON.stringify(aces);
             body.entityId = result.entityId + randomId;
-            entity.save(body).then((ent) => {
-              res.json({
-                savedEntityObject: ent,
-                message: `New Entity ${body.name.toUpperCase()} has been added successfully and sent for the supervisor authorization.`
+            Promise.all([entity.getOne("name", body.name), entity.getOne("entityCode", body.entityCode)])
+              .then((result) => {
+                if (!_.isEmpty(result[0])) {
+                  throw new Error(`EntityName ${body.name} already exists`);
+                }
+                if (!_.isEmpty(result[1])) {
+                  throw new Error(`EntityCode ${body.entityCode} already exists`);
+                }
+                entity.save(body).then((ent) => {
+                  console.log(ent);
+                  res.json({
+                    savedEntityObject: ent,
+                    message: `New Entity ${body.name.toUpperCase()} has been added successfully and sent for the supervisor authorization.`
+                  });
+                }).catch((e) => {
+                  res.status(400).json({
+                    error: e.toString(),
+                    message: `Unable to add new Entity ${body.name}. Due to ${e.message}`
+                  });
+                });
+              }).catch((e) => {
+                res.status(400).json({
+                  error: e.toString(),
+                  message: `Unable to add new role ${body.roleName}. Due to ${e.message}`
+                });
               });
-            }).catch((e) => {
-              res.status(400).json({
-                error: e.toString(),
-                message: `Unable to add new Entity ${body.name}. Due to ${e.message}`
-              });
-            });
           } else {
             throw new Error(`ParentEntity is disabled`);
           }
@@ -84,17 +99,31 @@ module.exports = (router) => {
         let body = _.pick(req.body, entityAttributes);
         body.updatedBy = "User";
         body.lastUpdatedDate = new Date().toISOString();
-        entity.update(req.params.id, body).then((updatedEntity) => {
-          res.json({
-            updatedEntityObject: updatedEntity,
-            message: `${body.name} Entity has been modified successful and sent for the supervisor authorization.`
+        Promise.all([entity.getOne("name", body.name), entity.getOne("entityCode", body.entityCode)])
+          .then((result) => {
+            if (!_.isEmpty(result[0])) {
+              throw new Error(`EntityName ${body.name} already exists`);
+            }
+            if (!_.isEmpty(result[1])) {
+              throw new Error(`EntityCode ${body.entityCode} already exists`);
+            }
+            entity.update(req.params.id, body).then((updatedEntity) => {
+              res.json({
+                updatedEntityObject: updatedEntity,
+                message: `${body.name} Entity has been modified successful and sent for the supervisor authorization.`
+              });
+            }).catch((e) => {
+              res.status(400).json({
+                error: e.toString(),
+                message: `Unable to modify entity ${body.name}. Due to ${e.message}`
+              });
+            });
+          }).catch((e) => {
+            res.status(400).json({
+              error: e.toString(),
+              message: `Unable to modify entity ${body.name}. Due to ${e.message}`
+            });
           });
-        }).catch((e) => {
-          res.status(400).json({
-            error: e.toString(),
-            message: `Unable to modify entity ${body.name}. Due to ${e.message}`
-          });
-        });
       } catch (e) {
         res.status(400).json({
           error: e.toString(),
@@ -121,23 +150,23 @@ module.exports = (router) => {
     });
 
 
-    router.route('/entity/find')
-     .get((req, res, next) => {
-       try {
-         let entityId = req.query.entityId;
-         entity.getOne("entityId", entityId).then((entity) => {
-           res.json(entity);
-         }).catch((e) => {
-           res.status(400).json({
-             error: e.toString()
-           });
-         });
-       } catch (e) {
-         res.status(400).json({
-           error: e.toString()
-         });
-       }
-     });
+  router.route('/entity/find')
+    .get((req, res, next) => {
+      try {
+        let entityId = req.query.entityId;
+        entity.getOne("entityId", entityId).then((entity) => {
+          res.json(entity);
+        }).catch((e) => {
+          res.status(400).json({
+            error: e.toString()
+          });
+        });
+      } catch (e) {
+        res.status(400).json({
+          error: e.toString()
+        });
+      }
+    });
 
 
   router.route('/entityNames')
@@ -146,21 +175,25 @@ module.exports = (router) => {
         let header = _.pick(req.headers, headerAttributes);
         entity.getAll(header.tenantid, header.entityid, header.accesslevel).then((entity) => {
           if (entity.length > 0) {
+            console.log("if");
             var codes = _.uniq(_.map(entity, 'name'));
             res.send(codes);
           } else {
+            console.log("else");
             res.status(204).json({
               message: "No entity found"
             });
           }
         }).catch((e) => {
           debug(`failed to fetch all entity names ${e}`);
+          console.log(e);
           res.status(400).json({
             error: e.toString()
           });
         });
       } catch (e) {
         debug(`caught exception ${e}`);
+        console.log(e);
         res.status(400).json({
           error: e.toString()
         });

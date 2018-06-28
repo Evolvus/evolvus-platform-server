@@ -3,7 +3,7 @@ const _ = require("lodash");
 const role = require("evolvus-role");
 const application = require("evolvus-application");
 
-const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup","lastUpdatedDate"];
+const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup", "lastUpdatedDate"];
 const headerAttributes = ["tenantid", "entitycode", "accesslevel"];
 
 module.exports = (router) => {
@@ -36,7 +36,7 @@ module.exports = (router) => {
             }).catch((e) => {
               res.status(400).json({
                 error: e.toString(),
-                message: `Unable to add new role ${body.roleName}. Due to ${e.message}`
+                message: `Unable to add new role ${body.roleName}. Due to ${e.toString()}`
               });
             });
           }).catch((e) => {
@@ -79,9 +79,9 @@ module.exports = (router) => {
     .put((req, res, next) => {
       try {
         let body = _.pick(req.body.roleData, roleAttributes);
-        body.lastUpdatedDate=new Date().toISOString();
-        body.updatedBy="SYSTEM";
-        body.processingStatus="PENDING_AUTHORIZATION";
+        body.lastUpdatedDate = new Date().toISOString();
+        body.updatedBy = "SYSTEM";
+        body.processingStatus = "PENDING_AUTHORIZATION";
         Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
           .then((result) => {
             if (_.isEmpty(result[0])) {
