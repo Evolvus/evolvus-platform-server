@@ -36,7 +36,7 @@ module.exports = (router) => {
             }).catch((e) => {
               res.status(400).json({
                 error: e.toString(),
-                message: `Unable to add new role ${body.roleName}. Due to ${e.toString()}`
+                message: `Unable to add new role ${body.roleName}. Due to ${e.message}`
               });
             });
           }).catch((e) => {
@@ -57,17 +57,29 @@ module.exports = (router) => {
     .get((req, res, next) => {
       try {
         let header = _.pick(req.headers, headerAttributes);
-        role.getAll(header.tenantid, header.entitycode, header.accesslevel).then((roles) => {
-          if (roles.length > 0) {
-            res.json(roles);
-          } else {
-            res.send([]);
-          }
-        }).catch((e) => {
-          res.status(400).json({
-            error: e.toString()
+        let pageNo = +req.query.pageNo;
+        let pageSize = +req.query.pageSize;
+        Promise.all([role.getAll(header.tenantid, header.entitycode, header.accesslevel, pageSize, pageNo), role.getRoleCounts(header.tenantid, header.entitycode, header.accesslevel)])
+          .then((result) => {
+            let totalNoOfRecords;
+            let data;
+            let pageObject = {};
+            if (result[1] > 0) {
+              let totalNoOfPages = Math.ceil(result[1] / pageSize);
+              pageObject.totalNoOfPages = totalNoOfPages;
+            }
+            pageObject.totalNoOfRecords = result[1];
+            if (result[0].length > 0) {
+              pageObject.data = result[0];
+              res.json(pageObject);
+            } else {
+              res.send([]);
+            }
+          }).catch((e) => {
+            res.status(400).json({
+              error: e.toString()
+            });
           });
-        });
       } catch (e) {
         res.status(400).json({
           error: e.toString()
@@ -170,13 +182,39 @@ module.exports = (router) => {
   router.route('/role/filter')
     .get((req, res, next) => {
       try {
-        role.filterByRoleDetails(req.query).then((roles) => {
-          res.send(roles);
-        }).catch((e) => {
-          res.status(400).send(JSON.stringify({
-            error: e.toString()
-          }));
-        });
+        let header = _.pick(req.headers, headerAttributes);
+        let countQuery = {};
+        countQuery.processingStatus = req.query.processingStatus;
+        countQuery.activationStatus = req.query.activationStatus;
+        countQuery.applicationCode = req.query.applicationCode;
+
+        let filterQuery = {};
+        filterQuery.processingStatus = req.query.processingStatus;
+        filterQuery.activationStatus = req.query.activationStatus;
+        filterQuery.applicationCode = req.query.applicationCode;
+        let pageNo = +req.query.pageNo;
+        let pageSize = +req.query.pageSize;
+        Promise.all([role.filterByRoleDetails(filterQuery, pageSize, pageNo), role.getRoleCounts(countQuery)])
+          .then((result) => {
+            let totalNoOfRecords;
+            let data;
+            let pageObject = {};
+            if (result[1] > 0) {
+              let totalNoOfPages = Math.ceil(result[1] / pageSize);
+              pageObject.totalNoOfPages = totalNoOfPages;
+            }
+            pageObject.totalNoOfRecords = result[1];
+            if (result[0].length > 0) {
+              pageObject.data = result[0];
+              res.json(pageObject);
+            } else {
+              res.send({});
+            }
+          }).catch((e) => {
+            res.status(400).json({
+              error: e.toString()
+            });
+          });
       } catch (e) {
         res.status(400).send(JSON.stringify({
           error: e.toString()
