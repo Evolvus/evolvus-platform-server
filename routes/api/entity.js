@@ -77,17 +77,11 @@ module.exports = (router) => {
             let totalNoOfRecords;
             let data;
             let pageObject = {};
-            if (result[1] > 0) {
-              let totalNoOfPages = Math.ceil(result[1] / pageSize);
-              pageObject.totalNoOfPages = totalNoOfPages;
-            }
+            let totalNoOfPages = Math.ceil(result[1] / pageSize);
+            pageObject.totalNoOfPages = totalNoOfPages;
             pageObject.totalNoOfRecords = result[1];
-            if (result[0].length > 0) {
-              pageObject.data = result[0];
-              res.json(pageObject);
-            } else {
-              res.send(pageObject);
-            }
+            pageObject.data = result[0];
+            res.json(pageObject);
           }).catch((e) => {
             res.status(400).json({
               error: e.toString()
@@ -177,17 +171,11 @@ module.exports = (router) => {
             let totalNoOfRecords;
             let data;
             let pageObject = {};
-            if (result[1] > 0) {
-              let totalNoOfPages = Math.ceil(result[1] / pageSize);
-              pageObject.totalNoOfPages = totalNoOfPages;
-            }
+            let totalNoOfPages = Math.ceil(result[1] / pageSize);
+            pageObject.totalNoOfPages = totalNoOfPages;
             pageObject.totalNoOfRecords = result[1];
-            if (result[0].length > 0) {
-              pageObject.data = result[0];
-              res.json(pageObject);
-            } else {
-              res.send(pageObject);
-            }
+            pageObject.data = result[0];
+            res.json(pageObject);
           }).catch((e) => {
             res.status(400).json({
               error: e.toString()

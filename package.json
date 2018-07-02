@@ -14,7 +14,7 @@
     "debug": "^3.1.0",
     "evolvus-application": "^0.1.1",
     "evolvus-contact": "0.0.7",
-    "evolvus-entity": "^0.1.6",
+    "evolvus-entity": "^0.1.8",
     "evolvus-menu": "^1.0.8",
     "evolvus-role": "^0.2.8",
     "evolvus-user": "0.0.6",
