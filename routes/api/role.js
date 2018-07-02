@@ -73,7 +73,7 @@ module.exports = (router) => {
               pageObject.data = result[0];
               res.json(pageObject);
             } else {
-              res.send([]);
+              res.send(pageObject);
             }
           }).catch((e) => {
             res.status(400).json({
@@ -208,7 +208,7 @@ module.exports = (router) => {
               pageObject.data = result[0];
               res.json(pageObject);
             } else {
-              res.send({});
+              res.send(pageObject);
             }
           }).catch((e) => {
             res.status(400).json({

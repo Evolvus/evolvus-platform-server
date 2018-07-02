@@ -34,7 +34,6 @@ module.exports = (router) => {
                   throw new Error(`EntityCode ${body.entityCode} already exists`);
                 }
                 entity.save(body).then((ent) => {
-                  console.log(ent);
                   res.json({
                     savedEntityObject: ent,
                     message: `New Entity ${body.name.toUpperCase()} has been added successfully and sent for the supervisor authorization.`
@@ -67,31 +66,40 @@ module.exports = (router) => {
         });
       }
     });
-
-
   router.route('/entity')
     .get((req, res, next) => {
       try {
         let header = _.pick(req.headers, headerAttributes);
-        entity.getAll(header.tenantid, header.entityid, header.accesslevel).then((entities) => {
-          if (entities.length > 0) {
-            res.send(entities);
-          } else {
-            res.send([]);
-          }
-        }).catch((e) => {
-          debug(`failed to fetch entities ${e}`);
-          res.status(400).send(JSON.stringify({
-            error: e.toString()
-          }));
-        });
+        let pageNo = +req.query.pageNo;
+        let pageSize = +req.query.pageSize;
+        Promise.all([entity.getAll(header.tenantid, header.entityid, header.accesslevel, pageSize, pageNo), entity.getEntityCounts(header.tenantid, header.entityid, header.accesslevel)])
+          .then((result) => {
+            let totalNoOfRecords;
+            let data;
+            let pageObject = {};
+            if (result[1] > 0) {
+              let totalNoOfPages = Math.ceil(result[1] / pageSize);
+              pageObject.totalNoOfPages = totalNoOfPages;
+            }
+            pageObject.totalNoOfRecords = result[1];
+            if (result[0].length > 0) {
+              pageObject.data = result[0];
+              res.json(pageObject);
+            } else {
+              res.send(pageObject);
+            }
+          }).catch((e) => {
+            res.status(400).json({
+              error: e.toString()
+            });
+          });
       } catch (e) {
-        debug(`caught exception ${e}`);
-        res.status(400).send(JSON.stringify({
+        res.status(400).json({
           error: e.toString()
-        }));
+        });
       }
     });
+
 
   router.route("/entity/:id")
     .put((req, res, next) => {
@@ -132,23 +140,65 @@ module.exports = (router) => {
       }
     });
 
+  // router.route('/entity/filter')
+  //   .get((req, res, next) => {
+  //     try {
+  //       entity.filterByEntityDetails(req.query).then((entity) => {
+  //         res.send(entity);
+  //       }).catch((e) => {
+  //         res.status(400).send(JSON.stringify({
+  //           error: e.toString()
+  //         }));
+  //       });
+  //     } catch (e) {
+  //       res.status(400).send(JSON.stringify({
+  //         error: e.toString()
+  //       }));
+  //     }
+  //   });
+
   router.route('/entity/filter')
     .get((req, res, next) => {
       try {
-        entity.filterByEntityDetails(req.query).then((entity) => {
-          res.send(entity);
-        }).catch((e) => {
-          res.status(400).send(JSON.stringify({
-            error: e.toString()
-          }));
-        });
+        let header = _.pick(req.headers, headerAttributes);
+        let countQuery = {};
+        countQuery.parent = req.query.parent;
+        countQuery.enableFlag = req.query.enableFlag;
+        countQuery.processingStatus = req.query.processingStatus;
+
+        let filterQuery = {};
+        filterQuery.processingStatus = req.query.processingStatus;
+        filterQuery.parent = req.query.parent;
+        filterQuery.enableFlag = req.query.enableFlag;
+        let pageNo = +req.query.pageNo;
+        let pageSize = +req.query.pageSize;
+        Promise.all([entity.filterByEntityDetails(filterQuery, pageSize, pageNo), entity.getEntityCounts(countQuery)])
+          .then((result) => {
+            let totalNoOfRecords;
+            let data;
+            let pageObject = {};
+            if (result[1] > 0) {
+              let totalNoOfPages = Math.ceil(result[1] / pageSize);
+              pageObject.totalNoOfPages = totalNoOfPages;
+            }
+            pageObject.totalNoOfRecords = result[1];
+            if (result[0].length > 0) {
+              pageObject.data = result[0];
+              res.json(pageObject);
+            } else {
+              res.send(pageObject);
+            }
+          }).catch((e) => {
+            res.status(400).json({
+              error: e.toString()
+            });
+          });
       } catch (e) {
         res.status(400).send(JSON.stringify({
           error: e.toString()
         }));
       }
     });
-
 
   router.route('/entity/find')
     .get((req, res, next) => {
@@ -175,25 +225,21 @@ module.exports = (router) => {
         let header = _.pick(req.headers, headerAttributes);
         entity.getAll(header.tenantid, header.entityid, header.accesslevel).then((entity) => {
           if (entity.length > 0) {
-            console.log("if");
             var codes = _.uniq(_.map(entity, 'name'));
             res.send(codes);
           } else {
-            console.log("else");
             res.status(204).json({
               message: "No entity found"
             });
           }
         }).catch((e) => {
           debug(`failed to fetch all entity names ${e}`);
-          console.log(e);
           res.status(400).json({
             error: e.toString()
           });
         });
       } catch (e) {
         debug(`caught exception ${e}`);
-        console.log(e);
         res.status(400).json({
           error: e.toString()
         });
