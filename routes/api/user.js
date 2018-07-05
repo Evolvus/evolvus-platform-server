@@ -2,8 +2,13 @@ const debug = require("debug")("evolvus-platform-server:routes:api:user");
 const _ = require("lodash");
 const user = require("evolvus-user");
 const application = require("evolvus-application");
+const response = {
+  "status": "200",
+  "description": "",
+  "data": {}
+};
 
-const userAttributes = ["tenantId", "entityid", "accessLevel", "application", "contact", "entity", "role", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token"];
+const userAttributes = ["tenantId", "entityid", "accessLevel", "application", "contact", "entity", "role", "userId", "designation", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token"];
 const headerAttributes = ["tenantid", "entityid", "accesslevel"];
 const credentials = ["userName", "userPassword", "applicationCode"];
 
@@ -11,26 +16,38 @@ module.exports = (router) => {
   router.route("/user")
     .post((req, res, next) => {
       try {
+        console.log(user);
         let body = _.pick(req.body, userAttributes);
         let header = _.pick(req.headers, headerAttributes);
         body.tenantId = header.tenantid;
         body.entityid = header.entityid;
         body.accessLevel = header.accesslevel;
+        body.activationStatus = "ACTIVE";
         body.processingStatus = "PENDING_AUTHORIZATION";
         body.createdBy = "SYSTEM";
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-        user.save(body).then((response) => {
-          res.send(response);
+        user.save(body).then((savedUser) => {
+          response.status = "200";
+          response.description = `New User ${body.userName} has been added successfully.`;
+          response.data = savedUser;
+          res.status(200)
+            .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
-          res.status(400).json({
-            error: e.toString()
-          });
+          response.status = "400";
+          response.description = e.toString();
+          response.data = {};
+          console.log(e);
+          res.status(400)
+            .send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
-        res.status(400).json({
-          error: e.toString()
-        });
+        response.status = "400";
+        response.description = e.toString();
+        response.data = {};
+        console.log(e);
+        res.status(400)
+          .send(JSON.stringify(response, null, 2));
       }
     });
 

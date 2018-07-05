@@ -3,7 +3,7 @@ const _ = require("lodash");
 const menu = require("evolvus-menu");
 const application = require("evolvus-application");
 
-const menuAttributes = ["menuGroupCode", "title", "applicationCode", "tenantId", "menuItems", "createdBy", "createdDate","menuGroupOrder"];
+const menuAttributes = ["menuGroupCode", "title", "applicationCode", "tenantId", "menuItems", "createdBy", "createdDate", "menuGroupOrder"];
 
 module.exports = (router) => {
   router.route("/menu")
@@ -12,13 +12,15 @@ module.exports = (router) => {
         let body = _.pick(req.body, menuAttributes);
         body.createdBy = "SYSTEM";
         body.createdDate = new Date().toISOString();
-        application.getOne("applicationCode", body.applicationCode).then((app) => {
+        application.getOne({
+          applicationCode: body.applicationCode
+        }).then((app) => {
           if (_.isEmpty(app)) {
             throw new Error(`No Application with ${body.applicationCode} found`);
           } else {
             menu.save(body).then((menuObj) => {
               res.send(menuObj);
-            }).catch((e) => {              
+            }).catch((e) => {
               res.status(400).json({
                 error: e.toString()
               });
@@ -31,7 +33,7 @@ module.exports = (router) => {
         });
       } catch (e) {
         res.status(400).json({
-          error:  e.toString()
+          error: e.toString()
         });
       }
     });
@@ -67,12 +69,12 @@ module.exports = (router) => {
           res.json(app);
         }).catch((e) => {
           res.status(400).json({
-            error:e.toString()
+            error: e.toString()
           });
         });
-      } catch (e) {        
+      } catch (e) {
         res.status(400).json({
-          error:e.toString()
+          error: e.toString()
         });
       }
     });

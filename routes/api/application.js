@@ -3,13 +3,15 @@ const _ = require("lodash");
 const application = require("evolvus-application");
 
 const applicationAttributes = ["applicationName", "applicationId", "description", "enabled", "applicationCode", "createdBy", "createdDate", "logo", "favicon"];
+const headerAttributes = ["tenantid", "entityid", "accesslevel"];
 
 module.exports = (router) => {
   router.route('/application')
     .post((req, res, next) => {
       try {
         let body = _.pick(req.body, applicationAttributes);
-        body.tenantId = "IVL";
+        let header = _.pick(req.headers, headerAttributes);
+        body.tenantId = header.tenantid;
         body.createdBy = "SYSTEM";
         body.createdDate = new Date().toISOString();
         application.save(body).then((app) => {
@@ -33,7 +35,9 @@ module.exports = (router) => {
     .get((req, res, next) => {
       try {
         let codeValue = req.params.applicationCode;
+        console.log(codeValue);
         application.getOne("applicationCode", codeValue).then((app) => {
+          console.log(app);
           if (_.isEmpty(app)) {
             debug(`no application found by this code `, codeValue);
             res.status(204).json({
@@ -82,7 +86,7 @@ module.exports = (router) => {
       }
     });
 
-    router.route("/application/:id")
+  router.route("/application/:id")
     .put((req, res, next) => {
       try {
         application.update(req.params.id, req.body).then((response) => {

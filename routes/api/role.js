@@ -4,7 +4,7 @@ const role = require("evolvus-role");
 const application = require("evolvus-application");
 
 const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup", "lastUpdatedDate"];
-const headerAttributes = ["tenantid", "entitycode", "accesslevel"];
+const headerAttributes = ["tenantid", "entityid", "accesslevel"];
 
 module.exports = (router) => {
   router.route("/role")
@@ -13,14 +13,16 @@ module.exports = (router) => {
         let body = _.pick(req.body, roleAttributes);
         let header = _.pick(req.headers, headerAttributes);
         body.tenantId = header.tenantid;
-        body.entityCode = header.entitycode;
+        body.entityCode = header.entityid;
         body.accessLevel = header.accesslevel;
         body.processingStatus = "PENDING_AUTHORIZATION";
         body.associatedUsers = 5;
         body.createdBy = "SYSTEM";
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-        Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
+        Promise.all([application.getOne({
+            applicationCode: body.applicationCode
+          }), role.getOne("roleName", body.roleName)])
           .then((result) => {
             if (_.isEmpty(result[0])) {
               throw new Error(`No Application with ${body.applicationCode} found`);
@@ -59,15 +61,15 @@ module.exports = (router) => {
         let header = _.pick(req.headers, headerAttributes);
         let pageNo = +req.query.pageNo;
         let pageSize = +req.query.pageSize;
-        Promise.all([role.getAll(header.tenantid, header.entitycode, header.accesslevel, pageSize, pageNo), role.getRoleCounts(header.tenantid, header.entitycode, header.accesslevel)])
+        role.getAll(header.tenantid, header.entityid, header.accesslevel, pageSize, pageNo)
           .then((result) => {
             let totalNoOfRecords;
             let data;
             let pageObject = {};
-            let totalNoOfPages = Math.ceil(result[1] / pageSize);
+            pageObject.totalNoOfRecords = result.length;
+            let totalNoOfPages = Math.ceil(pageObject.totalNoOfRecords / pageSize);
             pageObject.totalNoOfPages = totalNoOfPages;
-            pageObject.totalNoOfRecords = result[1];
-            pageObject.data = result[0];
+            pageObject.data = result;
             res.json(pageObject);
           }).catch((e) => {
             res.status(400).json({
@@ -88,7 +90,9 @@ module.exports = (router) => {
         body.lastUpdatedDate = new Date().toISOString();
         body.updatedBy = "SYSTEM";
         body.processingStatus = "PENDING_AUTHORIZATION";
-        Promise.all([application.getOne("applicationCode", body.applicationCode), role.getOne("roleName", body.roleName)])
+        Promise.all([application.getOne({
+            applicationCode: body.applicationCode
+          }), role.getOne("roleName", body.roleName)])
           .then((result) => {
             if (_.isEmpty(result[0])) {
               throw new Error(`No Application with ${body.applicationCode} found`);
