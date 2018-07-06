@@ -1,236 +1,230 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:entity");
 const _ = require("lodash");
-const entity = require("evolvus-entity");
+const entity = require("./../../index");
 const randomString = require("randomstring");
-const entityAttributes = ["tenantId", "name", "entityCode", "entityId", "description", "processingStatus", "enableFlag", "createdBy", "createdDate", "parent", "acessLevel", "lastUpdatedDate"];
-const headerAttributes = ["tenantid", "entityid", "accesslevel"];
 
+const LIMIT = process.env.LIMIT || 10;
+const tenantHeader = "X-TENANT-ID";
+const userHeader = "X-USER";
+const ipHeader = "X-IP-HEADER";
+const PAGE_SIZE = 10;
+const entityIdHeader = "X-ENTITY-ID";
+const accessLevelHeader = "X-ACCESSLEVEL"
+const entityAttributes = ["tenantId", "name", "entityCode", "entityId", "description", "processingStatus", "enableFlag", "createdBy", "createdDate", "parent", "acessLevel", "lastUpdatedDate"];
+const filterAttributes = entity.filterAttributes;
+const sortAttributes=entity.sortAttributes;
+console.log(filterAttributes,"filterAttributessss");
 module.exports = (router) => {
   router.route('/entity')
     .post((req, res, next) => {
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader)
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": {}
+      };
+      let body = _.pick(req.body, entityAttributes);
       try {
-        let body = _.pick(req.body, entityAttributes);
-        let header = _.pick(req.headers, headerAttributes);
-        body.tenantId = header.tenantid;
-        body.accessLevel = header.accesslevel;
-        body.createdBy = "User";
+        body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-        entity.getOne("name", body.parent).then((result) => {
+        entity.find(tenantId, entityId, accessLevel, {
+          "name": body.parent
+        }, {}, 0, 1).then((result) => {
           if (_.isEmpty(result)) {
             throw new Error(`No ParentEntity found with ${body.parent}`);
           }
           var randomId = randomString.generate(5);
-          if (result.enableFlag) {
-            var aces = parseInt(result.accessLevel) + 1;
+
+          if (result[0].enableFlag == `1`) {
+            var aces = parseInt(result[0].accessLevel) + 1;
             body.accessLevel = JSON.stringify(aces);
-            body.entityId = result.entityId + randomId;
-            Promise.all([entity.getOne("name", body.name), entity.getOne("entityCode", body.entityCode)])
+            body.entityId = result[0].entityId + randomId;
+            entity.find(tenantId, entityId, accessLevel, {
+                "name": body.name,
+                "entityCode": body.entityCode
+              }, {}, 0, 1)
               .then((result) => {
                 if (!_.isEmpty(result[0])) {
-                  throw new Error(`EntityName ${body.name} already exists`);
+                  throw new Error(`Entity ${body.name},${body.entityCode} already exists`);
                 }
-                if (!_.isEmpty(result[1])) {
-                  throw new Error(`EntityCode ${body.entityCode} already exists`);
-                }
-                entity.save(body).then((ent) => {
-                  res.json({
-                    savedEntityObject: ent,
-                    message: `New Entity ${body.name.toUpperCase()} has been added successfully and sent for the supervisor authorization.`
-                  });
+                entity.save(tenantId, body).then((ent) => {
+                  response.status = "200";
+                  response.description = "SUCCESS";
+                  response.data = ent;
+                  res.status(200)
+                    .send(JSON.stringify(response, null, 2));
+
                 }).catch((e) => {
-                  res.status(400).json({
-                    error: e.toString(),
-                    message: `Unable to add new Entity ${body.name}. Due to ${e.message}`
-                  });
+                  response.status="400",
+                  response.description=`Unable to add new Entity ${body.name}. Due to ${e.message}`,
+                  response.data=e.toString()
+                  res.status(response.status).send(JSON.stringify(response, null, 2));
                 });
               }).catch((e) => {
-                res.status(400).json({
-                  error: e.toString(),
-                  message: `Unable to add new role ${body.roleName}. Due to ${e.message}`
-                });
+                response.status="400",
+                response.description=`Unable to add new Entity ${body.name}. Due to ${e.message}`,
+                response.data=e.toString()
+                res.status(response.status).send(JSON.stringify(response, null, 2));
               });
           } else {
             throw new Error(`ParentEntity is disabled`);
           }
         }).catch((e) => {
-          res.status(400).json({
-            error: e.toString(),
-            message: `Unable to add new Entity ${body.name}. Due to ${e.message}`
-          });
+          response.status="400",
+          response.description=`Unable to add new Entity ${body.name}. Due to ${e.message}`,
+          response.data=e.toString()
+          res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
-        res.status(400).json({
-          error: e.toString(),
-          message: `Unable to add new Entity ${body.name}. Due to ${e.message}`
-        });
+        response.status="400",
+        response.description=`Unable to add new Entity ${body.name}. Due to ${e.message}`,
+        response.data=e.toString()
+        res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
-  router.route('/entity')
+  router.route('/entity/')
     .get((req, res, next) => {
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader)
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": {}
+      };
+      debug("query: " + JSON.stringify(req.query));
+      var limit = _.get(req.query, "limit", LIMIT);
+      var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
+      var pageNo = _.get(req.query, "pageNo", 1);
+      var skipCount = pageSize * (pageNo - 1);
+      var filter = _.pick(req.query, filterAttributes);
+      var sort = _.get(req.query, "sort", {});
+      var orderby = sortable(sort);
+      console.log(filter,"yyyyyyyyyyyyyyyyyyyyyyyyyyy");
       try {
-        let header = _.pick(req.headers, headerAttributes);
-        let pageNo = +req.query.pageNo;
-        let pageSize = +req.query.pageSize;
-        Promise.all([entity.getAll(header.tenantid, header.entityid, header.accesslevel, pageSize, pageNo), entity.getEntityCounts(header.tenantid, header.entityid, header.accesslevel)])
+        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, +limit), entity.counts(tenantId, entityId, accessLevel, filter)])
           .then((result) => {
-            let totalNoOfRecords;
-            let data;
-            let pageObject = {};
-            let totalNoOfPages = Math.ceil(result[1] / pageSize);
-            pageObject.totalNoOfPages = totalNoOfPages;
-            pageObject.totalNoOfRecords = result[1];
-            pageObject.data = result[0];
-            res.json(pageObject);
-          }).catch((e) => {
-            res.status(400).json({
-              error: e.toString()
-            });
+            if (result[0].length > 0) {
+              response.status = "200";
+              response.description = "SUCCESS";
+              response.totalNoOfPages = Math.ceil(result[1] / pageSize);
+              response.totalNoOfRecords = result[1];
+              response.data = result[0];
+
+
+              res.status(200)
+                .send(JSON.stringify(response, null, 2));
+            } else {
+              response.status = "404";
+              response.description = "No entity found";
+              debug("response: " + JSON.stringify(response));
+              res.status(response.status)
+                .send(JSON.stringify(response, null, 2));
+            }
+          })
+          .catch((e) => {
+            console.log(e);
+            debug(`failed to fetch all entity ${e}`);
+            response.status="400",
+            response.description=`Unable to fetch all entities`
+            response.data=e.toString()
+            res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        res.status(400).json({
-          error: e.toString()
-        });
+        console.log(e);
+        debug(`caught exception ${e}`);
+        response.status="400",
+        response.description=`Unable to fetch all entities`
+        response.data=e.toString()
+        res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
 
-
-  router.route("/entity/:id")
+    router.route("/entity/:entityCode")
     .put((req, res, next) => {
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader)
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": {}
+      };
+      debug("query: " + JSON.stringify(req.query));
       try {
         let body = _.pick(req.body, entityAttributes);
-        body.updatedBy = "User";
+        body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        Promise.all([entity.getOne("name", body.name), entity.getOne("entityCode", body.entityCode)])
+        console.log(body,"booodyyyy");
+        entity.find(tenantId, entityId, accessLevel, {
+            "name": body.name,
+            "entityCode": body.entityCode
+          }, {}, 0, 1)
           .then((result) => {
-            if (!_.isEmpty(result[0])) {
-              throw new Error(`EntityName ${body.name} already exists`);
+            if (_.isEmpty(result[0])) {
+              throw new Error(`Entity ${body.name},  already exists `);
             }
-            if (!_.isEmpty(result[1])) {
-              throw new Error(`EntityCode ${body.entityCode} already exists`);
-            }
-            entity.update(req.params.id, body).then((updatedEntity) => {
-              res.json({
-                updatedEntityObject: updatedEntity,
-                message: `${body.name} Entity has been modified successful and sent for the supervisor authorization.`
-              });
-            }).catch((e) => {
-              res.status(400).json({
-                error: e.toString(),
-                message: `Unable to modify entity ${body.name}. Due to ${e.message}`
-              });
-            });
-          }).catch((e) => {
-            res.status(400).json({
-              error: e.toString(),
-              message: `Unable to modify entity ${body.name}. Due to ${e.message}`
-            });
-          });
-      } catch (e) {
-        res.status(400).json({
-          error: e.toString(),
-          message: `Unable to modify entity ${body.name}. Due to ${e.message}`
-        });
-      }
-    });
-
-  // router.route('/entity/filter')
-  //   .get((req, res, next) => {
-  //     try {
-  //       entity.filterByEntityDetails(req.query).then((entity) => {
-  //         res.send(entity);
-  //       }).catch((e) => {
-  //         res.status(400).send(JSON.stringify({
-  //           error: e.toString()
-  //         }));
-  //       });
-  //     } catch (e) {
-  //       res.status(400).send(JSON.stringify({
-  //         error: e.toString()
-  //       }));
-  //     }
-  //   });
-
-  router.route('/entity/filter')
-    .get((req, res, next) => {
-      try {
-        let header = _.pick(req.headers, headerAttributes);
-        let countQuery = {};
-        countQuery.parent = req.query.parent;
-        countQuery.enableFlag = req.query.enableFlag;
-        countQuery.processingStatus = req.query.processingStatus;
-
-        let filterQuery = {};
-        filterQuery.processingStatus = req.query.processingStatus;
-        filterQuery.parent = req.query.parent;
-        filterQuery.enableFlag = req.query.enableFlag;
-        let pageNo = +req.query.pageNo;
-        let pageSize = +req.query.pageSize;
-        Promise.all([entity.filterByEntityDetails(filterQuery, pageSize, pageNo), entity.getEntityCounts(countQuery)])
-          .then((result) => {
-            let totalNoOfRecords;
-            let data;
-            let pageObject = {};
-            let totalNoOfPages = Math.ceil(result[1] / pageSize);
-            pageObject.totalNoOfPages = totalNoOfPages;
-            pageObject.totalNoOfRecords = result[1];
-            pageObject.data = result[0];
-            res.json(pageObject);
-          }).catch((e) => {
-            res.status(400).json({
-              error: e.toString()
-            });
-          });
-      } catch (e) {
-        res.status(400).send(JSON.stringify({
-          error: e.toString()
-        }));
-      }
-    });
-
-  router.route('/entity/find')
-    .get((req, res, next) => {
-      try {
-        let entityId = req.query.entityId;
-        entity.getOne("entityId", entityId).then((entity) => {
-          res.json(entity);
-        }).catch((e) => {
-          res.status(400).json({
-            error: e.toString()
-          });
-        });
-      } catch (e) {
-        res.status(400).json({
-          error: e.toString()
-        });
-      }
-    });
-
-
-  router.route('/entityNames')
-    .get((req, res, next) => {
-      try {
-        let header = _.pick(req.headers, headerAttributes);
-        entity.getAll(header.tenantid, header.entityid, header.accesslevel).then((entity) => {
-          if (entity.length > 0) {
-            var codes = _.uniq(_.map(entity, 'name'));
-            res.send(codes);
-          } else {
-            res.status(204).json({
-              message: "No entity found"
-            });
+            if ((!_.isEmpty(result[0])) && (result[0].entityCode != req.params.entityCode)) {
+            throw new Error(`Entity ${body.name} already exists`);
           }
-        }).catch((e) => {
-          debug(`failed to fetch all entity names ${e}`);
-          res.status(400).json({
-            error: e.toString()
+            entity.update(tenantId,body.entityCode, body).then((updatedEntity) => {
+              response.status = "200";
+              response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
+              response.data = body;
+              res.status(200)
+                .send(JSON.stringify(response, null, 2));
+
+            }).catch((e) => {
+              response.status="400",
+              response.description= `Unable to modify entity ${body.name}. Due to ${e.message}`
+              response.data=e.toString()
+              res.status(response.status).send(JSON.stringify(response, null, 2));
+            });
+          }).catch((e) => {
+            response.status="400",
+            response.description= `Unable to modify entity ${body.name}. Due to ${e.message}`
+            response.data=e.toString()
+            res.status(response.status).send(JSON.stringify(response, null, 2));
           });
-        });
       } catch (e) {
-        debug(`caught exception ${e}`);
-        res.status(400).json({
-          error: e.toString()
-        });
+        response.status="400",
+        response.description= `Unable to modify entity ${body.name}. Due to ${e.message}`
+        response.data=e.toString()
+        res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
+
+};
+
+function sortable(sort) {
+  if (typeof sort === 'undefined' ||
+    sort == null) {
+    return {};
+  }
+  if (typeof sort === 'string') {
+    var result = sort.split(",")
+      .reduce((temp, sortParam) => {
+        if (sortParam.charAt(0) == "-") {
+          return _.assign(temp, _.fromPairs([
+            [sortParam.replace(/-/, ""), -1]
+          ]));
+        } else {
+          return _.assign(_.fromPairs([
+            [sortParam.replace(/\+/, ""), 1]
+          ]));
+        }
+      }, {});
+    return result;
+  } else {
+    return {};
+  }
 }
