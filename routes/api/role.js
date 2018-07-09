@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:role");
 const _ = require("lodash");
-const role = require("./../../index");
+const role = require("evolvus-role");
 const application = require("evolvus-new-application")
 
 const LIMIT = process.env.LIMIT || 10;
@@ -13,7 +13,6 @@ const PAGE_SIZE = 10;
 
 const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup", "lastUpdatedDate", "entityId", "accessLevel"];
 const filterAttributes = role.filterAttributes;
-console.log("filterAttributes", filterAttributes);
 const sortableAttributes = role.sortableAttributes;
 
 
@@ -39,7 +38,6 @@ module.exports = (router) => {
         body.entityId = entityId;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-        console.log(body);
         Promise.all([application.find(tenantId, {
           "applicationCode": body.applicationCode
         }, {}, 0, 1), role.find(tenantId, {
@@ -81,7 +79,6 @@ module.exports = (router) => {
   router.route('/role/')
     .get((req, res, next) => {
       const tenantId = req.header(tenantHeader);
-      console.log(tenantId, "tenantId");
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
       const entityId = req.header(entityIdHeader);
@@ -96,15 +93,12 @@ module.exports = (router) => {
       var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = pageSize * (pageNo - 1);
-      console.log(skipCount, "skipCount");
       var filter = _.pick(req.query, filterAttributes);
-      console.log("filterAttributes", filter);
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
         Promise.all([role.find(tenantId, filter, orderby, skipCount, +limit), role.counts(tenantId, entityId, accessLevel, filter)])
           .then((result) => {
-            console.log("resulttttttttttttttttttttt", result);
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
@@ -114,7 +108,6 @@ module.exports = (router) => {
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
-              console.log("else");
               response.status = "404";
               response.description = "No role found";
               debug("response: " + JSON.stringify(response));
@@ -123,7 +116,6 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
-            console.log("catch1", e);
             debug(`failed to fetch all roles ${e}`);
             response.status = "400",
               response.description = `Unable to fetch all roles`
@@ -131,7 +123,6 @@ module.exports = (router) => {
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        console.log("catch2", e);
         debug(`caught exception ${e}`);
         response.status = "400",
           response.description = `Unable to fetch all roles`

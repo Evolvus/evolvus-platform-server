@@ -1,19 +1,22 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:entity");
 const _ = require("lodash");
-const entity = require("./../../index");
+const entity = require("evolvus-entity");
 const randomString = require("randomstring");
 
 const LIMIT = process.env.LIMIT || 10;
+const ORDER_BY = process.env.ORDER_BY || {
+  lastUpdatedDate: -1
+}
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const PAGE_SIZE = 10;
 const entityIdHeader = "X-ENTITY-ID";
-const accessLevelHeader = "X-ACCESSLEVEL"
+const accessLevelHeader = "X-ACCESS-LEVEL"
 const entityAttributes = ["tenantId", "name", "entityCode", "entityId", "description", "processingStatus", "enableFlag", "createdBy", "createdDate", "parent", "acessLevel", "lastUpdatedDate"];
 const filterAttributes = entity.filterAttributes;
 const sortAttributes = entity.sortAttributes;
-console.log(filterAttributes, "filterAttributessss");
+
 module.exports = (router) => {
   router.route('/entity')
     .post((req, res, next) => {
@@ -39,7 +42,6 @@ module.exports = (router) => {
             throw new Error(`No ParentEntity found with ${body.parent}`);
           }
           var randomId = randomString.generate(5);
-
           if (result[0].enableFlag == `1`) {
             var aces = parseInt(result[0].accessLevel) + 1;
             body.accessLevel = JSON.stringify(aces);
@@ -54,22 +56,21 @@ module.exports = (router) => {
                 }
                 entity.save(tenantId, body).then((ent) => {
                   response.status = "200";
-                  response.description = "SUCCESS";
+                  response.description = `New Entity ''${body.name}' has been added successfully and sent for the supervisor authorization`;
                   response.data = ent;
                   res.status(200)
                     .send(JSON.stringify(response, null, 2));
-
                 }).catch((e) => {
                   response.status = "400",
                     response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
                     response.data = e.toString()
-                  res.status(response.status).send(JSON.stringify(response, null, 2));
+                  res.status(400).send(JSON.stringify(response, null, 2));
                 });
               }).catch((e) => {
                 response.status = "400",
                   response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
                   response.data = e.toString()
-                res.status(response.status).send(JSON.stringify(response, null, 2));
+                res.status(400).send(JSON.stringify(response, null, 2));
               });
           } else {
             throw new Error(`ParentEntity is disabled`);
@@ -78,13 +79,13 @@ module.exports = (router) => {
           response.status = "400",
             response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
             response.data = e.toString()
-          res.status(response.status).send(JSON.stringify(response, null, 2));
+          res.status(400).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
         response.status = "400",
           response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
           response.data = e.toString()
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        res.status(400).send(JSON.stringify(response, null, 2));
       }
     });
   router.route('/entity/')
@@ -104,11 +105,14 @@ module.exports = (router) => {
       var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = pageSize * (pageNo - 1);
-      var filter = _.pick(req.query, filterAttributes);
+      var filterValues = _.pick(req.query, filterAttributes);
+      var filter = _.omitBy(filterValues, function(value, key) {
+        return value.startsWith("undefined");
+      });
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, +limit), entity.counts(tenantId, entityId, accessLevel, filter)])
+        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, +pageSize), entity.counts(tenantId, entityId, accessLevel, filter)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -116,12 +120,13 @@ module.exports = (router) => {
               response.totalNoOfPages = Math.ceil(result[1] / pageSize);
               response.totalNoOfRecords = result[1];
               response.data = result[0];
-
-
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
-              response.status = "404";
+              response.status = "200";
+              response.data = [];
+              response.totalNoOfRecords = result[1];
+              response.totalNoOfPages = 0;
               response.description = "No entity found";
               debug("response: " + JSON.stringify(response));
               res.status(response.status)
@@ -129,19 +134,17 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
-            console.log(e);
             debug(`failed to fetch all entity ${e}`);
-            response.status = "400",
-              response.description = `Unable to fetch all entities`
-            response.data = e.toString()
+            response.status = "400";
+            response.description = `Unable to fetch all entities`;
+            response.data = e.toString();
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        console.log(e);
         debug(`caught exception ${e}`);
-        response.status = "400",
-          response.description = `Unable to fetch all entities`
-        response.data = e.toString()
+        response.status = "400";
+        response.description = `Unable to fetch all entities`;
+        response.data = e.toString();
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
@@ -163,7 +166,6 @@ module.exports = (router) => {
         let body = _.pick(req.body, entityAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        console.log(body, "booodyyyy");
         entity.find(tenantId, entityId, accessLevel, {
             "name": body.name,
             "entityCode": body.entityCode
@@ -207,7 +209,7 @@ module.exports = (router) => {
 function sortable(sort) {
   if (typeof sort === 'undefined' ||
     sort == null) {
-    return {};
+    return ORDER_BY;
   }
   if (typeof sort === 'string') {
     var result = sort.split(",")
@@ -224,6 +226,6 @@ function sortable(sort) {
       }, {});
     return result;
   } else {
-    return {};
+    return ORDER_BY;
   }
 }
