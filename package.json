@@ -15,8 +15,8 @@
     "evolvus-application": "^0.1.1",
     "evolvus-contact": "0.0.7",
     "evolvus-entity": "^2.0.0",
-    "evolvus-menu": "^1.0.9",
-    "evolvus-role": "^2.0.0",
+    "evolvus-menu": "^2.0.2",
+    "evolvus-role": "^2.0.1",
     "evolvus-user": "0.0.4",
     "express": "^4.16.3",
     "mongoose": "^5.1.5"
