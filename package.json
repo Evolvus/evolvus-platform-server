@@ -12,8 +12,7 @@
   "dependencies": {
     "body-parser": "^1.18.2",
     "debug": "^3.1.0",
-    "evolvus-application": "^0.1.1",
-    "evolvus-contact": "0.0.7",
+    "evolvus-application": "^2.0.0",
     "evolvus-entity": "^2.0.0",
     "evolvus-menu": "^2.0.2",
     "evolvus-role": "^2.0.1",
