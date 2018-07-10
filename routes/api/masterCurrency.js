@@ -1,7 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:masterCurrency");
 const _ = require("lodash");
-const masterCurrency = require("./../../index");
-console.log("masterCurrency", masterCurrency);
+const masterCurrency = require("evolvus-master-currency");
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
@@ -12,8 +11,6 @@ const masterCurrencyAttributes = ["currencyCode", "currencyName", "decimalDigit"
 
 const filterAttributes = masterCurrency.filterAttributes;
 const sortAttributes = masterCurrency.sortableAttributes;
-
-
 
 module.exports = (router) => {
   router.route('/masterCurrency/')
@@ -34,11 +31,7 @@ module.exports = (router) => {
       var filter = _.pick(req.query, filterAttributes);
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
-
       try {
-        console.log("inside server");
-        //console.log(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limit);
-        //masterCurrency.find(tenantId, filter, orderby, skipCount, limit)
         Promise.all([masterCurrency.find(tenantId, filter, orderby, skipCount, limit), masterCurrency.counts(tenantId, filter)])
           .then((result) => {
             if (result[0].length > 0) {
@@ -47,19 +40,17 @@ module.exports = (router) => {
               response.totalNoOfPages = Math.ceil(result[1] / pageSize);
               response.totalNoOfRecords = result[1];
               response.data = result[0];
-
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
-              response.status = "404";
+              response.status = "400";
               response.description = "No masterCurrency found";
               debug("response: " + JSON.stringify(response));
-              res.status(200)
+              res.status(400)
                 .send(JSON.stringify(response, null, 2));
             }
           })
           .catch((e) => {
-            console.log("err1", e);
             debug(`failed to fetch all masterCurrency ${e}`);
             response.status = "400",
               response.description = `Unable to fetch all masterCurrency`
@@ -67,7 +58,6 @@ module.exports = (router) => {
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        console.log("err2", e);
         debug(`caught exception ${e}`);
         response.status = "400",
           response.description = `Unable to fetch all masterCurrency`

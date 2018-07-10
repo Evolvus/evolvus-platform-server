@@ -5,5 +5,8 @@ module.exports = (router) => {
   require("./menu")(router);
   require("./entity")(router);
   require("./user")(router);
+  require("./masterCurrency")(router);
+  require("./masterTimeZone")(router);
+  require("./supportedDateFormats")(router);
 
 };

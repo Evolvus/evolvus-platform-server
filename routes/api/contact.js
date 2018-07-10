@@ -44,10 +44,6 @@ module.exports = (router) => {
 
         Promise.all([contact.find(tenantId, filter, orderby, skipCount, +limit), contact.counts(tenantId, filter)])
           .then((contacts) => {
-            console.log(contacts, "coom=ntacts");
-            console.log(contacts);
-            console.log(contacts[0]);
-            console.log(contacts[1]);
             if (contacts[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
@@ -58,7 +54,6 @@ module.exports = (router) => {
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
-              console.log("er", e);
               response.status = "404";
               response.description = "No contacts found";
               debug("response: " + JSON.stringify(response));
@@ -67,7 +62,6 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
-            console.log("er", e);
             debug(`failed to fetch all contacts ${e}`);
             response.status = "400",
               response.description = `Unable to fetch all contacts`

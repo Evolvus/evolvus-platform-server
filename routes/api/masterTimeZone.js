@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:masterTimeZone");
 const _ = require("lodash");
-const masterTimeZone = require("./../../index");
+const masterTimeZone = require("evolvus-master-time-zone");
 
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
@@ -58,7 +58,6 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
-            console.log("err1", e);
             debug(`failed to fetch all masterTimeZone ${e}`);
             response.status = "400",
               response.description = `Unable to fetch all masterTimeZone`
@@ -66,7 +65,6 @@ module.exports = (router) => {
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        console.log("err2", e);
         debug(`caught exception ${e}`);
         response.status = "400",
           response.description = `Unable to fetch all masterTimeZone`

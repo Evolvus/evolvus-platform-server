@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:supportedDateFormats");
 const _ = require("lodash");
-const supportedDateFormats = require("./../../index");
+const supportedDateFormats = require("evolvus-supported-date-formats");
 
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
@@ -57,7 +57,6 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
-            console.log("err1", e);
             debug(`failed to fetch all supportedDateFormats ${e}`);
             response.status = "400",
               response.description = `Unable to fetch all supportedDateFormats`
@@ -65,7 +64,6 @@ module.exports = (router) => {
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        console.log("err2", e);
         debug(`caught exception ${e}`);
         response.status = "400",
           response.description = `Unable to fetch all supportedDateFormats`
