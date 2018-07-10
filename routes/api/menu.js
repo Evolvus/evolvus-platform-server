@@ -4,7 +4,7 @@ const menu = require("evolvus-menu");
 
 const LIMIT = process.env.LIMIT || 10;
 const ORDER_BY = process.env.ORDER_BY || {
-  lastUpdatedDate: -1
+  menuGroupOrder:1
 };
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";

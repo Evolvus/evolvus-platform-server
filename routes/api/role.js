@@ -1,7 +1,10 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:role");
 const _ = require("lodash");
 const role = require("evolvus-role");
-const application = require("evolvus-application")
+const application = require("evolvus-application");
+const ORDER_BY = process.env.ORDER_BY || {
+  lastUpdatedDate: -1
+};
 
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
@@ -36,12 +39,13 @@ module.exports = (router) => {
         body.tenantId = tenantId;
         body.createdBy = createdBy;
         body.entityId = entityId;
+        body.accessLevel = accessLevel;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
 
         Promise.all([application.find(tenantId, {
           "applicationCode": body.applicationCode
-        }, {}, 0, 1), role.find(tenantId, {
+        }, {}, 0, 1), role.find(tenantId,entityId, accessLevel, {
           "roleName": body.roleName
         }, {}, 0, 1)]).then((result) => {
           if (_.isEmpty(result[0])) {
@@ -52,7 +56,7 @@ module.exports = (router) => {
           }
           role.save(tenantId, body).then((roles) => {
             response.status = "200";
-            response.description = "Saved Role Successfully";
+            response.description = `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`;
             response.data = roles;
             res.status(200)
               .send(JSON.stringify(response, null, 2));
@@ -101,7 +105,7 @@ module.exports = (router) => {
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        Promise.all([role.find(tenantId, filter, orderby, skipCount, +pageSize), role.counts(tenantId, entityId, accessLevel, filter)])
+        Promise.all([role.find(tenantId,entityId, accessLevel, filter, orderby, skipCount, +pageSize), role.counts(tenantId, entityId, accessLevel, filter)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -154,7 +158,7 @@ module.exports = (router) => {
         let body = _.pick(req.body, roleAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        role.find(tenantId, {
+        role.find(tenantId,entityId, accessLevel, {
             "roleName": body.roleName,
             "applicationCode": body.applicationCode
           }, {}, 0, 1)
@@ -196,7 +200,7 @@ module.exports = (router) => {
 function sortable(sort) {
   if (typeof sort === 'undefined' ||
     sort == null) {
-    return {};
+    return ORDER_BY;
   }
   if (typeof sort === 'string') {
     var result = sort.split(",")
@@ -213,6 +217,6 @@ function sortable(sort) {
       }, {});
     return result;
   } else {
-    return {};
+    return ORDER_BY;
   }
 }

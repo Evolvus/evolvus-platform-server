@@ -1,6 +1,9 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:application");
 const _ = require("lodash");
-const application = require("./../../index");
+const application = require("evolvus-application");
+const ORDER_BY = process.env.ORDER_BY || {
+  lastUpdatedDate: -1
+};
 const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESSLEVEL"
 const LIMIT = process.env.LIMIT || 10;
@@ -129,10 +132,12 @@ module.exports = (router) => {
       var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = pageSize * (pageNo - 1);
-      var filter = _.pick(req.query, filterAttributes);
+      var filterValues = _.pick(req.query, filterAttributes);
+      var filter = _.omitBy(filterValues, function(value, key) {
+        return value.startsWith("undefined");
+      });
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
-
       try {
         Promise.all([application.find(tenantId, filter, orderby, skipCount, +limit), application.counts(tenantId, entityId, accessLevel, filter)])
           .then((result) => {
@@ -172,7 +177,7 @@ module.exports = (router) => {
 function sortable(sort) {
   if (typeof sort === 'undefined' ||
     sort == null) {
-    return {};
+    return ORDER_BY;
   }
   if (typeof sort === 'string') {
     var result = sort.split(",")
@@ -189,6 +194,6 @@ function sortable(sort) {
       }, {});
     return result;
   } else {
-    return {};
+    return ORDER_BY;
   }
 }
