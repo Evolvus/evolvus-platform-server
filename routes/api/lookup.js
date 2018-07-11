@@ -68,8 +68,9 @@ module.exports = (router) => {
             response.description = `Unable to fetch all lookup`;
             response.data = e.toString();
             res.status(response.status).send(JSON.stringify(response, null, 2));
-          });
-      };
+          };
+      });
+    };
 
     function sortable(sort) {
       if (typeof sort === 'undefined' ||
