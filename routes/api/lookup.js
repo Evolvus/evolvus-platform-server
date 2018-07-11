@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:lookup");
 const _ = require("lodash");
-const lookup = require("./../../index");
+const lookup = require("evolvus-lookup");
 
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
