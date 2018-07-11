@@ -7,6 +7,7 @@ module.exports = (router) => {
   require("./user")(router);
   require("./masterCurrency")(router);
   require("./masterTimeZone")(router);
+  require("./lookup")(router);
   require("./supportedDateFormats")(router);
 
 };
