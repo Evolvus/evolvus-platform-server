@@ -14,15 +14,17 @@ const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
 
-const userAttributes = ["tenantId", "entityCode", "accessLevel", "applicationCode", "contact", "role", "userId", "designation", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token", "masterTimeZone", "masterCurrency"];
+const userAttributes = ["tenantId", "entityId", "accessLevel", "applicationCode", "contact", "role", "userId", "designation", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token",
+  "masterTimeZone", "masterCurrency", "dailyLimit", "individualTransactionLimit", "loginStatus"
+];
 const filterAttributes = user.filterAttributes;
 const sortAttributes = user.sortAttributes;
-
 
 module.exports = (router) => {
 
   router.route('/user/')
     .get((req, res, next) => {
+      console.log("QUERY", req.query);
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
@@ -36,35 +38,45 @@ module.exports = (router) => {
       debug("query: " + JSON.stringify(req.query));
       var limit = _.get(req.query, "limit", LIMIT);
       var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
-      var pageNo = _.get(req.query, "pageSize", 1);
+      var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = (pageNo - 1) * pageSize;
-      var filter = _.pick(req.query, filterAttributes);
+      var filterValues = _.pick(req.query, filterAttributes);
+      console.log("FILTERVALUES", filterValues);
+      var filter = _.omitBy(filterValues, function(value, key) {
+        return value.startsWith("undefined");
+      });
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        user.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limit)
-          .then((users) => {
-            if (users.length > 0) {
+        console.log("filter after removing undefined", filter);
+        Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, skipCount, +pageSize), user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, 0, 0)])
+          .then((result) => {
+            console.log("RESULT", result[0].length);
+            console.log("count", result[1].length);
+            if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
-              response.data = users;
+              response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
+              response.totalNoOfRecords = result[1].length;
+              response.data = result[0];
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
               response.status = "200";
-              response.description = "No users found";
-              response.data = {};
+              response.data = [];
+              response.totalNoOfRecords = result[1].length;
+              response.totalNoOfPages = 0;
+              response.description = "No Users added yet. Create a new User to start off";
               debug("response: " + JSON.stringify(response));
-              res.status(200)
+              res.status(response.status)
                 .send(JSON.stringify(response, null, 2));
             }
-          })
-          .catch((e) => {
-            debug(`failed to fetch all users ${e}`);
-            res.status(400)
-              .json({
-                error: e.toString()
-              });
+          }).catch((e) => {
+            debug(`failed to fetch all Users ${e}`);
+            response.status = "400";
+            response.description = `Unable to fetch all Users`;
+            response.data = e.toString();
+            res.status(400).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
         debug(`caught exception ${e}`);
@@ -88,13 +100,14 @@ module.exports = (router) => {
         "data": {}
       };
       try {
+        console.log(req.body);
         let object = _.pick(req.body, userAttributes);
         object.tenantId = tenantId;
         object.createdDate = new Date().toISOString();
         object.lastUpdatedDate = object.createdDate;
         object.createdBy = createdBy;
-        object.accessLevel = accessLevel;
-        object.entityId = entityId;
+        object.accessLevel = "1";
+        object.applicationCode = object.role.applicationCode;
         user.save(tenantId, ipAddress, createdBy, object).then((savedUser) => {
           response.status = "200";
           response.description = `New User '${req.body.userName}' has been added successfully and sent for the supervisor authorization.`;
@@ -102,6 +115,7 @@ module.exports = (router) => {
           res.status(200)
             .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
+          console.log(e);
           response.status = "400";
           response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
           response.data = {};
@@ -109,6 +123,7 @@ module.exports = (router) => {
             .send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
+        console.log(e);
         response.status = "400";
         response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
         response.data = {};
