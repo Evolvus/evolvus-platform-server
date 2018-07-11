@@ -1,7 +1,7 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:user");
 const _ = require("lodash");
 const user = require("evolvus-user");
-// const entity = require("evolvus-entity")
+const entity = require("evolvus-entity")
 
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
@@ -24,7 +24,6 @@ module.exports = (router) => {
 
   router.route('/user/')
     .get((req, res, next) => {
-      console.log("QUERY", req.query);
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
@@ -41,18 +40,14 @@ module.exports = (router) => {
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = (pageNo - 1) * pageSize;
       var filterValues = _.pick(req.query, filterAttributes);
-      console.log("FILTERVALUES", filterValues);
       var filter = _.omitBy(filterValues, function(value, key) {
         return value.startsWith("undefined");
       });
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        console.log("filter after removing undefined", filter);
         Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, skipCount, +pageSize), user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, 0, 0)])
           .then((result) => {
-            console.log("RESULT", result[0].length);
-            console.log("count", result[1].length);
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
@@ -68,22 +63,21 @@ module.exports = (router) => {
               response.totalNoOfPages = 0;
               response.description = "No Users added yet. Create a new User to start off";
               debug("response: " + JSON.stringify(response));
-              res.status(response.status)
+              res.status(200)
                 .send(JSON.stringify(response, null, 2));
             }
           }).catch((e) => {
             debug(`failed to fetch all Users ${e}`);
             response.status = "400";
-            response.description = `Unable to fetch all Users`;
+            response.description = `Unable to fetch all Users due to ${e}`;
             response.data = e.toString();
             res.status(400).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        debug(`caught exception ${e}`);
-        res.status(400)
-          .json({
-            error: e.toString()
-          });
+        response.status = "400";
+        response.description = `Unable to fetch all Users due to ${e}`;
+        response.data = e.toString();
+        res.status(400).send(JSON.stringify(response, null, 2));
       }
     });
 
@@ -100,22 +94,37 @@ module.exports = (router) => {
         "data": {}
       };
       try {
-        console.log(req.body);
+
         let object = _.pick(req.body, userAttributes);
         object.tenantId = tenantId;
         object.createdDate = new Date().toISOString();
         object.lastUpdatedDate = object.createdDate;
         object.createdBy = createdBy;
-        object.accessLevel = "1";
+        object.userPassword = "evolvus*123";
         object.applicationCode = object.role.applicationCode;
-        user.save(tenantId, ipAddress, createdBy, object).then((savedUser) => {
-          response.status = "200";
-          response.description = `New User '${req.body.userName}' has been added successfully and sent for the supervisor authorization.`;
-          response.data = savedUser;
-          res.status(200)
-            .send(JSON.stringify(response, null, 2));
+        var filter = {
+          entityId: object.entityId
+        };
+        entity.find(tenantId, object.entityId, accessLevel, filter, {}, 0, 1).then((entityObject) => {
+          if (!entityObject.length == 0) {
+            object.accessLevel = entityObject[0].accessLevel;
+            user.save(tenantId, ipAddress, createdBy, object).then((savedUser) => {
+              response.status = "200";
+              response.description = `New User '${req.body.userName}' has been added successfully and sent for the supervisor authorization.`;
+              response.data = savedUser;
+              res.status(200)
+                .send(JSON.stringify(response, null, 2));
+            }).catch((e) => {
+              response.status = "400";
+              response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
+              response.data = {};
+              res.status(400)
+                .send(JSON.stringify(response, null, 2));
+            });
+          } else {
+            throw new Error(`No Entity found with id ${req.body.entityId}`);
+          }
         }).catch((e) => {
-          console.log(e);
           response.status = "400";
           response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
           response.data = {};
@@ -123,7 +132,6 @@ module.exports = (router) => {
             .send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
-        console.log(e);
         response.status = "400";
         response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
         response.data = {};
@@ -146,26 +154,27 @@ module.exports = (router) => {
       debug("query: " + JSON.stringify(req.query));
       try {
         let body = _.pick(req.body, userAttributes);
-        body.updatedBy = req.header(userHeader);;
+
+        body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "PENDING_AUTHORIZATION";
         user.update(tenantId, req.params.userName, body).then((updatedUser) => {
           response.status = "200";
-          response.description = `'${req.params.userName}' User has been modified successfull and sent for the supervisor authorization.`;
-          response.data = `'${req.params.userName}' User has been modified successfull and sent for the supervisor authorization.`;
+          response.description = `'${req.params.userName}' User has been modified successfully and sent for the supervisor authorization.`;
+          response.data = `'${req.params.userName}' User has been modified successfully and sent for the supervisor authorization.`;
           res.status(200)
             .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
           response.status = "400";
           response.description = `Unable to modify User ${req.params.userName} . Due to  ${e.message}`;
-          response.data = e.toString();
-          res.status(response.status).send(JSON.stringify(response, null, 2));
+          response.data = `Unable to modify User ${req.params.userName} . Due to  ${e.message}`;
+          res.status(400).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to modify User ${req.params.userName} . Due to  ${e.message}`;
         response.data = e.toString();
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        res.status(400).send(JSON.stringify(response, null, 2));
       }
     });
 };
