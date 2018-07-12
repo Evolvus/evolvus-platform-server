@@ -26,7 +26,7 @@ mongoose.connect(dbUrl, (err, db) => {
 });
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
+ // res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Request-Headers", "*");
   res.header('Access-Control-Allow-Methods', 'GET, POST,PUT, DELETE, OPTIONS');
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With,X-HTTP-Method-Override, Content-Type, Accept, Authorization,entityId,tenantId,entityCode,accessLevel");
