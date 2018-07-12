@@ -62,7 +62,7 @@ module.exports = (router) => {
                     .send(JSON.stringify(response, null, 2));
                 }).catch((e) => {
                   response.status = "400",
-                    response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
+                    response.description = `Unable to add new Entity ${body.name}. Due to ${e}`,
                     response.data = e.toString()
                   res.status(400).send(JSON.stringify(response, null, 2));
                 });
@@ -112,20 +112,20 @@ module.exports = (router) => {
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, +pageSize), entity.counts(tenantId, entityId, accessLevel, filter)])
+        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, +pageSize), entity.find(tenantId, entityId, accessLevel, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
-              response.totalNoOfPages = Math.ceil(result[1] / pageSize);
-              response.totalNoOfRecords = result[1];
+              response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
+              response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
               response.status = "200";
               response.data = [];
-              response.totalNoOfRecords = result[1];
+              response.totalNoOfRecords = result[1].length;
               response.totalNoOfPages = 0;
               response.description = "No entity found";
               debug("response: " + JSON.stringify(response));

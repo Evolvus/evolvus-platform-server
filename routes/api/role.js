@@ -45,7 +45,7 @@ module.exports = (router) => {
 
         Promise.all([application.find(tenantId, {
           "applicationCode": body.applicationCode
-        }, {}, 0, 1), role.find(tenantId,entityId, accessLevel, {
+        }, {}, 0, 1), role.find(tenantId, {
           "roleName": body.roleName
         }, {}, 0, 1)]).then((result) => {
           if (_.isEmpty(result[0])) {
@@ -62,7 +62,7 @@ module.exports = (router) => {
               .send(JSON.stringify(response, null, 2));
           }).catch((e) => {
             response.status = "400",
-              response.description = `Unable to add new role ${body.roleName}. Due to ${e.message}`,
+              response.description = `Unable to add new role ${body.roleName}. Due to ${e}`,
               response.data = e.toString()
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
@@ -105,20 +105,20 @@ module.exports = (router) => {
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        Promise.all([role.find(tenantId,entityId, accessLevel, filter, orderby, skipCount, +pageSize), role.counts(tenantId, entityId, accessLevel, filter)])
+        Promise.all([role.find(tenantId, filter, orderby, skipCount, +pageSize), role.find(tenantId, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
-              response.totalNoOfPages = Math.ceil(result[1] / pageSize);
-              response.totalNoOfRecords = result[1];
+              response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
+              response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
               response.status = "200";
               response.data = [];
-              response.totalNoOfRecords = result[1];
+              response.totalNoOfRecords = result[1].length;
               response.totalNoOfPages = 0;
               response.description = "No role found";
               debug("response: " + JSON.stringify(response));
@@ -158,7 +158,7 @@ module.exports = (router) => {
         let body = _.pick(req.body, roleAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        role.find(tenantId,entityId, accessLevel, {
+        role.find(tenantId, {
             "roleName": body.roleName,
             "applicationCode": body.applicationCode
           }, {}, 0, 1)
