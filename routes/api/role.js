@@ -156,19 +156,21 @@ module.exports = (router) => {
       debug("query: " + JSON.stringify(req.query));
       try {
         let body = _.pick(req.body, roleAttributes);
-        body.updatedBy = req.header(userHeader);;
+        body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         role.find(tenantId, {
             "roleName": body.roleName,
             "applicationCode": body.applicationCode
           }, {}, 0, 1)
           .then((result) => {
-            if (!_.isEmpty(result[0])) {
+            if (_.isEmpty(result[0])) {
               throw new Error(`Role ${body.roleName},  already exists `);
             }
-            if ((!_.isEmpty(result[0])) && (result[0].applicationCode != req.params.applicationCode)) {
+            if ((!_.isEmpty(result[0])) && (result[0].roleName != req.params.roleName)) {
               throw new Error(`Role ${body.roleName} already exists`);
             }
+            console.log("tenant",tenantId,"body",body,"name",body.roleName);
+            
             role.update(tenantId, body.roleName, body).then((updatedRoles) => {
               response.status = "200";
               response.description = `${body.roleName} Role has been modified successful and sent for the supervisor authorization.`;
