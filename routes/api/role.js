@@ -35,6 +35,7 @@ module.exports = (router) => {
       };
       let body = _.pick(req.body, roleAttributes);
       try {
+        debug("request body:" + JSON.stringify(req.body));
         body.associatedUsers = 5;
         body.tenantId = tenantId;
         body.createdBy = createdBy;
@@ -58,24 +59,28 @@ module.exports = (router) => {
             response.status = "200";
             response.description = `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`;
             response.data = roles;
+            debug("response: " + JSON.stringify(response));
             res.status(200)
               .send(JSON.stringify(response, null, 2));
           }).catch((e) => {
-            response.status = "400",
-              response.description = `Unable to add new role ${body.roleName}. Due to ${e}`,
-              response.data = e.toString()
+            response.status = "400";
+            response.description = `Unable to add new role ${body.roleName}. Due to ${e}`;
+            response.data = {};
+            debug("failed to save an role" + JSON.stringify(response));
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
         }).catch((e) => {
-          response.status = "400",
-            response.description = `Unable to add new Role ${body.roleName}. Due to ${e.message}`,
-            response.data = e.toString()
+          response.status = "400";
+          response.description = `Unable to add new Role ${body.roleName}. Due to ${e.message}`;
+          response.data = {};
+          debug("failed to save an role" + JSON.stringify(response));
           res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
-        response.status = "400",
-          response.description = `Unable to add new Role ${body.roleName}. Due to ${e.message}`,
-          response.data = e.toString()
+        response.status = "400";
+        response.description = `Unable to add new Role ${body.roleName}. Due to ${e.message}`;
+        response.data = {};
+        debug("caught exception" + JSON.stringify(response));
         res.status(response.status).send(JSON.stringify(response, null, 2));
 
       }
@@ -169,30 +174,34 @@ module.exports = (router) => {
             if ((!_.isEmpty(result[0])) && (result[0].roleName != req.params.roleName)) {
               throw new Error(`Role ${body.roleName} already exists`);
             }
-            console.log("tenant",tenantId,"body",body,"name",body.roleName);
-            
+            console.log("tenant", tenantId, "body", body, "name", body.roleName);
+
             role.update(tenantId, body.roleName, body).then((updatedRoles) => {
               response.status = "200";
               response.description = `${body.roleName} Role has been modified successful and sent for the supervisor authorization.`;
               response.data = body;
+              debug("response: " + JSON.stringify(response));
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             }).catch((e) => {
               response.status = "400";
               response.description = `Unable to modify role ${body.roleName}. Due to ${e.message}`;
               response.data = e.toString();
+              debug("failed to modify a role" + JSON.stringify(response));
               res.status(response.status).send(JSON.stringify(response, null, 2));
             });
           }).catch((e) => {
             response.status = "400";
             response.description = `Unable to modify role ${body.roleName}. Due to ${e.message}`;
             response.data = e.toString();
+            debug("failed to modify a role" + JSON.stringify(response));
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to modify role ${body.roleName}. Due to ${e.message}`;
         response.data = e.toString();
+        debug(`caught exception ${e}`);
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
