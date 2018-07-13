@@ -43,6 +43,7 @@ module.exports = (router) => {
         return value.startsWith("undefined");
       });
       var orderby = sortable(sort);
+      var sort = _.get(req.query, "sort", {});
 
       try {
         Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, skipCount, +pageSize), user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, 0, 0)])
