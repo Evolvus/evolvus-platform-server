@@ -54,6 +54,7 @@ module.exports = (router) => {
               response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
+              debug("response: " + JSON.stringify(response));
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
@@ -67,16 +68,17 @@ module.exports = (router) => {
                 .send(JSON.stringify(response, null, 2));
             }
           }).catch((e) => {
-            debug(`failed to fetch all Users ${e}`);
             response.status = "400";
             response.description = `Unable to fetch all Users due to ${e}`;
             response.data = e.toString();
+            debug("failed to fetch all Users" + JSON.stringify(response));
             res.status(400).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to fetch all Users due to ${e}`;
         response.data = e.toString();
+        debug("caught exception" + JSON.stringify(response));
         res.status(400).send(JSON.stringify(response, null, 2));
       }
     });
@@ -94,7 +96,7 @@ module.exports = (router) => {
         "data": {}
       };
       try {
-
+        debug("request body:" + JSON.stringify(req.body));
         let object = _.pick(req.body, userAttributes);
         object.tenantId = tenantId;
         object.createdDate = new Date().toISOString();
@@ -112,12 +114,14 @@ module.exports = (router) => {
               response.status = "200";
               response.description = `New User '${req.body.userName}' has been added successfully and sent for the supervisor authorization.`;
               response.data = savedUser;
+              debug("response: " + JSON.stringify(response));
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             }).catch((e) => {
               response.status = "400";
               response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
               response.data = {};
+              debug("failed to save an user" + JSON.stringify(response));
               res.status(400)
                 .send(JSON.stringify(response, null, 2));
             });
@@ -128,6 +132,7 @@ module.exports = (router) => {
           response.status = "400";
           response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
           response.data = {};
+          debug("failed to save an user" + JSON.stringify(response));
           res.status(400)
             .send(JSON.stringify(response, null, 2));
         });
@@ -135,6 +140,7 @@ module.exports = (router) => {
         response.status = "400";
         response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
         response.data = {};
+        debug("caught exception" + JSON.stringify(response));
         res.status(400)
           .send(JSON.stringify(response, null, 2));
       }
@@ -154,26 +160,43 @@ module.exports = (router) => {
       debug("query: " + JSON.stringify(req.query));
       try {
         let body = _.pick(req.body, userAttributes);
-
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "PENDING_AUTHORIZATION";
-        user.update(tenantId, req.params.userName, body).then((updatedUser) => {
-          response.status = "200";
-          response.description = `'${req.params.userName}' User has been modified successfully and sent for the supervisor authorization.`;
-          response.data = `'${req.params.userName}' User has been modified successfully and sent for the supervisor authorization.`;
-          res.status(200)
-            .send(JSON.stringify(response, null, 2));
+        object.applicationCode = object.role.applicationCode;
+        entity.find(tenantId, object.entityId, accessLevel, filter, {}, 0, 1).then((entityObject) => {
+          if (!entityObject.length == 0) {
+            object.accessLevel = entityObject[0].accessLevel;
+            user.update(tenantId, req.params.userName, body).then((updatedUser) => {
+              response.status = "200";
+              response.description = `'${req.params.userName}' User has been modified successfully and sent for the supervisor authorization.`;
+              response.data = `'${req.params.userName}' User has been modified successfully and sent for the supervisor authorization.`;
+              debug("response: " + JSON.stringify(response));
+              res.status(200)
+                .send(JSON.stringify(response, null, 2));
+            }).catch((e) => {
+              response.status = "400";
+              response.description = `Unable to modify User ${req.params.userName} . Due to  ${e.message}`;
+              response.data = `Unable to modify User ${req.params.userName} . Due to  ${e.message}`;
+              debug("failed to modify an user" + JSON.stringify(response));
+              res.status(400).send(JSON.stringify(response, null, 2));
+            });
+          } else {
+            throw new Error(`No Entity found with id ${req.body.entityId}`);
+          }
         }).catch((e) => {
           response.status = "400";
-          response.description = `Unable to modify User ${req.params.userName} . Due to  ${e.message}`;
-          response.data = `Unable to modify User ${req.params.userName} . Due to  ${e.message}`;
-          res.status(400).send(JSON.stringify(response, null, 2));
+          response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
+          response.data = {};
+          debug("failed to modify an user" + JSON.stringify(response));
+          res.status(400)
+            .send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to modify User ${req.params.userName} . Due to  ${e.message}`;
         response.data = e.toString();
+        debug("caught exception" + JSON.stringify(response));
         res.status(400).send(JSON.stringify(response, null, 2));
       }
     });
