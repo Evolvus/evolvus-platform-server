@@ -32,66 +32,27 @@ module.exports = (router) => {
       };
       let body = _.pick(req.body, entityAttributes);
       try {
-        debug("request body:" + JSON.stringify(req.body));
         body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-        entity.find(tenantId, entityId, accessLevel, {
-          "name": body.parent
-        }, {}, 0, 1).then((result) => {
-          if (_.isEmpty(result)) {
-            throw new Error(`No ParentEntity found with ${body.parent}`);
-          }
-          var randomId = randomString.generate(5);
-          if (result[0].enableFlag == `1`) {
-            var aces = parseInt(result[0].accessLevel) + 1;
-            body.accessLevel = JSON.stringify(aces);
-            body.entityId = result[0].entityId + randomId;
-            entity.find(tenantId, entityId, accessLevel, {
-                "name": body.name,
-                "entityCode": body.entityCode
-              }, {}, 0, 1)
-              .then((result) => {
-                if (!_.isEmpty(result[0])) {
-                  throw new Error(`Entity ${body.name},${body.entityCode} already exists`);
-                }
-                entity.save(tenantId, body).then((ent) => {
-                  response.status = "200";
-                  response.description = `New Entity ''${body.name}' has been added successfully and sent for the supervisor authorization`;
-                  response.data = ent;
-                  debug("response: " + JSON.stringify(response));
-                  res.status(200)
-                    .send(JSON.stringify(response, null, 2));
-                }).catch((e) => {
-                  response.status = "400";
-                  response.description = `Unable to add new Entity ${body.name}. Due to ${e}`;
-                  response.data = {};
-                  debug("failed to save an entity" + JSON.stringify(response));
-                  res.status(400).send(JSON.stringify(response, null, 2));
-                });
-              }).catch((e) => {
-                response.status = "400";
-                response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`;
-                response.data = {};
-                debug("failed to save an entity" + JSON.stringify(response));
-                res.status(400).send(JSON.stringify(response, null, 2));
-              });
-          } else {
-            throw new Error(`ParentEntity is disabled`);
-          }
+        body.name=body.name.toUpperCase();
+        entity.save(tenantId, entityId, accessLevel, body).then((ent) => {
+          response.status = "200";
+          response.description = "SUCCESS";
+          response.data = ent;
+          res.status(200)
+            .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
-          response.status = "400";
-          response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`;
-          response.data = {};
-          debug("failed to save an entity" + JSON.stringify(response));
-          res.status(400).send(JSON.stringify(response, null, 2));
+          response.status = "400",
+            response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
+            response.data = e.toString()
+          res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
-        response.status = "400";
-        response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`;
-        response.data = {};
-        debug("caught exception" + JSON.stringify(response));
-        res.status(400).send(JSON.stringify(response, null, 2));
+        response.status = "400",
+          response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
+          response.data = e.toString()
+        res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
   router.route('/entity/')
