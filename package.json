@@ -21,7 +21,7 @@
     "evolvus-menu": "^2.0.2",
     "evolvus-role": "^2.0.3",
     "evolvus-supported-date-formats": "^0.1.5",
-    "evolvus-user": "^2.0.1",
+    "evolvus-user": "^2.0.2",
     "express": "^4.16.3",
     "mongoose": "^5.1.5"
   },
