@@ -12,7 +12,7 @@ const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const PAGE_SIZE = 10;
 
-const applicationAttributes = ["applicationName", "applicationId", "description", "enabled", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel"];
+const applicationAttributes = ["applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel","lastUpdatedDate"];
 
 var filterAttributes = application.filterAttributes;
 var sortAttributes = application.sortAttributes;
@@ -28,7 +28,7 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data": {}
+        "data": []
       };
       let body = _.pick(req.body, applicationAttributes);
       try {
@@ -39,19 +39,19 @@ module.exports = (router) => {
         body.accessLevel = accessLevel;
         application.save(tenantId, body).then((ent) => {
           response.status = "200";
-          response.description = "SUCCESS";
+          response.description = `New Application ''${body.applicationName}' has been added successfully and sent for the supervisor authorization`;
           response.data = ent;
           res.status(200)
             .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
           response.status = "400",
-            response.description = `Unable to add new application ${body.name}. Due to ${e}`,
+            response.description = `Unable to add new application ${body.applicationName}. Due to ${e.message}`,
             response.data = e.toString()
           res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
         response.status = "400",
-          response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
+          response.description = `Unable to add new Application ${body.applicationName}. Due to ${e.message}`,
           response.data = e.toString()
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
@@ -67,7 +67,7 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data": {}
+        "data": []
       };
       debug("query: " + JSON.stringify(req.query));
       let body = _.pick(req.body, applicationAttributes);
@@ -125,7 +125,7 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data": {}
+        "data":[]
       };
       debug("query: " + JSON.stringify(req.query));
       var limit = _.get(req.query, "limit", LIMIT);
@@ -150,7 +150,7 @@ module.exports = (router) => {
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
-              response.status = "404";
+              response.status = "200";
               response.description = "No applications found";
               response.totalNoOfRecords = result[1].length;
               response.totalNoOfPages = 0;
