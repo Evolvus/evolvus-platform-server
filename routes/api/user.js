@@ -159,15 +159,18 @@ module.exports = (router) => {
       };
       debug("query: " + JSON.stringify(req.query));
       try {
-        let body = _.pick(req.body, userAttributes);
-        body.updatedBy = req.header(userHeader);
-        body.lastUpdatedDate = new Date().toISOString();
-        body.processingStatus = "PENDING_AUTHORIZATION";
+        let object = _.pick(req.body, userAttributes);
+        object.updatedBy = req.header(userHeader);
+        object.lastUpdatedDate = new Date().toISOString();
+        object.processingStatus = "PENDING_AUTHORIZATION";
         object.applicationCode = object.role.applicationCode;
+        var filter = {
+          entityId: object.entityId
+        };
         entity.find(tenantId, object.entityId, accessLevel, filter, {}, 0, 1).then((entityObject) => {
           if (!entityObject.length == 0) {
             object.accessLevel = entityObject[0].accessLevel;
-            user.update(tenantId, req.params.userName, body).then((updatedUser) => {
+            user.update(tenantId, req.params.userName, object).then((updatedUser) => {
               response.status = "200";
               response.description = `'${req.params.userName}' User has been modified successfully and sent for the supervisor authorization.`;
               response.data = `'${req.params.userName}' User has been modified successfully and sent for the supervisor authorization.`;
