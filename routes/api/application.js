@@ -28,7 +28,7 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data": []
+        "data": {}
       };
       let body = _.pick(req.body, applicationAttributes);
       try {
@@ -41,18 +41,21 @@ module.exports = (router) => {
           response.status = "200";
           response.description = `New Application ''${body.applicationName}' has been added successfully and sent for the supervisor authorization`;
           response.data = ent;
+          debug("response: " + JSON.stringify(response));
           res.status(200)
             .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
-          response.status = "400",
-            response.description = `Unable to add new application ${body.applicationName}. Due to ${e.message}`,
-            response.data = e.toString()
+          response.status = "400";
+            response.description = `Unable to add new application ${body.applicationName}. Due to ${e.message}`;
+            response.data = e.toString();
+            debug("failed to save an application" + JSON.stringify(response));
           res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
-        response.status = "400",
-          response.description = `Unable to add new Application ${body.applicationName}. Due to ${e.message}`,
-          response.data = e.toString()
+        response.status = "400";
+          response.description = `Unable to add new Application ${body.applicationName}. Due to ${e.message}`;
+          response.data = e.toString();
+          debug("caught exception" + JSON.stringify(response));
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
@@ -67,7 +70,7 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data": []
+        "data": {}
       };
       debug("query: " + JSON.stringify(req.query));
       let body = _.pick(req.body, applicationAttributes);
@@ -85,29 +88,34 @@ module.exports = (router) => {
             if ((!_.isEmpty(result[0])) && (result[0].applicationCode != req.params.applicationCode)) {
               throw new Error(`application ${body.applicationName} already exists`);
             }
+            
             application.update(tenantId, body.applicationCode, body).then((updatedapplication) => {
               response.status = "200";
-              response.description = `${body.applicationName} application has been modified successful and sent for the supervisor authorization.`;
+              response.description = `${body.applicationName} application has been modified successfully and sent for the supervisor authorization.`;
               response.data = body;
+              debug("response: " + JSON.stringify(response));
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
 
             }).catch((e) => {
-              response.status = "400",
-                response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`
-              response.data = e.toString()
+              response.status = "400";
+                response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
+              response.data = e.toString();
+              debug("failed to modify an application" + JSON.stringify(response));
               res.status(response.status).send(JSON.stringify(response, null, 2));
             });
           }).catch((e) => {
-            response.status = "400",
-              response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`
-            response.data = e.toString()
+            response.status = "400";
+              response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
+              debug("failed to modify an application" + JSON.stringify(response));
+            response.data = e.toString();
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        response.status = "400",
-          response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`
-        response.data = e.toString()
+        response.status = "400";
+          response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
+        response.data = e.toString();
+        debug("caught exception" + JSON.stringify(response));
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
@@ -125,7 +133,7 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data":[]
+        "data":{}
       };
       debug("query: " + JSON.stringify(req.query));
       var limit = _.get(req.query, "limit", LIMIT);
@@ -147,6 +155,7 @@ module.exports = (router) => {
               response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
+              debug("response: " + JSON.stringify(response));
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
@@ -160,17 +169,19 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
-            debug(`failed to fetch all applications ${e}`);
+           
             res.status(400)
-            response.description = `Unable to fetch all applications`
-            response.data = e.toString()
+            response.description = `Unable to fetch all applications`;
+            response.data = e.toString();
+            debug(`failed to fetch all applications ${e}`);
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
+        
+        res.status(400);
+        response.description = `Unable to fetch all applications`;
+        response.data = e.toString();
         debug(`caught exception ${e}`);
-        res.status(400)
-        response.description = `Unable to fetch all applications`
-        response.data = e.toString()
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
