@@ -98,13 +98,13 @@ module.exports = (router) => {
         }).catch((e) => {
 
           response.status = "400",
-            response.description = `Unable to add new lookup ${body.name}. Due to ${e.message}`,
+            response.description = `Unable to add new lookup ${body.lookupCode}. Due to ${e.message}`,
             response.data = e.toString()
           res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
         response.status = "400",
-          response.description = `Unable to add new lookup ${body.name}. Due to ${e.message}`,
+          response.description = `Unable to add new lookup ${body.lookupCode}. Due to ${e.message}`,
           response.data = e.toString()
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
