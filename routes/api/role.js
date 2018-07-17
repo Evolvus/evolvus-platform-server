@@ -80,18 +80,15 @@ module.exports = (router) => {
       var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = pageSize * (pageNo - 1);
-      console.log("SKIPCOUNT", skipCount);
       var filterValues = _.pick(req.query, filterAttributes);
       var filter = _.omitBy(filterValues, function(value, key) {
         return value.startsWith("undefined");
       });
-      console.log("filter", filter);
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        Promise.all([role.find(tenantId, filter, orderby, skipCount, +limit), role.counts(tenantId, entityId, accessLevel, filter)])
+        Promise.all([role.find(tenantId, filter, orderby, skipCount, +limit), role.find(tenantId, filter, orderby, 0, 0)])
           .then((result) => {
-            console.log("result", result[1]);
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
