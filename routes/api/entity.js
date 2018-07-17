@@ -35,7 +35,8 @@ module.exports = (router) => {
         body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-        body.name=body.name.toUpperCase();
+        body.name = body.name.toUpperCase();
+        body.entityCode = entityCode.toUpperCase();
         entity.save(tenantId, entityId, accessLevel, body).then((ent) => {
           response.status = "200";
           response.description = "SUCCESS";
@@ -134,39 +135,23 @@ module.exports = (router) => {
         let body = _.pick(req.body, entityAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        entity.find(tenantId, entityId, accessLevel, {
-            "name": body.name,
-            "entityCode": body.entityCode
-          }, {}, 0, 1)
-          .then((result) => {
-            if (_.isEmpty(result[0])) {
-              throw new Error(`Entity ${body.name},  already exists `);
-            }
-            if ((!_.isEmpty(result[0])) && (result[0].entityCode != req.params.entityCode)) {
-              throw new Error(`Entity ${body.name} already exists`);
-            }
-            entity.update(tenantId, body.entityCode, body).then((updatedEntity) => {
-              response.status = "200";
-              response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
-              response.data = body;
-              debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .send(JSON.stringify(response, null, 2));
+        body.name = body.name.toUpperCase();
+        body.entityCode = entityCode.toUpperCase();
+        entity.update(tenantId, body.entityCode, body).then((updatedEntity) => {
+          response.status = "200";
+          response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
+          response.data = body;
+          debug("response: " + JSON.stringify(response));
+          res.status(200)
+            .send(JSON.stringify(response, null, 2));
 
-            }).catch((e) => {
-              response.status = "400";
-              response.description = `Unable to modify entity ${body.name}. Due to ${e.message}`;
-              response.data = e.toString();
-              debug("failed to modify an entity" + JSON.stringify(response));
-              res.status(response.status).send(JSON.stringify(response, null, 2));
-            });
-          }).catch((e) => {
-            response.status = "400";
-            response.description = `Unable to modify entity ${body.name}. Due to ${e.message}`;
-            response.data = e.toString();
-            debug("failed to modify an entity" + JSON.stringify(response));
-            res.status(response.status).send(JSON.stringify(response, null, 2));
-          });
+        }).catch((e) => {
+          response.status = "400";
+          response.description = `Unable to modify entity ${body.name}. Due to ${e.message}`;
+          response.data = e.toString();
+          debug("failed to modify an entity" + JSON.stringify(response));
+          res.status(response.status).send(JSON.stringify(response, null, 2));
+        });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to modify entity ${body.name}. Due to ${e.message}`;
