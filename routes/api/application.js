@@ -12,7 +12,7 @@ const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const PAGE_SIZE = 10;
 
-const applicationAttributes = ["applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel","lastUpdatedDate"];
+const applicationAttributes = ["applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel", "lastUpdatedDate"];
 
 var filterAttributes = application.filterAttributes;
 var sortAttributes = application.sortAttributes;
@@ -32,12 +32,14 @@ module.exports = (router) => {
       };
       let body = _.pick(req.body, applicationAttributes);
       try {
+        body.tenantId = tenantId;
         body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
         body.entityId = entityId;
         body.accessLevel = accessLevel;
-        application.save(tenantId, body).then((ent) => {
+
+        application.save(tenantId, ipAddress, createdBy, body).then((ent) => {
           response.status = "200";
           response.description = `New Application ''${body.applicationName}' has been added successfully and sent for the supervisor authorization`;
           response.data = ent;
@@ -46,16 +48,16 @@ module.exports = (router) => {
             .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
           response.status = "400";
-            response.description = `Unable to add new application ${body.applicationName}. Due to ${e.message}`;
-            response.data = e.toString();
-            debug("failed to save an application" + JSON.stringify(response));
+          response.description = `Unable to add new application ${body.applicationName}. Due to ${e.message}`;
+          response.data = e.toString();
+          debug("failed to save an application" + JSON.stringify(response));
           res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
         response.status = "400";
-          response.description = `Unable to add new Application ${body.applicationName}. Due to ${e.message}`;
-          response.data = e.toString();
-          debug("caught exception" + JSON.stringify(response));
+        response.description = `Unable to add new Application ${body.applicationName}. Due to ${e.message}`;
+        response.data = e.toString();
+        debug("caught exception" + JSON.stringify(response));
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
@@ -66,7 +68,8 @@ module.exports = (router) => {
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
       const accessLevel = req.header(accessLevelHeader);
-      const entityId = req.header(entityIdHeader)
+      const entityId = req.header(entityIdHeader);
+      var updateapplicationCode = req.params.applicationCode;
       const response = {
         "status": "200",
         "description": "",
@@ -77,47 +80,31 @@ module.exports = (router) => {
       try {
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        application.find(tenantId, {
-            "applicationName": body.applicationName,
-            "applicationCode": body.applicationCode
-          }, {}, 0, 1)
-          .then((result) => {
-            if (_.isEmpty(result[0])) {
-              throw new Error(`application ${body.applicationName},  already exists `);
-            }
-            if ((!_.isEmpty(result[0])) && (result[0].applicationCode != req.params.applicationCode)) {
-              throw new Error(`application ${body.applicationName} already exists`);
-            }
-            
-            application.update(tenantId, body.applicationCode, body).then((updatedapplication) => {
-              response.status = "200";
-              response.description = `${body.applicationName} application has been modified successfully and sent for the supervisor authorization.`;
-              response.data = body;
-              debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .send(JSON.stringify(response, null, 2));
 
-            }).catch((e) => {
-              response.status = "400";
-                response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
-              response.data = e.toString();
-              debug("failed to modify an application" + JSON.stringify(response));
-              res.status(response.status).send(JSON.stringify(response, null, 2));
-            });
-          }).catch((e) => {
-            response.status = "400";
-              response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
-              debug("failed to modify an application" + JSON.stringify(response));
-            response.data = e.toString();
-            res.status(response.status).send(JSON.stringify(response, null, 2));
-          });
+        application.update(tenantId, body.applicationCode, body, updateapplicationCode).then((updatedapplication) => {
+          response.status = "200";
+          response.description = `${body.applicationName} application has been modified successfully and sent for the supervisor authorization.`;
+          response.data = body;
+          debug("response: " + JSON.stringify(response));
+          res.status(200)
+            .send(JSON.stringify(response, null, 2));
+
+        }).catch((e) => {
+          response.status = "400";
+          response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
+          response.data = e.toString();
+          debug("failed to modify an application" + JSON.stringify(response));
+          res.status(response.status).send(JSON.stringify(response, null, 2));
+        });
+
       } catch (e) {
         response.status = "400";
-          response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
+        response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
         response.data = e.toString();
         debug("caught exception" + JSON.stringify(response));
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
+
     });
 
 
@@ -133,7 +120,7 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data":{}
+        "data": {}
       };
       debug("query: " + JSON.stringify(req.query));
       var limit = _.get(req.query, "limit", LIMIT);
@@ -169,7 +156,6 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
-           
             res.status(400)
             response.description = `Unable to fetch all applications`;
             response.data = e.toString();
@@ -177,7 +163,6 @@ module.exports = (router) => {
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        
         res.status(400);
         response.description = `Unable to fetch all applications`;
         response.data = e.toString();
