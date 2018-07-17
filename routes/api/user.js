@@ -54,6 +54,7 @@ module.exports = (router) => {
               response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
+              debug("response: " + JSON.stringify(response));
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
@@ -77,6 +78,7 @@ module.exports = (router) => {
         response.status = "400";
         response.description = `Unable to fetch all Users due to ${e}`;
         response.data = e.toString();
+        debug("response: " + JSON.stringify(response));
         res.status(400).send(JSON.stringify(response, null, 2));
       }
     });
@@ -100,17 +102,18 @@ module.exports = (router) => {
         object.lastUpdatedDate = object.createdDate;
         object.createdBy = createdBy;
         object.userPassword = "evolvus*123";
-        object.applicationCode = object.role.applicationCode;
         user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
           response.status = "200";
           response.description = `New User '${req.body.userName}' has been added successfully and sent for the supervisor authorization.`;
           response.data = savedUser;
+          debug("response: " + JSON.stringify(response));
           res.status(200)
             .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
           response.status = "400";
           response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
           response.data = {};
+          debug("response: " + JSON.stringify(response));
           res.status(400)
             .send(JSON.stringify(response, null, 2));
         });
@@ -118,6 +121,7 @@ module.exports = (router) => {
         response.status = "400";
         response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
         response.data = {};
+        debug("response: " + JSON.stringify(response));
         res.status(400)
           .send(JSON.stringify(response, null, 2));
       }
@@ -141,23 +145,26 @@ module.exports = (router) => {
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "PENDING_AUTHORIZATION";
-        body.applicationCode = body.role.applicationCode;
+
         user.update(tenantId, req.params.userId, body, accessLevel).then((updatedUser) => {
           response.status = "200";
           response.description = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
           response.data = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
+          debug("response: " + JSON.stringify(response));
           res.status(200)
             .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
           response.status = "400";
           response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
           response.data = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
+          debug("response: " + JSON.stringify(response));
           res.status(400).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
         response.data = e.toString();
+        debug("response: " + JSON.stringify(response));
         res.status(400).send(JSON.stringify(response, null, 2));
       }
     });
