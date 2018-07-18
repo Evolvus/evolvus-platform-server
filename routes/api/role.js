@@ -83,6 +83,7 @@ module.exports = (router) => {
       debug("query: " + JSON.stringify(req.query));
       var limit = _.get(req.query, "limit", LIMIT);
       var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
+      console.log(typeof pageSize);
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = pageSize * (pageNo - 1);
       var filterValues = _.pick(req.query, filterAttributes);
@@ -92,8 +93,9 @@ module.exports = (router) => {
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        Promise.all([role.find(tenantId, filter, orderby, skipCount, +limit), role.find(tenantId, filter, orderby, 0, 0)])
+        Promise.all([role.find(tenantId, filter, orderby, skipCount, +pageSize), role.find(tenantId, filter, orderby, 0, 0)])
           .then((result) => {
+            console.log(result[0].length, "length");
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
