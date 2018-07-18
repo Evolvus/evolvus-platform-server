@@ -2,7 +2,9 @@ const debug = require("debug")("evolvus-platform-server:routes:api:role");
 const _ = require("lodash");
 const role = require("evolvus-role");
 const application = require("evolvus-application");
-
+const ORDER_BY = process.env.ORDER_BY || {
+  lastUpdatedDate: -1
+};
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
@@ -11,7 +13,7 @@ const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESS-LEVEL";
 const PAGE_SIZE = 10;
 
-const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup", "lastUpdatedDate", "entityId", "accessLevel"];
+const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup", "lastUpdatedDate", "entityId", "accessLevel", "roleType", "txnType"];
 const filterAttributes = role.filterAttributes;
 const sortableAttributes = role.sortAttributes;
 
@@ -39,6 +41,7 @@ module.exports = (router) => {
         body.entityId = entityId;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
+
         role.save(tenantId, body).then((roles) => {
           response.status = "200";
           response.description = `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`;
@@ -47,6 +50,7 @@ module.exports = (router) => {
           res.status(200)
             .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
+
           response.status = "400";
           response.description = `Unable to add new role ${body.roleName}. Due to ${e}`;
           response.data = {};
@@ -54,6 +58,7 @@ module.exports = (router) => {
           res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
+
         response.status = "400";
         response.description = `Unable to add new Role ${body.roleName}. Due to ${e.message}`;
         response.data = {};
@@ -141,6 +146,7 @@ module.exports = (router) => {
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
         let updateRoleName = req.params.roleName;
+
         role.update(tenantId, body.roleName, updateRoleName, body).then((updatedRoles) => {
           response.status = "200";
           response.description = `${body.roleName} Role has been modified successful and sent for the supervisor authorization.`;
