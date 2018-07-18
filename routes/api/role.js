@@ -42,7 +42,7 @@ module.exports = (router) => {
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
 
-        role.save(tenantId, body).then((roles) => {
+        role.save(tenantId, createdBy, accessLevel, entityId, body).then((roles) => {
           response.status = "200";
           response.description = `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`;
           response.data = roles;
@@ -175,7 +175,7 @@ module.exports = (router) => {
 function sortable(sort) {
   if (typeof sort === 'undefined' ||
     sort == null) {
-    return {};
+    return ORDER_BY;
   }
   if (typeof sort === 'string') {
     var result = sort.split(",")
@@ -192,6 +192,6 @@ function sortable(sort) {
       }, {});
     return result;
   } else {
-    return {};
+    return ORDER_BY;
   }
 }
