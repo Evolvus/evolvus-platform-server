@@ -35,8 +35,6 @@ module.exports = (router) => {
         body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-        body.name = body.name.toUpperCase();
-        body.entityCode = entityCode.toUpperCase();
         entity.save(tenantId, entityId, accessLevel, body).then((ent) => {
           response.status = "200";
           response.description = "SUCCESS";
