@@ -42,18 +42,18 @@ module.exports = (router) => {
           response.description = "SUCCESS";
           response.data = ent;
           res.status(200)
-            .send(JSON.stringify(response, null, 2));
+            .json(response);
         }).catch((e) => {
           response.status = "400",
             response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
             response.data = e.toString()
-          res.status(response.status).send(JSON.stringify(response, null, 2));
+          res.status(response.status).json(response);
         });
       } catch (e) {
         response.status = "400",
           response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
           response.data = e.toString()
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        res.status(response.status).json(response);
       }
     });
   router.route('/entity/')
@@ -79,8 +79,9 @@ module.exports = (router) => {
       });
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
+        limit = (+pageSize < +limit) ? pageSize: limit;
       try {
-        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, +pageSize), entity.find(tenantId, entityId, accessLevel, filter, orderby, 0, 0)])
+        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, +limit), entity.find(tenantId, entityId, accessLevel, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -90,7 +91,7 @@ module.exports = (router) => {
               response.data = result[0];
               debug("response: " + JSON.stringify(response));
               res.status(200)
-                .send(JSON.stringify(response, null, 2));
+              .json(response);
             } else {
               response.status = "200";
               response.data = [];
@@ -99,7 +100,7 @@ module.exports = (router) => {
               response.description = "No entity found";
               debug("response: " + JSON.stringify(response));
               res.status(response.status)
-                .send(JSON.stringify(response, null, 2));
+                .json(response);
             }
           })
           .catch((e) => {
@@ -107,14 +108,14 @@ module.exports = (router) => {
             response.status = "400";
             response.description = `Unable to fetch all entities`;
             response.data = e.toString();
-            res.status(response.status).send(JSON.stringify(response, null, 2));
+            res.status(response.status).json(response);
           });
       } catch (e) {
         debug(`caught exception ${e}`);
         response.status = "400";
         response.description = `Unable to fetch all entities`;
         response.data = e.toString();
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        res.status(response.status).json(response);
       }
     });
 
@@ -136,28 +137,28 @@ module.exports = (router) => {
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
         body.name = body.name.toUpperCase();
-        body.entityCode = entityCode.toUpperCase();
+        body.entityCode =body.entityCode.toUpperCase();
         entity.update(tenantId, body.entityCode, body).then((updatedEntity) => {
           response.status = "200";
           response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
           debug("response: " + JSON.stringify(response));
           res.status(200)
-            .send(JSON.stringify(response, null, 2));
+          .json(response);
 
         }).catch((e) => {
           response.status = "400";
-          response.description = `Unable to modify entity ${body.name}. Due to ${e.message}`;
+          response.description = `Unable to modify entity ${body.name}. Due to ${e}`;
           response.data = e.toString();
           debug("failed to modify an entity" + JSON.stringify(response));
-          res.status(response.status).send(JSON.stringify(response, null, 2));
+          res.status(response.status).json(response);
         });
       } catch (e) {
         response.status = "400";
-        response.description = `Unable to modify entity ${body.name}. Due to ${e.message}`;
+        response.description = `Unable to modify entity ${req.body.name}. Due to ${e}`;
         response.data = e.toString();
         debug("caught exception" + JSON.stringify(response));
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        res.status(response.status).json(response);
       }
     });
 
