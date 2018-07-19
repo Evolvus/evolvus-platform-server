@@ -45,8 +45,10 @@ module.exports = (router) => {
       var orderby = sortable(sort);
       var sort = _.get(req.query, "sort", {});
 
+      limit = +pageSize > +limit ? +limit : +pageSize;
+
       try {
-        Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, skipCount, +pageSize), user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, 0, 0)])
+        Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, skipCount, limit), user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -55,8 +57,7 @@ module.exports = (router) => {
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .send(JSON.stringify(response, null, 2));
+              res.status(200).json(response);
             } else {
               response.status = "200";
               response.data = [];
@@ -64,22 +65,21 @@ module.exports = (router) => {
               response.totalNoOfPages = 0;
               response.description = "No Users added yet. Create a new User to start off";
               debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .send(JSON.stringify(response, null, 2));
+              res.status(200).json(response);
             }
           }).catch((e) => {
             debug(`failed to fetch all Users ${e}`);
             response.status = "400";
             response.description = `Unable to fetch all Users due to ${e}`;
             response.data = e.toString();
-            res.status(400).send(JSON.stringify(response, null, 2));
+            res.status(400).json(response);
           });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to fetch all Users due to ${e}`;
         response.data = e.toString();
         debug("response: " + JSON.stringify(response));
-        res.status(400).send(JSON.stringify(response, null, 2));
+        res.status(400).json(response);
       }
     });
 
@@ -107,23 +107,20 @@ module.exports = (router) => {
           response.description = `New User '${req.body.userName}' has been added successfully and sent for the supervisor authorization.`;
           response.data = savedUser;
           debug("response: " + JSON.stringify(response));
-          res.status(200)
-            .send(JSON.stringify(response, null, 2));
+          res.status(200).json(response);
         }).catch((e) => {
           response.status = "400";
           response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
           response.data = {};
           debug("response: " + JSON.stringify(response));
-          res.status(400)
-            .send(JSON.stringify(response, null, 2));
+          res.status(400).json(response);
         });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
         response.data = {};
         debug("response: " + JSON.stringify(response));
-        res.status(400)
-          .send(JSON.stringify(response, null, 2));
+        res.status(400).json(response);
       }
     });
 
@@ -151,21 +148,20 @@ module.exports = (router) => {
           response.description = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
           response.data = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
           debug("response: " + JSON.stringify(response));
-          res.status(200)
-            .send(JSON.stringify(response, null, 2));
+          res.status(200).json(response);
         }).catch((e) => {
           response.status = "400";
           response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
           response.data = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
           debug("response: " + JSON.stringify(response));
-          res.status(400).send(JSON.stringify(response, null, 2));
+          res.status(400).json(response);
         });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
         response.data = e.toString();
         debug("response: " + JSON.stringify(response));
-        res.status(400).send(JSON.stringify(response, null, 2));
+        res.status(400).json(response);
       }
     });
 };
