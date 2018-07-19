@@ -2,8 +2,8 @@ FROM node:8.9 as node
 
 WORKDIR /usr/ng-sandstorm/
 RUN npm install pm2 -g
-ENV PM2_PUBLIC_KEY ui66okn6ecdbhhs
-ENV PM2_SECRET_KEY 6r0wlnmp28kf39
+ENV PM2_PUBLIC_KEY XXXX
+ENV PM2_SECRET_KEY YYYY
 RUN git clone https://github.com/Evolvus/evolvus-sandstorm-ng-ui.git
 
 WORKDIR /usr/ng-sandstorm/evolvus-sandstorm-ng-ui/
