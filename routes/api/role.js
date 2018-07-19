@@ -48,14 +48,14 @@ module.exports = (router) => {
           response.data = roles;
           debug("response: " + JSON.stringify(response));
           res.status(200)
-            .send(JSON.stringify(response, null, 2));
+          .json(response);
         }).catch((e) => {
 
           response.status = "400";
           response.description = `Unable to add new role ${body.roleName}. Due to ${e}`;
           response.data = {};
           debug("failed to save an role" + JSON.stringify(response));
-          res.status(response.status).send(JSON.stringify(response, null, 2));
+          res.status(response.status).json(response);
         });
       } catch (e) {
 
@@ -63,8 +63,7 @@ module.exports = (router) => {
         response.description = `Unable to add new Role ${body.roleName}. Due to ${e.message}`;
         response.data = {};
         debug("caught exception" + JSON.stringify(response));
-        res.status(response.status).send(JSON.stringify(response, null, 2));
-
+        res.status(response.status).json(response);
       }
     });
 
@@ -92,8 +91,9 @@ module.exports = (router) => {
       });
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
+        limit = (+pageSize < +limit) ? pageSize: limit;
       try {
-        Promise.all([role.find(tenantId, filter, orderby, skipCount, +pageSize), role.find(tenantId, filter, orderby, 0, 0)])
+        Promise.all([role.find(tenantId, filter, orderby, skipCount, +limit), role.find(tenantId, filter, orderby, 0, 0)])
           .then((result) => {
             console.log(result[0].length, "length");
             if (result[0].length > 0) {
@@ -103,7 +103,7 @@ module.exports = (router) => {
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               res.status(200)
-                .send(JSON.stringify(response, null, 2));
+              .json(response);
             } else {
               response.status = "200";
               response.data = [];
@@ -112,21 +112,21 @@ module.exports = (router) => {
               response.description = "No role found";
               debug("response: " + JSON.stringify(response));
               res.status(response.status)
-                .send(JSON.stringify(response, null, 2));
+                .json(response);
             }
           }).catch((e) => {
             debug(`failed to fetch all roles ${e}`);
             response.status = "400";
             response.description = `Unable to fetch all roles`;
             response.data = e.toString();
-            res.status(response.status).send(JSON.stringify(response, null, 2));
+            res.status(response.status).json(response);
           });
       } catch (e) {
         debug(`caught exception ${e}`);
         response.status = "400";
         response.description = `Unable to fetch all roles`;
         response.data = e.toString();
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        res.status(response.status).json(response);
       }
     });
 
@@ -155,20 +155,20 @@ module.exports = (router) => {
           response.data = body;
           debug("response: " + JSON.stringify(response));
           res.status(200)
-            .send(JSON.stringify(response, null, 2));
+            .json(response);
         }).catch((e) => {
           response.status = "400";
           response.description = `Unable to modify role ${body.roleName}. Due to ${e.message}`;
           response.data = e.toString();
           debug("failed to modify a role" + JSON.stringify(response));
-          res.status(response.status).send(JSON.stringify(response, null, 2));
+          res.status(response.status).json(response);
         });
       } catch (e) {
         response.status = "400";
         response.description = `Unable to modify role ${body.roleName}. Due to ${e.message}`;
         response.data = e.toString();
         debug(`caught exception ${e}`);
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        res.status(response.status).json(response);
       }
     });
 };
