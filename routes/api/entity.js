@@ -33,7 +33,7 @@ module.exports = (router) => {
       let body = _.pick(req.body, entityAttributes);
       try {
         body.createdBy = createdBy;
-        body.entityId=entityId;
+        body.tenantId=tenantId;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
         entity.save(tenantId, entityId, accessLevel, body).then((ent) => {
