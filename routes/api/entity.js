@@ -33,23 +33,24 @@ module.exports = (router) => {
       let body = _.pick(req.body, entityAttributes);
       try {
         body.createdBy = createdBy;
+        body.entityId=entityId;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
         entity.save(tenantId, entityId, accessLevel, body).then((ent) => {
           response.status = "200";
-          response.description = "SUCCESS";
+          response.description = `New role ${body.roleName.toUpperCase()} has been added successfully and sent for the supervisor authorization.`;
           response.data = ent;
           res.status(200)
             .json(response);
         }).catch((e) => {
           response.status = "400",
-            response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
+            response.description = `Unable to add new Entity ${body.name}. Due to ${e}`,
             response.data = e.toString()
           res.status(response.status).json(response);
         });
       } catch (e) {
         response.status = "400",
-          response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`,
+          response.description = `Unable to add new Entity ${body.name}. Due to ${e}`,
           response.data = e.toString()
         res.status(response.status).json(response);
       }
