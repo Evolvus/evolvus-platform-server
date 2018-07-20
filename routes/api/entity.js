@@ -38,7 +38,7 @@ module.exports = (router) => {
         body.lastUpdatedDate = body.createdDate;
         entity.save(tenantId, entityId, accessLevel, body).then((ent) => {
           response.status = "200";
-          response.description = `New role ${body.roleName.toUpperCase()} has been added successfully and sent for the supervisor authorization.`;
+          response.description = `New entity ${body.name.toUpperCase()} has been added successfully and sent for the supervisor authorization.`;
           response.data = ent;
           res.status(200)
             .json(response);
