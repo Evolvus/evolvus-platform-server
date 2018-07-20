@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:supportedDateFormats");
 const _ = require("lodash");
-const supportedDateFormats = require("evolvus-supported-date-formats");
+const supportedDateFormats = require("@evolvus/evolvus-supported-date-formats");
 
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";

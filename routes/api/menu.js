@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:menu");
 const _ = require("lodash");
-const menu = require("evolvus-menu");
+const menu = require("@evolvus/evolvus-menu");
 
 const LIMIT = process.env.LIMIT || 10;
 const ORDER_BY = process.env.ORDER_BY || {

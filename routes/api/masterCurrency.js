@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:masterCurrency");
 const _ = require("lodash");
-const masterCurrency = require("evolvus-master-currency");
+const masterCurrency = require("@evolvus/evolvus-master-currency");
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";

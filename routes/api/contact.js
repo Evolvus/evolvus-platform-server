@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:contact");
 const _ = require("lodash");
-const contact = require("./../../index");
+const contact = require("@evolvus/evolvus-contact");
 
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
@@ -10,7 +10,6 @@ const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESSLEVEL"
 
 const PAGE_SIZE = 10;
-
 
 const contactAttributes = ["tenantId", "firstName", "middleName", "lastName", "emailId", "emailVerified", "phoneNumber", "mobileNumber", "mobileVerified", "faxNumber", "companyName", "address1", "address2", "city", "state", "country", "zipCode", "createdDate", "lastUpdatedDate"];
 const filterAttributes = contact.filterAttributes;

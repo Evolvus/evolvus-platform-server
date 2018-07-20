@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:masterTimeZone");
 const _ = require("lodash");
-const masterTimeZone = require("evolvus-master-time-zone");
+const masterTimeZone = require("@evolvus/evolvus-master-time-zone");
 
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";

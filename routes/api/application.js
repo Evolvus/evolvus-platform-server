@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:application");
 const _ = require("lodash");
-const application = require("evolvus-application");
+const application = require("@evolvus/evolvus-application");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };

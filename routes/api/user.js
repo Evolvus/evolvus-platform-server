@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:user");
 const _ = require("lodash");
-const user = require("evolvus-user");
+const user = require("@evolvus/evolvus-user");
 
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";

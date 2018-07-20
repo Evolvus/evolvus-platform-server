@@ -1,6 +1,6 @@
 {
-  "name": "evolvus-platform-server",
-  "version": "1.0.25",
+  "name": "@evolvus/evolvus-platform-server",
+  "version": "1.0.0",
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -12,16 +12,16 @@
   "dependencies": {
     "body-parser": "^1.18.2",
     "debug": "^3.1.0",
-    "evolvus-application": "^2.0.8",
-    "evolvus-contact": "^2.0.6",
-    "evolvus-entity": "^2.0.2",
-    "evolvus-lookup": "^2.0.0",
-    "evolvus-master-currency": "^0.1.4",
-    "evolvus-master-time-zone": "^2.0.5",
-    "evolvus-menu": "^2.0.2",
-    "evolvus-role": "^2.0.7",
-    "evolvus-supported-date-formats": "^0.1.5",
-    "evolvus-user": "^2.0.3",
+    "@evolvus/evolvus-application": "^1.0.3",
+    "@evolvus/evolvus-contact": "^1.0.2",
+    "@evolvus/evolvus-entity": "^1.0.2",
+    "@evolvus/evolvus-lookup": "^1.0.2",
+    "@evolvus/evolvus-master-currency": "^1.0.2",
+    "@evolvus/evolvus-master-time-zone": "^1.0.2",
+    "@evolvus/evolvus-menu": "^1.0.2",
+    "@evolvus/evolvus-role": "^1.0.4",
+    "@evolvus/evolvus-supported-date-formats": "^1.0.2",
+    "@evolvus/evolvus-user": "^1.0.2",
     "express": "^4.16.3",
     "mongoose": "^5.1.5"
   },
@@ -35,8 +35,5 @@
     "grunt-mocha-test": "^0.13.3",
     "mocha": "^5.1.1",
     "randomstring": "^1.1.5"
-  },
-  "publishConfig": {
-    "registry": "http://10.10.69.203:8081/repository/npm-private/"
   }
 }

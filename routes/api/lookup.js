@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:lookup");
 const _ = require("lodash");
-const lookup = require("evolvus-lookup");
+const lookup = require("@evolvus/evolvus-lookup");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };

@@ -1,7 +1,7 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:role");
 const _ = require("lodash");
-const role = require("evolvus-role");
-const application = require("evolvus-application");
+const role = require("@evolvus/evolvus-role");
+const application = require("@evolvus/evolvus-application");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };

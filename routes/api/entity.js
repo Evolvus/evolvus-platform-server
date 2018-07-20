@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:entity");
 const _ = require("lodash");
-const entity = require("evolvus-entity");
+const entity = require("@evolvus/evolvus-entity");
 const randomString = require("randomstring");
 
 const LIMIT = process.env.LIMIT || 10;
