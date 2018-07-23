@@ -2,7 +2,7 @@ const debug = require("debug")("evolvus-platform-server:routes:api:menu");
 const _ = require("lodash");
 const menu = require("@evolvus/evolvus-menu");
 
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 20;
 const ORDER_BY = process.env.ORDER_BY || {
   menuGroupOrder:1
 };
@@ -39,7 +39,7 @@ module.exports = (router) => {
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        menu.find(tenantId, filter, orderby, skipCount, +limit)
+        menu.find(tenantId,createdBy, ipAddress,  filter, orderby, skipCount, +limit)
           .then((menus) => {
             if (menus.length > 0) {
               response.status = "200";

@@ -50,7 +50,7 @@ module.exports = (router) => {
           res.status(200)
           .json(response);
         }).catch((e) => {
-
+          console.log(e);
           response.status = "400";
           response.description = `Unable to add new role ${body.roleName}. Due to ${e}`;
           response.data = {};
@@ -58,9 +58,9 @@ module.exports = (router) => {
           res.status(response.status).json(response);
         });
       } catch (e) {
-
+console.log(e);
         response.status = "400";
-        response.description = `Unable to add new Role ${body.roleName}. Due to ${e.message}`;
+        response.description = `Unable to add new Role ${body.roleName}. Due to ${e}`;
         response.data = {};
         debug("caught exception" + JSON.stringify(response));
         res.status(response.status).json(response);
@@ -146,7 +146,7 @@ module.exports = (router) => {
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
         let updateRoleName = req.params.roleName;
-
+        body.processingStatus="PENDING_AUTHORIZATION";
         role.update(tenantId, body.roleName, updateRoleName, body).then((updatedRoles) => {
           response.status = "200";
           response.description = `${body.roleName} Role has been modified successful and sent for the supervisor authorization.`;

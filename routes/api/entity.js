@@ -3,7 +3,8 @@ const _ = require("lodash");
 const entity = require("@evolvus/evolvus-entity");
 const randomString = require("randomstring");
 
-const LIMIT = process.env.LIMIT || 10;
+const ORDER_BY = process.env.ORDER_BY || {lastUpdatedDate: -1};
+const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
@@ -13,6 +14,7 @@ const accessLevelHeader = "X-ACCESS-LEVEL"
 const entityAttributes = ["tenantId", "name", "entityCode", "entityId", "wfInstanceId", "wfInstanceStatus", "description", "processingStatus", "enableFlag", "createdBy", "createdDate", "parent", "acessLevel", "lastUpdatedDate"];
 const filterAttributes = entity.filterAttributes;
 const sortAttributes = entity.sortAttributes;
+
 module.exports = (router) => {
 
   router.route('/entity')
@@ -32,8 +34,9 @@ module.exports = (router) => {
         body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
+        body.tenantId=tenantId;
 
-        entity.save(tenantId, entityId, accessLevel, body).then((ent) => {
+        entity.save(tenantId, createdBy, entityId, accessLevel, body).then((ent) => {
           response.status = "200";
           response.description = `New entiy ${body.name.toUpperCase()} has been added successfully  and sent for the supervisor authorization.`;
           response.data = ent;
@@ -52,6 +55,9 @@ module.exports = (router) => {
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
+
+
+
   router.route('/entity/')
     .get((req, res, next) => {
       const tenantId = req.header(tenantHeader);
@@ -82,7 +88,10 @@ module.exports = (router) => {
           throw new Error("pageNo must be a number")
         }
         var skipCount = pageSizec * (pageNoc - 1);
-        var filter = _.pick(req.query, filterAttributes);
+        var filterValues = _.pick(req.query, filterAttributes);
+        var filter = _.omitBy(filterValues, function(value, key) {
+          return value.startsWith("undefined");
+        });
         var sort = _.get(req.query, "sort", {});
         var orderby = sortable(sort);
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
@@ -92,8 +101,8 @@ module.exports = (router) => {
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
-              response.totalNoOfPages = Math.ceil(result[1] / pageSize);
-              response.totalNoOfRecords = result[1];
+              response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
+              response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               res.status(200)
                 .json(response);
@@ -141,6 +150,7 @@ module.exports = (router) => {
         let body = _.pick(req.body, entityAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
+        body.processingStatus="PENDING_AUTHORIZATION";
         entity.update(tenantId, body.entityCode, body).then((updatedEntity) => {
           response.status = "200";
           response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
@@ -167,7 +177,7 @@ module.exports = (router) => {
 function sortable(sort) {
   if (typeof sort === 'undefined' ||
     sort == null) {
-    return {};
+    return ORDER_BY;
   }
   if (typeof sort === 'string') {
     var result = sort.split(",")
@@ -184,6 +194,6 @@ function sortable(sort) {
       }, {});
     return result;
   } else {
-    return {};
+    return ORDER_BY;
   }
 }
