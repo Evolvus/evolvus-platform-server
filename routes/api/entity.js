@@ -87,7 +87,7 @@ module.exports = (router) => {
         var orderby = sortable(sort);
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
 
-        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, limitc), entity.find(tenantId, entityId, accessLevel, filter,0,0)])
+        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, limitc), entity.find(tenantId, entityId, accessLevel, filter, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -98,8 +98,11 @@ module.exports = (router) => {
               res.status(200)
                 .json(response);
             } else {
-              response.status = "404";
+              response.status = "200";
               response.description = "No entity found";
+              response.data = [];
+              response.totalNoOfPages = 0;
+              response.totalNoOfRecords = 0;
               debug("response: " + JSON.stringify(response));
               res.status(response.status)
                 .json(response);
