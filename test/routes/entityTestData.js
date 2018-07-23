@@ -34,7 +34,7 @@ module.exports.validObject3 = {
   "entityCode": "entity3",
   "name": "northZone",
   "parent": "HeadOffice",
-  "description": "northZone description",
+  "description": "northZone descriptionnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
   "createdBy": "SYSTEM",
   "createdDate": "2018-05-05T12:25:22.895Z",
   "lastUpdatedDate": "2018-05-05T12:25:22.895Z",
