@@ -98,8 +98,9 @@ module.exports = (router) => {
               res.status(200)
                 .json(response);
             } else {
-              response.status = "404";
+              response.status = "200";
               response.description = "No entity found";
+                response.data=[];
               debug("response: " + JSON.stringify(response));
               res.status(response.status)
                 .json(response);
