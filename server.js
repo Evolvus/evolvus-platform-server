@@ -9,7 +9,6 @@ const PORT = process.env.PORT || 8086;
 const debug = require("debug")("evolvus-platform-server:server");
 const express = require("express");
 const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
 const path = require("path");
 const connection=require("@evolvus/evolvus-mongo-dao").connection;
 

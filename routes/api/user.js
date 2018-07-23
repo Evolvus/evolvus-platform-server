@@ -52,7 +52,7 @@ module.exports = (router) => {
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
-              response.description = "SUCCESS";
+              response.description = "Users found";
               response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
@@ -63,7 +63,7 @@ module.exports = (router) => {
               response.data = [];
               response.totalNoOfRecords = result[1].length;
               response.totalNoOfPages = 0;
-              response.description = "No Users added yet. Create a new User to start off";
+              response.description = "No User data available";
               debug("response: " + JSON.stringify(response));
               res.status(200).json(response);
             }
