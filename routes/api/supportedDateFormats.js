@@ -1,7 +1,7 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:supportedDateFormats");
 const _ = require("lodash");
 const supportedDateFormats = require("@evolvus/evolvus-supported-date-formats");
-
+const shortid = require('shortid');
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
@@ -36,16 +36,16 @@ module.exports = (router) => {
       var orderby = sortable(sort);
 
       try {
-        Promise.all([supportedDateFormats.find(tenantId, filter, orderby, skipCount, +limit), supportedDateFormats.counts(tenantId, filter)])
-          .then((supportedDateFormats) => {
-
-            if (supportedDateFormats.length > 0) {
+        debug(`GetAll API ,tenantId :${tenantId}, filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} , are parameters`);
+        Promise.all([supportedDateFormats.find(tenantId, filter, orderby, skipCount, +limit), supportedDateFormats.find(tenantId, filter, orderby, 0, 0)])
+          .then((result) => {
+            if (result.length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
-              response.totalNoOfPages = Math.ceil(supportedDateFormats[1] / pageSize);
-              response.totalNoOfRecords = supportedDateFormats[1];
-              response.data = supportedDateFormats[0];
-
+              response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
+              response.totalNoOfRecords = result[1].length;
+              response.data = result[0];
+              debug("response: " + JSON.stringify(response));
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
@@ -57,6 +57,8 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
+            var reference = shortid.generate();
+            debug(`In get API get promise failed due to :${e} and referenceId is : ${reference}`);
             debug(`failed to fetch all supportedDateFormats ${e}`);
             response.status = "400",
               response.description = `Unable to fetch all supportedDateFormats`
@@ -64,6 +66,8 @@ module.exports = (router) => {
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
+        var reference = shortid.generate();
+        debug(`In get API try catch failed due to :${e} and referenceId is : ${reference}`);
         debug(`caught exception ${e}`);
         response.status = "400",
           response.description = `Unable to fetch all supportedDateFormats`

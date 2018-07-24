@@ -1,5 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:lookup");
 const _ = require("lodash");
+const shortid = require('shortid');
 const lookup = require("@evolvus/evolvus-lookup");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
@@ -10,14 +11,14 @@ const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const PAGE_SIZE = 10;
 
-const lookupAttributes = ["lookupCode", "value", "enabled", "createdBy", "createdDate"];
+const lookupAttributes = ["lookupCode", "value", "enabled", "createdBy", "wfInstanceId", "wfInstanceStatus", "createdDate", "lastUpdatedDate"];
 const filterAttributes = lookup.filterAttributes;
 const sortAttributes = lookup.sortAttributes;
 
 
 module.exports = (router) => {
 
-  router.route('/lookup/')
+  router.route('/lookup')
     .get((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
@@ -39,10 +40,11 @@ module.exports = (router) => {
 
 
       try {
-
+        debug(`get API.tenantId :${tenantId}, createdBy :${createdBy}, ipAddress :${ipAddress}, filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, limit :${limit} are parameters`);
         lookup.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limit)
           .then((lookups) => {
             if (lookups.length > 0) {
+              debug("getting successfully", lookups)
               response.status = "200";
               response.description = "SUCCESS";
               response.data = lookups;
@@ -58,14 +60,16 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
-            debug(`failed to fetch all lookup ${e}`);
+            var reference = shortid.generate();
+            debug(`failed to fetch all lookup ${e} ,and reference id ${reference}`);
             response.status = "400";
             response.description = `Unable to fetch all lookup`;
             response.data = e.toString();
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        debug(`failed to fetch all lookup ${e}`);
+        var reference = shortid.generate();
+        debug(`try catch failed due to : ${e} and reference id :${reference}`);
         response.status = "400";
         response.description = `Unable to fetch all lookup`;
         response.data = e.toString();
@@ -88,7 +92,7 @@ module.exports = (router) => {
         body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-
+        debug(`save API. tenantId :${tenantId}, createdBy :${createdBy}, ipAddress :${ipAddress}, body :${JSON.stringify(body)}, are parameters values `);
         lookup.save(tenantId, createdBy, ipAddress, body).then((ent) => {
           response.status = "200";
           response.description = "SUCCESS";
@@ -96,13 +100,16 @@ module.exports = (router) => {
           res.status(200)
             .send(JSON.stringify(response, null, 2));
         }).catch((e) => {
-
+          var reference = shortid.generate();
+          debug(`save promise failed .due to ${e},and referenceId is ${reference}`);
           response.status = "400",
             response.description = `Unable to add new lookup ${body.lookupCode}. Due to ${e.message}`,
             response.data = e.toString()
           res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
+        var reference = shortid.generate();
+        debug(`try catch failed .due to ${e},and referenceId is ${reference}`);
         response.status = "400",
           response.description = `Unable to add new lookup ${body.lookupCode}. Due to ${e.message}`,
           response.data = e.toString()

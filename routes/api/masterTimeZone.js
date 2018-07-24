@@ -1,7 +1,7 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:masterTimeZone");
 const _ = require("lodash");
 const masterTimeZone = require("@evolvus/evolvus-master-time-zone");
-
+const shortid = require('shortid');
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
@@ -36,28 +36,31 @@ module.exports = (router) => {
       var orderby = sortable(sort);
 
       try {
-        //console.log(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limit);
-        Promise.all([masterTimeZone.find(tenantId, filter, orderby, skipCount, +limit), masterTimeZone.counts(tenantId, filter)])
-          .then((masterTimeZone) => {
-
-            if (masterTimeZone.length > 0) {
+        debug(`getAll API.tenantId :${tenantId} ,filter :${JSON.stringify(filter)},orderby :${JSON.stringify(orderby)},skipCount :${skipCount} ,limit :${limit} are parameters`);
+        Promise.all([masterTimeZone.find(tenantId, filter, orderby, skipCount, +limit), masterTimeZone.find(tenantId, filter, orderby, 0, 0)])
+          .then((result) => {
+            if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
-              response.totalNoOfPages = Math.ceil(masterTimeZone[1] / pageSize);
-              response.totalNoOfRecords = masterTimeZone[1];
-              response.data = masterTimeZone[0];
-
+              response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
+              response.totalNoOfRecords = result[1].length;
+              response.data = result[0];
+              debug("response: " + JSON.stringify(response));
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
-              response.status = "404";
+              response.status = "200";
               response.description = "No masterTimeZone found";
+              response.totalNoOfRecords = result[1].length;
+              response.totalNoOfPages = 0;
               debug("response: " + JSON.stringify(response));
-              res.status(200)
+              res.status(response.status)
                 .send(JSON.stringify(response, null, 2));
             }
           })
           .catch((e) => {
+            var reference = shortid.generate();
+            debug(`getAll promise failed due to :${e} and referenceid :${reference}`);
             debug(`failed to fetch all masterTimeZone ${e}`);
             response.status = "400",
               response.description = `Unable to fetch all masterTimeZone`
@@ -65,6 +68,8 @@ module.exports = (router) => {
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
+        var reference = shortid.generate();
+        debug(`try catch failed due to :${e} and referenceid :${reference}`);
         debug(`caught exception ${e}`);
         response.status = "400",
           response.description = `Unable to fetch all masterTimeZone`

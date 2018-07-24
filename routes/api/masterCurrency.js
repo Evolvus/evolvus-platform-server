@@ -1,5 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:masterCurrency");
 const _ = require("lodash");
+const shortid = require('shortid');
 const masterCurrency = require("@evolvus/evolvus-master-currency");
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
@@ -13,7 +14,7 @@ const filterAttributes = masterCurrency.filterAttributes;
 const sortAttributes = masterCurrency.sortableAttributes;
 
 module.exports = (router) => {
-  router.route('/masterCurrency/')
+  router.route('/masterCurrency')
     .get((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
@@ -32,33 +33,40 @@ module.exports = (router) => {
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        Promise.all([masterCurrency.find(tenantId, filter, orderby, skipCount, limit), masterCurrency.counts(tenantId, filter)])
+        debug(`getAll API . tenantId :${tenantId}, filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, limit :${limit} are parameters `);
+        Promise.all([masterCurrency.find(tenantId, filter, orderby, skipCount, limit), masterCurrency.find(tenantId, filter, orderby, 0, 0)])
           .then((result) => {
+            console.log(result, "log");
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
-              response.totalNoOfPages = Math.ceil(result[1] / pageSize);
-              response.totalNoOfRecords = result[1];
+              response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
+              response.totalNoOfRecords = result[1].length;
               response.data = result[0];
+              debug("response: " + JSON.stringify(response));
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
-              response.status = "400";
+              response.status = "200";
               response.description = "No masterCurrency found";
+              response.totalNoOfRecords = result[1].length;
+              response.totalNoOfPages = 0;
               debug("response: " + JSON.stringify(response));
-              res.status(400)
+              res.status(response.status)
                 .send(JSON.stringify(response, null, 2));
             }
           })
           .catch((e) => {
-            debug(`failed to fetch all masterCurrency ${e}`);
+            var reference = shortid.generate();
+            debug(`getAll promise failed due to  ${e} and referenceId is ${reference}`);
             response.status = "400",
               response.description = `Unable to fetch all masterCurrency`
             response.data = e.toString()
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
-        debug(`caught exception ${e}`);
+        var reference = shortid.generate();
+        debug(`try catch failed due to  ${e} and referenceId is ${reference}`);
         response.status = "400",
           response.description = `Unable to fetch all masterCurrency`
         response.data = e.toString()

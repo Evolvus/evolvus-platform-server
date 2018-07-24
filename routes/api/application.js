@@ -4,6 +4,7 @@ const application = require("@evolvus/evolvus-application");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
+const shortid = require('shortid');
 const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESSLEVEL"
 const LIMIT = process.env.LIMIT || 10;
@@ -38,7 +39,7 @@ module.exports = (router) => {
         body.lastUpdatedDate = body.createdDate;
         body.entityId = entityId;
         body.accessLevel = accessLevel;
-
+        debug(`save API. tenantId :${tenantId},ipAddress :${ipAddress}, createdBy :${createdBy}, body :${JSON.stringify(body) }are parameters`);
         application.save(tenantId, ipAddress, createdBy, body).then((ent) => {
           response.status = "200";
           response.description = `New Application ''${body.applicationName}' has been added successfully and sent for the supervisor authorization`;
@@ -50,14 +51,16 @@ module.exports = (router) => {
           response.status = "400";
           response.description = `Unable to add new application ${body.applicationName}. Due to ${e.message}`;
           response.data = e.toString();
-          debug("failed to save an application" + JSON.stringify(response));
+          var reference = shortid.generate();
+          debug(`save promise failed due to :${e} and referenceId :${reference}`);
           res.status(response.status).send(JSON.stringify(response, null, 2));
         });
       } catch (e) {
+        var reference = shortid.generate();
         response.status = "400";
         response.description = `Unable to add new Application ${body.applicationName}. Due to ${e.message}`;
         response.data = e.toString();
-        debug("caught exception" + JSON.stringify(response));
+        debug(`try catch failed due to :${e} , and reference id :${reference}`);
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
@@ -80,7 +83,7 @@ module.exports = (router) => {
       try {
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-
+        debug(`Update API.tenantId :${tenantId}, body.applicationCode :${body.applicationCode}, body :${JSON.stringify(body)}, updateapplicationCode :${updateapplicationCode} , are parameters`);
         application.update(tenantId, body.applicationCode, body, updateapplicationCode).then((updatedapplication) => {
           response.status = "200";
           response.description = `${body.applicationName} application has been modified successfully and sent for the supervisor authorization.`;
@@ -93,15 +96,17 @@ module.exports = (router) => {
           response.status = "400";
           response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
           response.data = e.toString();
-          debug("failed to modify an application" + JSON.stringify(response));
+          var reference = shortid.generate();
+          debug(`Update promise failed due to :${e} and referenceId :${reference}`);
           res.status(response.status).send(JSON.stringify(response, null, 2));
         });
 
       } catch (e) {
+        var reference = shortid.generate();
         response.status = "400";
         response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
         response.data = e.toString();
-        debug("caught exception" + JSON.stringify(response));
+        debug(`try catch failed due to :${e} , and reference id :${reference}`);
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
 
@@ -134,6 +139,7 @@ module.exports = (router) => {
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
+        debug(`GET ALL API.tenantId :${tenantId}, filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
         Promise.all([application.find(tenantId, filter, orderby, skipCount, +limit), application.find(tenantId, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
@@ -156,17 +162,19 @@ module.exports = (router) => {
             }
           })
           .catch((e) => {
+            var reference = shortid.generate();
             res.status(400)
             response.description = `Unable to fetch all applications`;
             response.data = e.toString();
-            debug(`failed to fetch all applications ${e}`);
+            debug(`Get All promise failed due to :${e} and referenceId :${reference}`);
             res.status(response.status).send(JSON.stringify(response, null, 2));
           });
       } catch (e) {
+        var reference = shortid.generate();
         res.status(400);
         response.description = `Unable to fetch all applications`;
         response.data = e.toString();
-        debug(`caught exception ${e}`);
+        debug(`try catch failed due to :${e} , and reference id :${reference}`);
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
