@@ -1,9 +1,11 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:entity");
 const _ = require("lodash");
-const entity = require("@evolvus/evolvus-entity");
+const entity = require("@teamtagevo/evolvus-entity");
 const randomString = require("randomstring");
 
-const ORDER_BY = process.env.ORDER_BY || {lastUpdatedDate: -1};
+const ORDER_BY = process.env.ORDER_BY || {
+  lastUpdatedDate: -1
+};
 const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
@@ -34,7 +36,7 @@ module.exports = (router) => {
         body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-        body.tenantId=tenantId;
+        body.tenantId = tenantId;
 
         entity.save(tenantId, createdBy, entityId, accessLevel, body).then((ent) => {
           response.status = "200";
@@ -56,8 +58,6 @@ module.exports = (router) => {
       }
     });
 
-
-
   router.route('/entity/')
     .get((req, res, next) => {
       const tenantId = req.header(tenantHeader);
@@ -73,58 +73,77 @@ module.exports = (router) => {
       try {
         debug("query: " + JSON.stringify(req.query));
         var limit = _.get(req.query, "limit", LIMIT);
-        var limitc = parseInt(limit);
-        if (isNaN(limitc)) {
+       limit = parseInt(limit);
+        if (isNaN(limit)) {
           throw new Error("limit must be a number")
         }
         var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
-        var pageSizec = parseInt(pageSize);
-        if (isNaN(pageSizec)) {
+        pageSize = parseInt(pageSize);
+        if (isNaN(pageSize)) {
           throw new Error("pageSize must be a number")
         }
         var pageNo = _.get(req.query, "pageNo", 1);
-        var pageNoc = parseInt(pageNo);
-        if (isNaN(pageNoc)) {
+        pageNo = parseInt(pageNo);
+        if (isNaN(pageNo)) {
           throw new Error("pageNo must be a number")
         }
-        var skipCount = pageSizec * (pageNoc - 1);
+        var skipCount = pageSize * (pageNo - 1);
         var filterValues = _.pick(req.query, filterAttributes);
         var filter = _.omitBy(filterValues, function(value, key) {
           return value.startsWith("undefined");
         });
-        var sort = _.get(req.query, "sort", {});
-        var orderby = sortable(sort);
-        limitc = (+pageSizec < limitc) ? pageSizec : limitc;
+        console.log("filter", filterValues);
 
-        Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, limitc), entity.find(tenantId, entityId, accessLevel, filter, 0, 0)])
-          .then((result) => {
-            if (result[0].length > 0) {
-              response.status = "200";
-              response.description = "SUCCESS";
-              response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
-              response.totalNoOfRecords = result[1].length;
-              response.data = result[0];
-              res.status(200)
-                .json(response);
-            } else {
-              response.status = "200";
-              response.description = "No entity found";
-              response.data = [];
-              response.totalNoOfPages = 0;
-              response.totalNoOfRecords = 0;
-              debug("response: " + JSON.stringify(response));
-              res.status(response.status)
-                .json(response);
-            }
-          })
-          .catch((e) => {
-            debug(`failed to fetch all entity ${e}`);
-            response.status = "400",
-              response.description = `Unable to fetch all entities`
-            response.data = e.toString()
-            res.status(response.status).json(response);
-          });
+        var invalidFilters = _.difference(_.keys(req.query), filterAttributes);
+        let a = _.pull(invalidFilters, 'pageSize', 'pageNo','limit','sort');
+        debug("invalidFilters:", invalidFilters);
+        if (a.length !== 0) {
+          response.status = "200";
+          response.description = "No entity found";
+          response.data = [];
+          response.totalNoOfPagses = 0;
+          response.totalNoOfRecords = 0;
+          res.json(response);
+        } else {
+
+          var sort = _.get(req.query, "sort", {});
+          var orderby = sortable(sort);
+          limit = (+pageSize < limit) ? pageSize : limit;
+console.log(typeof limit );
+          Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, limit), entity.find(tenantId, entityId, accessLevel, filter, {}, 0, 0)])
+            .then((result) => {
+              if (result[0].length > 0) {
+                response.status = "200";
+                response.description = "SUCCESS";
+                response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
+                response.totalNoOfRecords = result[1].length;
+                response.data = result[0];
+                res.status(200)
+                  .json(response);
+              } else {
+                response.status = "200";
+                response.description = "No entity found";
+                response.data = [];
+                response.totalNoOfPages = 0;
+                response.totalNoOfRecords = 0;
+                debug("response: " + JSON.stringify(response));
+                res.status(response.status)
+                  .json(response);
+              }
+            })
+            .catch((e) => {
+              console.log(e);
+              debug(`failed to fetch all entity ${e}`);
+              response.status = "400",
+                response.description = `Unable to fetch all entities`
+              response.data = e.toString()
+              res.status(response.status).json(response);
+            });
+        }
+
+
       } catch (e) {
+        console.log(e);
         debug(`caught exception ${e}`);
         response.status = "400",
           response.description = `Unable to fetch all entities`
@@ -150,8 +169,8 @@ module.exports = (router) => {
         let body = _.pick(req.body, entityAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        body.processingStatus="PENDING_AUTHORIZATION";
-        entity.update(tenantId, body.entityCode, body).then((updatedEntity) => {
+        body.processingStatus = "PENDING_AUTHORIZATION";
+        entity.update(tenantId, req.params.entityCode, body).then((updatedEntity) => {
           response.status = "200";
           response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
@@ -172,7 +191,46 @@ module.exports = (router) => {
       }
     });
 
-};
+    router.route("/entity/:entityCode/swe")
+      .put((req, res, next) => {
+        const tenantId = req.header(tenantHeader);
+        const createdBy = req.header(userHeader);
+        const ipAddress = req.header(ipHeader);
+        const accessLevel = req.header(accessLevelHeader);
+        const entityId = req.header(entityIdHeader)
+        const response = {
+          "status": "200",
+          "description": "",
+          "data": []
+        };
+        debug("query: " + JSON.stringify(req.query));
+        try {
+          let body = _.pick(req.body, entityAttributes);
+          body.updatedBy = req.header(userHeader);;
+          body.lastUpdatedDate = new Date().toISOString();
+          body.processingStatus = "PENDING_AUTHORIZATION";
+          entity.update(tenantId, req.params.entityCode, body).then((updatedEntity) => {
+            response.status = "200";
+            response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
+            response.data = body;
+            res.status(200)
+              .json(response);
+
+          }).catch((e) => {
+            response.status = "400",
+              response.description = `Unable to modify entity ${body.name}. Due to ${e}`
+            response.data = e.toString()
+            res.status(response.status).json(response);
+          });
+        } catch (e) {
+          response.status = "400",
+            response.description = `Unable to modify entity ${req.body.name}. Due to ${e}`
+          response.data = e.toString()
+          res.status(response.status).json(response);
+        }
+      });
+  };
+
 
 function sortable(sort) {
   if (typeof sort === 'undefined' ||
