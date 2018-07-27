@@ -6,14 +6,14 @@ const ORDER_BY = process.env.ORDER_BY || {
 };
 const shortid = require('shortid');
 const entityIdHeader = "X-ENTITY-ID";
-const accessLevelHeader = "X-ACCESSLEVEL"
+const accessLevelHeader = "X-ACCESS-LEVEL"
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const PAGE_SIZE = 10;
 
-const applicationAttributes = ["applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel", "lastUpdatedDate"];
+const applicationAttributes = ["applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel", "lastUpdatedDate", "wfInstanceId", "wfInstanceStatus"];
 
 var filterAttributes = application.filterAttributes;
 var sortAttributes = application.sortAttributes;
@@ -32,6 +32,7 @@ module.exports = (router) => {
         "data": {}
       };
       let body = _.pick(req.body, applicationAttributes);
+
       try {
         body.tenantId = tenantId;
         body.createdBy = createdBy;
@@ -39,29 +40,32 @@ module.exports = (router) => {
         body.lastUpdatedDate = body.createdDate;
         body.entityId = entityId;
         body.accessLevel = accessLevel;
+
+
         debug(`save API. tenantId :${tenantId},ipAddress :${ipAddress}, createdBy :${createdBy}, body :${JSON.stringify(body) }are parameters`);
         application.save(tenantId, ipAddress, createdBy, body).then((ent) => {
           response.status = "200";
           response.description = `New Application ''${body.applicationName}' has been added successfully and sent for the supervisor authorization`;
           response.data = ent;
           debug("response: " + JSON.stringify(response));
-          res.status(200)
-            .send(JSON.stringify(response, null, 2));
+          res.status(response.status).json(response);
         }).catch((e) => {
           response.status = "400";
-          response.description = `Unable to add new application ${body.applicationName}. Due to ${e.message}`;
-          response.data = e.toString();
+          response.description = `Unable to add new application ${body.applicationName}. Due to ${e}`;
+          response.data = e;
           var reference = shortid.generate();
           debug(`save promise failed due to :${e} and referenceId :${reference}`);
-          res.status(response.status).send(JSON.stringify(response, null, 2));
+          debug("failed to save an application" + JSON.stringify(response));
+          res.status(response.status).json(response);
         });
       } catch (e) {
         var reference = shortid.generate();
+        debug(`try catch failed due to :${e} , and reference id :${reference}`);
         response.status = "400";
         response.description = `Unable to add new Application ${body.applicationName}. Due to ${e.message}`;
         response.data = e.toString();
-        debug(`try catch failed due to :${e} , and reference id :${reference}`);
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        debug("caught exception" + JSON.stringify(response));
+        res.status(response.status).json(response);
       }
     });
 
@@ -83,36 +87,32 @@ module.exports = (router) => {
       try {
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        debug(`Update API.tenantId :${tenantId}, body.applicationCode :${body.applicationCode}, body :${JSON.stringify(body)}, updateapplicationCode :${updateapplicationCode} , are parameters`);
-        application.update(tenantId, body.applicationCode, body, updateapplicationCode).then((updatedapplication) => {
+        debug(`Update API.tenantId :${tenantId}, updateapplicationCode :${updateapplicationCode}, body :${JSON.stringify(body)}, are parameters`);
+        application.update(tenantId, updateapplicationCode, body).then((updatedapplication) => {
           response.status = "200";
-          response.description = `${body.applicationName} application has been modified successfully and sent for the supervisor authorization.`;
+          response.description = `${updateapplicationCode} application has been modified successfully and sent for the supervisor authorization.`;
           response.data = body;
           debug("response: " + JSON.stringify(response));
-          res.status(200)
-            .send(JSON.stringify(response, null, 2));
-
+          res.status(response.status).json(response);
         }).catch((e) => {
           response.status = "400";
-          response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
+          response.description = `Unable to modify application ${updateapplicationCode}. Due to ${e.message}`;
           response.data = e.toString();
           var reference = shortid.generate();
           debug(`Update promise failed due to :${e} and referenceId :${reference}`);
-          res.status(response.status).send(JSON.stringify(response, null, 2));
+          res.status(response.status).json(response);
         });
 
       } catch (e) {
         var reference = shortid.generate();
+        debug(`try catch failed due to :${e} , and reference id :${reference}`);
         response.status = "400";
         response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
         response.data = e.toString();
-        debug(`try catch failed due to :${e} , and reference id :${reference}`);
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        res.status(response.status).json(response);
       }
 
     });
-
-
 
 
   router.route('/application/')
@@ -139,8 +139,33 @@ module.exports = (router) => {
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
+        debug("query: " + JSON.stringify(req.query));
+        var limit = _.get(req.query, "limit", LIMIT);
+        var limitc = parseInt(limit);
+        if (isNaN(limitc)) {
+          throw new Error("limit must be a number")
+        }
+        var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
+        var pageSizec = parseInt(pageSize);
+        if (isNaN(pageSizec)) {
+          throw new Error("pageSize must be a number")
+        }
+        var pageNo = _.get(req.query, "pageNo", 1);
+        var pageNoc = parseInt(pageNo);
+        if (isNaN(pageNoc)) {
+          throw new Error("pageNo must be a number")
+        }
+        var skipCount = pageSizec * (pageNoc - 1);
+        var filterValues = _.pick(req.query, filterAttributes);
+        var filter = _.omitBy(filterValues, function(value, key) {
+          return value.startsWith("undefined");
+        });
+        var sort = _.get(req.query, "sort", {});
+        var orderby = sortable(sort);
+        limitc = (+pageSizec < limitc) ? pageSizec : limitc;
+
         debug(`GET ALL API.tenantId :${tenantId}, filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
-        Promise.all([application.find(tenantId, filter, orderby, skipCount, +limit), application.find(tenantId, filter, orderby, 0, 0)])
+        Promise.all([application.find(tenantId, filter, orderby, skipCount, limitc), application.find(tenantId, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -149,8 +174,7 @@ module.exports = (router) => {
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .send(JSON.stringify(response, null, 2));
+              res.status(response.status).json(response);
             } else {
               response.status = "200";
               response.description = "No applications found";
@@ -158,24 +182,26 @@ module.exports = (router) => {
               response.totalNoOfPages = 0;
               debug("response: " + JSON.stringify(response));
               res.status(response.status)
-                .send(JSON.stringify(response, null, 2));
+                .json(response);
             }
           })
           .catch((e) => {
             var reference = shortid.generate();
-            res.status(400)
+            debug(`Get All promise failed due to :${e} and referenceId :${reference}`);
+            response.status = "400";
             response.description = `Unable to fetch all applications`;
             response.data = e.toString();
-            debug(`Get All promise failed due to :${e} and referenceId :${reference}`);
-            res.status(response.status).send(JSON.stringify(response, null, 2));
+            debug(`failed to fetch all applications ${e}`);
+            res.status(response.status).json(response);
           });
       } catch (e) {
         var reference = shortid.generate();
-        res.status(400);
+        debug(`try catch failed due to :${e} , and reference id :${reference}`);
+        response.status = "400";
         response.description = `Unable to fetch all applications`;
         response.data = e.toString();
-        debug(`try catch failed due to :${e} , and reference id :${reference}`);
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        debug(`caught exception ${e}`);
+        res.status(response.status).json(response);
       }
     });
 };
