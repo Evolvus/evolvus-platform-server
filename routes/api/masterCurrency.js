@@ -36,7 +36,6 @@ module.exports = (router) => {
         debug(`getAll API . tenantId :${tenantId}, filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, limit :${limit} are parameters `);
         Promise.all([masterCurrency.find(tenantId, filter, orderby, skipCount, limit), masterCurrency.find(tenantId, filter, orderby, 0, 0)])
           .then((result) => {
-            console.log(result, "log");
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
@@ -44,16 +43,15 @@ module.exports = (router) => {
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .send(JSON.stringify(response, null, 2));
+              res.status(response.status).json(response);
             } else {
               response.status = "200";
+              response.data = [];
               response.description = "No masterCurrency found";
               response.totalNoOfRecords = result[1].length;
               response.totalNoOfPages = 0;
               debug("response: " + JSON.stringify(response));
-              res.status(response.status)
-                .send(JSON.stringify(response, null, 2));
+              res.status(response.status).json(response);
             }
           })
           .catch((e) => {
@@ -61,16 +59,16 @@ module.exports = (router) => {
             debug(`getAll promise failed due to  ${e} and referenceId is ${reference}`);
             response.status = "400",
               response.description = `Unable to fetch all masterCurrency`
-            response.data = e.toString()
-            res.status(response.status).send(JSON.stringify(response, null, 2));
+            response.data = e.toString();
+            res.status(response.status).json(response);
           });
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch failed due to  ${e} and referenceId is ${reference}`);
         response.status = "400",
           response.description = `Unable to fetch all masterCurrency`
-        response.data = e.toString()
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        response.data = e.toString();
+        res.status(response.status).json(response);
       }
     });
 };

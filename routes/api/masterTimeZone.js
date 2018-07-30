@@ -46,16 +46,14 @@ module.exports = (router) => {
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .send(JSON.stringify(response, null, 2));
+              res.status(response.status).json(response);
             } else {
               response.status = "200";
               response.description = "No masterTimeZone found";
               response.totalNoOfRecords = result[1].length;
               response.totalNoOfPages = 0;
               debug("response: " + JSON.stringify(response));
-              res.status(response.status)
-                .send(JSON.stringify(response, null, 2));
+              res.status(response.status).json(response);
             }
           })
           .catch((e) => {
@@ -63,9 +61,9 @@ module.exports = (router) => {
             debug(`getAll promise failed due to :${e} and referenceid :${reference}`);
             debug(`failed to fetch all masterTimeZone ${e}`);
             response.status = "400",
-              response.description = `Unable to fetch all masterTimeZone`
-            response.data = e.toString()
-            res.status(response.status).send(JSON.stringify(response, null, 2));
+              response.description = `Unable to fetch all masterTimeZone`;
+            response.data = e.toString();
+            res.status(response.status).json(response);
           });
       } catch (e) {
         var reference = shortid.generate();
@@ -73,8 +71,8 @@ module.exports = (router) => {
         debug(`caught exception ${e}`);
         response.status = "400",
           response.description = `Unable to fetch all masterTimeZone`
-        response.data = e.toString()
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        response.data = e.toString();
+        res.status(response.status).json(response);
       }
     });
 };

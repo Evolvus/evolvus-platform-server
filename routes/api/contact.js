@@ -7,6 +7,9 @@ const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const PAGE_SIZE = 10;
+const ORDER_BY = process.env.ORDER_BY || {
+  lastUpdatedDate: -1
+};
 
 const contactAttributes = ["contactName", "contactId", "description", "enabled", "contactCode", "createdBy", "createdDate", "logo", "favicon"];
 
@@ -20,7 +23,6 @@ module.exports = (router) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
-      console.log(tenantId, createdBy, ipAddress);
       const response = {
         "status": "200",
         "description": "",
@@ -46,16 +48,18 @@ module.exports = (router) => {
               res.status(200)
                 .send(JSON.stringify(response, null, 2));
             } else {
-              response.status = "204";
+              response.status = "200";
+              response.data = [];
               response.description = "No contacts found";
               debug("response: " + JSON.stringify(response));
               res.status(200)
-                .send(JSON.stringify(response, null, 2));
+                .send(JSON.stringify(response));
             }
           })
           .catch((e) => {
             var reference = shortid.generate();
             debug(`find promise failed due to :${e} and referenceId :${referenceId}`);
+            debug(`failed to fetch all contacts ${e}`);
             res.status(400)
               .json({
                 error: e.toString()
@@ -64,6 +68,7 @@ module.exports = (router) => {
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch failed due to :${e} and referenceId :${referenceId}`);
+        debug(`caught exception ${e}`);
         res.status(400)
           .json({
             error: e.toString()
@@ -75,7 +80,7 @@ module.exports = (router) => {
 function sortable(sort) {
   if (typeof sort === 'undefined' ||
     sort == null) {
-    return {};
+    return ORDER_BY;
   }
   if (typeof sort === 'string') {
     var result = sort.split(",")
@@ -92,6 +97,6 @@ function sortable(sort) {
       }, {});
     return result;
   } else {
-    return {};
+    return ORDER_BY;
   }
 }

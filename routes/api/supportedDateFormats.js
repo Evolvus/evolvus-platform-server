@@ -46,14 +46,12 @@ module.exports = (router) => {
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .send(JSON.stringify(response, null, 2));
+              res.status(response.status).json(response);
             } else {
               response.status = "404";
               response.description = "No supportedDateFormats found";
               debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .send(JSON.stringify(response, null, 2));
+              res.status(response.status).json(response);
             }
           })
           .catch((e) => {
@@ -62,8 +60,8 @@ module.exports = (router) => {
             debug(`failed to fetch all supportedDateFormats ${e}`);
             response.status = "400",
               response.description = `Unable to fetch all supportedDateFormats`
-            response.data = e.toString()
-            res.status(response.status).send(JSON.stringify(response, null, 2));
+            response.data = e.toString();
+            res.status(response.status).json(response);
           });
       } catch (e) {
         var reference = shortid.generate();
@@ -72,7 +70,7 @@ module.exports = (router) => {
         response.status = "400",
           response.description = `Unable to fetch all supportedDateFormats`
         response.data = e.toString()
-        res.status(response.status).send(JSON.stringify(response, null, 2));
+        res.status(response.status).json(response);
       }
     });
 };

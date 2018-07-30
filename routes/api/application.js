@@ -13,10 +13,11 @@ const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const PAGE_SIZE = 10;
 
-const applicationAttributes = ["applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel", "lastUpdatedDate", "wfInstanceId", "wfInstanceStatus"];
+const applicationAttributes = ["tenantId", "applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel", "lastUpdatedDate", "wfInstanceId", "processingStatus"];
 
 var filterAttributes = application.filterAttributes;
 var sortAttributes = application.sortAttributes;
+var workFlowAttributes = ["wfInstanceId", "processingStatus"];
 
 module.exports = (router) => {
   router.route('/application')
@@ -65,7 +66,7 @@ module.exports = (router) => {
         response.description = `Unable to add new Application ${body.applicationName}. Due to ${e.message}`;
         response.data = e.toString();
         debug("caught exception" + JSON.stringify(response));
-        res.status(response.status).json(response);
+        res.status(response.status).send(JSON.stringify(response));
       }
     });
 
@@ -85,6 +86,7 @@ module.exports = (router) => {
       debug("query: " + JSON.stringify(req.query));
       let body = _.pick(req.body, applicationAttributes);
       try {
+        body.tenantId = tenantId;
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
         debug(`Update API.tenantId :${tenantId}, updateapplicationCode :${updateapplicationCode}, body :${JSON.stringify(body)}, are parameters`);
@@ -164,8 +166,8 @@ module.exports = (router) => {
         var orderby = sortable(sort);
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
 
-        debug(`GET ALL API.tenantId :${tenantId}, filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
-        Promise.all([application.find(tenantId, filter, orderby, skipCount, limitc), application.find(tenantId, filter, orderby, 0, 0)])
+        debug(`GET ALL API.tenantId :${tenantId},ipAddress :${JSON.stringify(ipAddress)},createdBy :${JSON.stringify(createdBy)},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
+        Promise.all([application.find(tenantId, ipAddress, createdBy, filter, orderby, skipCount, limitc), application.find(tenantId, ipAddress, createdBy, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -177,6 +179,7 @@ module.exports = (router) => {
               res.status(response.status).json(response);
             } else {
               response.status = "200";
+              response.data = [];
               response.description = "No applications found";
               response.totalNoOfRecords = result[1].length;
               response.totalNoOfPages = 0;
@@ -203,6 +206,51 @@ module.exports = (router) => {
         debug(`caught exception ${e}`);
         res.status(response.status).json(response);
       }
+    });
+
+  router.route("/application/:applicationCode/swe")
+    .put((req, res, next) => {
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader);
+      var updateapplicationCode = req.params.applicationCode;
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": {}
+      };
+      debug("query: " + JSON.stringify(req.query));
+      let body = _.pick(req.body, workFlowAttributes);
+      try {
+        body.tenantId = tenantId;
+        body.updatedBy = req.header(userHeader);;
+        body.lastUpdatedDate = new Date().toISOString();
+        debug(`Update API.tenantId :${tenantId}, updateapplicationCode :${updateapplicationCode}, body :${JSON.stringify(body)}, are parameters`);
+        application.update(tenantId, updateapplicationCode, body).then((updatedapplication) => {
+          response.status = "200";
+          response.description = `${updateapplicationCode} application has been modified successfully and sent for the supervisor authorization.`;
+          response.data = body;
+          debug("response: " + JSON.stringify(response));
+          res.status(response.status).json(response);
+        }).catch((e) => {
+          response.status = "400";
+          response.description = `Unable to modify application ${updateapplicationCode}. Due to ${e.message}`;
+          response.data = e.toString();
+          var reference = shortid.generate();
+          debug(`Update promise failed due to :${e} and referenceId :${reference}`);
+          res.status(response.status).json(response);
+        });
+      } catch (e) {
+        var reference = shortid.generate();
+        debug(`try catch failed due to :${e} , and reference id :${reference}`);
+        response.status = "400";
+        response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
+        response.data = e.toString();
+        res.status(response.status).json(response);
+      }
+
     });
 };
 
