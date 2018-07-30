@@ -4,12 +4,12 @@ const menu = require("@evolvus/evolvus-menu");
 
 const LIMIT = process.env.LIMIT || 20;
 const ORDER_BY = process.env.ORDER_BY || {
-  menuGroupOrder:1
+  menuGroupOrder: 1
 };
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const menuAttributes = ["menuGroupCode", "title", "applicationCode", "tenantId", "menuItems", "createdBy", "createdDate", "menuGroupOrder"];
 const filterAttributes = ["applicationCode"];
@@ -39,7 +39,7 @@ module.exports = (router) => {
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
       try {
-        menu.find(tenantId,createdBy, ipAddress,  filter, orderby, skipCount, +limit)
+        menu.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, +limit)
           .then((menus) => {
             if (menus.length > 0) {
               response.status = "200";
@@ -49,7 +49,7 @@ module.exports = (router) => {
                 .send(JSON.stringify(response, null, 2));
             } else {
               response.status = "204";
-              response.data=[];
+              response.data = [];
               response.description = "No menus found";
               debug("response: " + JSON.stringify(response));
               res.status(200)
@@ -66,9 +66,9 @@ module.exports = (router) => {
       } catch (e) {
         debug(`caught exception ${e}`);
         response.status = "400";
-            response.description = `Unable to fetch all menus`;
-            response.data = e.toString();
-            res.status(response.status).send(JSON.stringify(response, null, 2));
+        response.description = `Unable to fetch all menus`;
+        response.data = e.toString();
+        res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
 

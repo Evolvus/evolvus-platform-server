@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:entity");
 const _ = require("lodash");
-const entity = require("@teamtagevo/evolvus-entity");
+const entity = require("@evolvus/evolvus-entity");
 const randomString = require("randomstring");
 
 const ORDER_BY = process.env.ORDER_BY || {
@@ -10,7 +10,7 @@ const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESS-LEVEL"
 const entityAttributes = ["tenantId", "name", "entityCode", "entityId", "wfInstanceId", "wfInstanceStatus", "description", "processingStatus", "enableFlag", "createdBy", "createdDate", "parent", "acessLevel", "lastUpdatedDate"];
@@ -73,7 +73,7 @@ module.exports = (router) => {
       try {
         debug("query: " + JSON.stringify(req.query));
         var limit = _.get(req.query, "limit", LIMIT);
-       limit = parseInt(limit);
+        limit = parseInt(limit);
         if (isNaN(limit)) {
           throw new Error("limit must be a number")
         }
@@ -95,7 +95,7 @@ module.exports = (router) => {
         console.log("filter", filterValues);
 
         var invalidFilters = _.difference(_.keys(req.query), filterAttributes);
-        let a = _.pull(invalidFilters, 'pageSize', 'pageNo','limit','sort');
+        let a = _.pull(invalidFilters, 'pageSize', 'pageNo', 'limit', 'sort');
         debug("invalidFilters:", invalidFilters);
         if (a.length !== 0) {
           response.status = "200";
@@ -109,7 +109,7 @@ module.exports = (router) => {
           var sort = _.get(req.query, "sort", {});
           var orderby = sortable(sort);
           limit = (+pageSize < limit) ? pageSize : limit;
-console.log(typeof limit );
+          console.log(typeof limit);
           Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, limit), entity.find(tenantId, entityId, accessLevel, filter, {}, 0, 0)])
             .then((result) => {
               if (result[0].length > 0) {
@@ -191,45 +191,45 @@ console.log(typeof limit );
       }
     });
 
-    router.route("/entity/:entityCode/swe")
-      .put((req, res, next) => {
-        const tenantId = req.header(tenantHeader);
-        const createdBy = req.header(userHeader);
-        const ipAddress = req.header(ipHeader);
-        const accessLevel = req.header(accessLevelHeader);
-        const entityId = req.header(entityIdHeader)
-        const response = {
-          "status": "200",
-          "description": "",
-          "data": []
-        };
-        debug("query: " + JSON.stringify(req.query));
-        try {
-          let body = _.pick(req.body, entityAttributes);
-          body.updatedBy = req.header(userHeader);;
-          body.lastUpdatedDate = new Date().toISOString();
-          body.processingStatus = "PENDING_AUTHORIZATION";
-          entity.update(tenantId, req.params.entityCode, body).then((updatedEntity) => {
-            response.status = "200";
-            response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
-            response.data = body;
-            res.status(200)
-              .json(response);
+  router.route("/entity/:entityCode/swe")
+    .put((req, res, next) => {
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader)
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": []
+      };
+      debug("query: " + JSON.stringify(req.query));
+      try {
+        let body = _.pick(req.body, entityAttributes);
+        body.updatedBy = req.header(userHeader);;
+        body.lastUpdatedDate = new Date().toISOString();
+        body.processingStatus = "PENDING_AUTHORIZATION";
+        entity.update(tenantId, req.params.entityCode, body).then((updatedEntity) => {
+          response.status = "200";
+          response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
+          response.data = body;
+          res.status(200)
+            .json(response);
 
-          }).catch((e) => {
-            response.status = "400",
-              response.description = `Unable to modify entity ${body.name}. Due to ${e}`
-            response.data = e.toString()
-            res.status(response.status).json(response);
-          });
-        } catch (e) {
+        }).catch((e) => {
           response.status = "400",
-            response.description = `Unable to modify entity ${req.body.name}. Due to ${e}`
+            response.description = `Unable to modify entity ${body.name}. Due to ${e}`
           response.data = e.toString()
           res.status(response.status).json(response);
-        }
-      });
-  };
+        });
+      } catch (e) {
+        response.status = "400",
+          response.description = `Unable to modify entity ${req.body.name}. Due to ${e}`
+        response.data = e.toString()
+        res.status(response.status).json(response);
+      }
+    });
+};
 
 
 function sortable(sort) {

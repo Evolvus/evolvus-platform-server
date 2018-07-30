@@ -2,11 +2,11 @@ const debug = require("debug")("evolvus-platform-server:routes:api:contact");
 const _ = require("lodash");
 const contact = require("@evolvus/evolvus-contact");
 const shortid = require('shortid');
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const contactAttributes = ["contactName", "contactId", "description", "enabled", "contactCode", "createdBy", "createdDate", "logo", "favicon"];
 

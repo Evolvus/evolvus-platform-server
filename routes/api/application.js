@@ -7,11 +7,11 @@ const ORDER_BY = process.env.ORDER_BY || {
 const shortid = require('shortid');
 const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESS-LEVEL"
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const applicationAttributes = ["applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel", "lastUpdatedDate", "wfInstanceId", "wfInstanceStatus"];
 
@@ -165,7 +165,7 @@ module.exports = (router) => {
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
 
         debug(`GET ALL API.tenantId :${tenantId}, filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
-        Promise.all([application.find(tenantId, filter, orderby, skipCount, limitc), application.find(tenantId, filter, orderby, 0, 0)])
+        Promise.all([application.find(tenantId,createdBy,ipAddress, filter, orderby, skipCount, limitc), application.find(tenantId, createdBy,ipAddress,filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";

@@ -5,13 +5,13 @@ const application = require("@evolvus/evolvus-application");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESS-LEVEL";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup", "lastUpdatedDate", "entityId", "accessLevel", "roleType", "txnType"];
 const filterAttributes = role.filterAttributes;
@@ -42,13 +42,13 @@ module.exports = (router) => {
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
 
-        role.save(tenantId, createdBy, accessLevel, entityId, body).then((roles) => {
+        role.save(tenantId, createdBy,ipAddress, accessLevel, entityId, body).then((roles) => {
           response.status = "200";
           response.description = `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`;
           response.data = roles;
           debug("response: " + JSON.stringify(response));
           res.status(200)
-          .json(response);
+            .json(response);
         }).catch((e) => {
           console.log(e);
           response.status = "400";
@@ -58,7 +58,7 @@ module.exports = (router) => {
           res.status(response.status).json(response);
         });
       } catch (e) {
-console.log(e);
+        console.log(e);
         response.status = "400";
         response.description = `Unable to add new Role ${body.roleName}. Due to ${e}`;
         response.data = {};
@@ -90,9 +90,9 @@ console.log(e);
       });
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
-        limit = (+pageSize < +limit) ? pageSize: limit;
+      limit = (+pageSize < +limit) ? pageSize : limit;
       try {
-        Promise.all([role.find(tenantId, filter, orderby, skipCount, +limit), role.find(tenantId, filter, orderby, 0, 0)])
+        Promise.all([role.find(tenantId, ipAddress,createdBy,filter, orderby, skipCount, +limit), role.find(tenantId,"192.168.1.115","kavyak", filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -101,7 +101,7 @@ console.log(e);
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               res.status(200)
-              .json(response);
+                .json(response);
             } else {
               response.status = "200";
               response.data = [];
@@ -146,7 +146,7 @@ console.log(e);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
         let updateRoleName = req.params.roleName;
-        body.processingStatus="PENDING_AUTHORIZATION";
+        body.processingStatus = "PENDING_AUTHORIZATION";
         role.update(tenantId, body.roleName, updateRoleName, body).then((updatedRoles) => {
           response.status = "200";
           response.description = `${body.roleName} Role has been modified successful and sent for the supervisor authorization.`;
