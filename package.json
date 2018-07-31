@@ -12,7 +12,8 @@
       "classname": "Test",
       "testdir": "test",
       "outputfile": "report/TEST-results.xml"
-    },
+    }
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {

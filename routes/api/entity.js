@@ -164,7 +164,7 @@ module.exports = (router) => {
         let body = _.pick(req.body, entityAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        body.processingStatus = "PENDING_AUTHORIZATION";
+        body.processingStatus = "IN_PROGRESS";
         entity.update(tenantId, createdBy, ipAddress, req.params.entityCode, body).then((updatedEntity) => {
           response.status = "200";
           response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
