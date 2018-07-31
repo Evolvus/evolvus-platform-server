@@ -2,13 +2,13 @@ const debug = require("debug")("evolvus-platform-server:routes:api:user");
 const _ = require("lodash");
 const user = require("@evolvus/evolvus-user");
 
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESS-LEVEL"
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };

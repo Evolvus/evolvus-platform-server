@@ -5,13 +5,13 @@ const application = require("@evolvus/evolvus-application");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESS-LEVEL";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const roleAttributes = ["tenantId", "roleName", "applicationCode", "description", "activationStatus", "processingStatus", "associatedUsers", "createdBy", "createdDate", "menuGroup", "lastUpdatedDate", "entityId", "accessLevel", "roleType", "txnType"];
 const filterAttributes = role.filterAttributes;
@@ -43,7 +43,11 @@ module.exports = (router) => {
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
 
+<<<<<<< HEAD
         role.save(tenantId, createdBy, ipAddress, accessLevel, entityId, body).then((roles) => {
+=======
+        role.save(tenantId, createdBy,ipAddress, accessLevel, entityId, body).then((roles) => {
+>>>>>>> b307cbb74fc4f456d72c8a06de30ca6eed1b31a5
           response.status = "200";
           response.description = `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`;
           response.data = roles;
@@ -93,7 +97,11 @@ module.exports = (router) => {
       var orderby = sortable(sort);
       limit = (+pageSize < +limit) ? pageSize : limit;
       try {
+<<<<<<< HEAD
         Promise.all([role.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, +limit), role.find(tenantId, createdBy, ipAddress, filter, orderby, 0, 0)])
+=======
+        Promise.all([role.find(tenantId, ipAddress,createdBy,filter, orderby, skipCount, +limit), role.find(tenantId,"192.168.1.115","kavyak", filter, orderby, 0, 0)])
+>>>>>>> b307cbb74fc4f456d72c8a06de30ca6eed1b31a5
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -146,8 +154,14 @@ module.exports = (router) => {
         let body = _.pick(req.body, roleAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
+<<<<<<< HEAD
         body.processingStatus = "PENDING_AUTHORIZATION";
         role.update(tenantId, req.params.roleName, body).then((updatedRoles) => {
+=======
+        let updateRoleName = req.params.roleName;
+        body.processingStatus = "PENDING_AUTHORIZATION";
+        role.update(tenantId, body.roleName, updateRoleName, body).then((updatedRoles) => {
+>>>>>>> b307cbb74fc4f456d72c8a06de30ca6eed1b31a5
           response.status = "200";
           response.description = `${req.params.roleName} Role has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
@@ -187,7 +201,7 @@ module.exports = (router) => {
         let body = _.pick(req.body, roleAttributes);
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        role.updateWorkflow(tenantId, req.params._id, body).then((updatedRole) => {
+        role.updateWorkflow(tenantId, createdBy, ipAddress, req.params._id, body).then((updatedRole) => {
           response.status = "200";
           response.description = `${req.params._id} Role has been modified successful and sent for the supervisor authorization.`;
           response.data = body;

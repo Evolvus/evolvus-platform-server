@@ -2,11 +2,11 @@ const debug = require("debug")("evolvus-platform-server:routes:api:masterTimeZon
 const _ = require("lodash");
 const masterTimeZone = require("@evolvus/evolvus-master-time-zone");
 const shortid = require('shortid');
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const mastermasterTimeZoneAttributes = ["zoneCode", "zoneName", "offsetValue", "createdDate", "lastUpdatedDate", "createdBy", "updatedBy", "enableFlag", "offSet", "objVersion"];
 

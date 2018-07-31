@@ -2,11 +2,11 @@ const debug = require("debug")("evolvus-platform-server:routes:api:masterCurrenc
 const _ = require("lodash");
 const shortid = require('shortid');
 const masterCurrency = require("@evolvus/evolvus-master-currency");
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const masterCurrencyAttributes = ["currencyCode", "currencyName", "decimalDigit", "delimiter", "createdDate", "lastUpdatedDate", "createdBy", "updatedBy", "objVersion", "enableFlag", "currencyLocale"];
 
