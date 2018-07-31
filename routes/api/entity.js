@@ -208,7 +208,6 @@ console.log(typeof limit );
           let body = _.pick(req.body, entityAttributes);
           body.updatedBy = req.header(userHeader);;
           body.lastUpdatedDate = new Date().toISOString();
-          body.processingStatus = "PENDING_AUTHORIZATION";
           entity.update(tenantId, req.params.entityCode, body).then((updatedEntity) => {
             response.status = "200";
             response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;

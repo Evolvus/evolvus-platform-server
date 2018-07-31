@@ -34,6 +34,7 @@ module.exports = (router) => {
         "data": {}
       };
       let body = _.pick(req.body, roleAttributes);
+      console.log("body", body)
       try {
         body.associatedUsers = 5;
         body.tenantId = tenantId;
@@ -42,13 +43,13 @@ module.exports = (router) => {
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
 
-        role.save(tenantId, createdBy, accessLevel, entityId, body).then((roles) => {
+        role.save(tenantId, createdBy, ipAddress, accessLevel, entityId, body).then((roles) => {
           response.status = "200";
           response.description = `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`;
           response.data = roles;
           debug("response: " + JSON.stringify(response));
           res.status(200)
-          .json(response);
+            .json(response);
         }).catch((e) => {
           console.log(e);
           response.status = "400";
@@ -58,7 +59,7 @@ module.exports = (router) => {
           res.status(response.status).json(response);
         });
       } catch (e) {
-console.log(e);
+        console.log(e);
         response.status = "400";
         response.description = `Unable to add new Role ${body.roleName}. Due to ${e}`;
         response.data = {};
@@ -90,9 +91,9 @@ console.log(e);
       });
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
-        limit = (+pageSize < +limit) ? pageSize: limit;
+      limit = (+pageSize < +limit) ? pageSize : limit;
       try {
-        Promise.all([role.find(tenantId, filter, orderby, skipCount, +limit), role.find(tenantId, filter, orderby, 0, 0)])
+        Promise.all([role.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, +limit), role.find(tenantId, createdBy, ipAddress, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -101,7 +102,7 @@ console.log(e);
               response.totalNoOfRecords = result[1].length;
               response.data = result[0];
               res.status(200)
-              .json(response);
+                .json(response);
             } else {
               response.status = "200";
               response.data = [];
@@ -145,27 +146,64 @@ console.log(e);
         let body = _.pick(req.body, roleAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-        let updateRoleName = req.params.roleName;
-        body.processingStatus="PENDING_AUTHORIZATION";
-        role.update(tenantId, body.roleName, updateRoleName, body).then((updatedRoles) => {
+        body.processingStatus = "PENDING_AUTHORIZATION";
+        role.update(tenantId, req.params.roleName, body).then((updatedRoles) => {
           response.status = "200";
-          response.description = `${body.roleName} Role has been modified successful and sent for the supervisor authorization.`;
+          response.description = `${req.params.roleName} Role has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
           debug("response: " + JSON.stringify(response));
           res.status(200)
             .json(response);
         }).catch((e) => {
           response.status = "400";
-          response.description = `Unable to modify role ${body.roleName}. Due to ${e.message}`;
+          response.description = `Unable to modify role ${req.params.roleName}. Due to ${e.message}`;
           response.data = e.toString();
           debug("failed to modify a role" + JSON.stringify(response));
           res.status(response.status).json(response);
         });
       } catch (e) {
         response.status = "400";
-        response.description = `Unable to modify role ${body.roleName}. Due to ${e.message}`;
+        response.description = `Unable to modify role ${req.params.roleName}. Due to ${e.message}`;
         response.data = e.toString();
         debug(`caught exception ${e}`);
+        res.status(response.status).json(response);
+      }
+    });
+
+  router.route("/private/:_id")
+    .put((req, res, next) => {
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader)
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": []
+      };
+      debug("query: " + JSON.stringify(req.query));
+      try {
+        let body = _.pick(req.body, roleAttributes);
+        body.updatedBy = req.header(userHeader);
+        body.lastUpdatedDate = new Date().toISOString();
+        role.updateWorkflow(tenantId, req.params._id, body).then((updatedRole) => {
+          response.status = "200";
+          response.description = `${req.params._id} Role has been modified successful and sent for the supervisor authorization.`;
+          response.data = body;
+          res.status(200)
+            .json(response);
+
+        }).catch((e) => {
+          response.status = "400",
+            response.description = `Unable to modify role ${req.params._id}. Due to ${e}`
+          response.data = e.toString()
+          res.status(response.status).json(response);
+        });
+      } catch (e) {
+        response.status = "400",
+          response.description = `Unable to modify role ${req.params._id}. Due to ${e}`
+        response.data = e.toString()
         res.status(response.status).json(response);
       }
     });
