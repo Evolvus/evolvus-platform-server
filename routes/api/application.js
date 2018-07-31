@@ -133,7 +133,7 @@ module.exports = (router) => {
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = pageSize * (pageNo - 1);
       var filterValues = _.pick(req.query, filterAttributes);
-      var filter = _.omitBy(filterValu_ides, function(value, key) {
+      var filter = _.omitBy(filterValues, function(value, key) {
         return value.startsWith("undefined");
       });
       var sort = _.get(req.query, "sort", {});
