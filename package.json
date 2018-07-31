@@ -7,10 +7,26 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
+  "config": {
+    "mocha-sonar-reporter": {
+      "classname": "Test",
+      "testdir": "test",
+      "outputfile": "report/TEST-results.xml"
+    },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@evolvus/evolvus-application": "^1.0.6",
+<<<<<<< HEAD
+    "@evolvus/evolvus-contact": "^1.0.3",
+    "@evolvus/evolvus-lookup": "^1.0.3",
+    "@evolvus/evolvus-master-currency": "^1.0.3",
+    "@evolvus/evolvus-master-time-zone": "^1.0.3",
+    "@evolvus/evolvus-menu": "^1.0.4",
+    "@evolvus/evolvus-role": "^1.1.0",
+    "@evolvus/evolvus-supported-date-formats": "^1.0.3",
+    "@evolvus/evolvus-user": "^1.0.8",
+=======
     "@evolvus/evolvus-contact": "^1.0.4",
     "@evolvus/evolvus-lookup": "^1.0.3",
     "@evolvus/evolvus-master-currency": "^1.0.3",
@@ -20,6 +36,7 @@
     "@evolvus/evolvus-supported-date-formats": "^1.0.3",
     "@evolvus/evolvus-user": "^1.0.8",
     "@evolvus/evolvus-entity": "^1.0.6",
+>>>>>>> b307cbb74fc4f456d72c8a06de30ca6eed1b31a5
     "body-parser": "^1.18.2",
     "debug": "^3.1.0",
     "express": "^4.16.3",
@@ -34,6 +51,7 @@
     "grunt-env": "^0.4.4",
     "grunt-mocha-test": "^0.13.3",
     "mocha": "^5.1.1",
+    "mocha-sonar-reporter": "^0.1.6",
     "randomstring": "^1.1.5"
   }
 }

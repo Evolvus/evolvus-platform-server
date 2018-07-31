@@ -6,9 +6,9 @@ process.env.MONGO_DB_URL = "mongodb://10.10.69.204:27017/TestPlatform_Dev";
  ** Test /api/audit API's
  */
 const debug = require("debug")("evolvus-platform-server.test.routes.api");
-const app = require("../../../server")
+const app = require("../../server")
   .app;
-const entityTestData = require("./entityData");
+const entityTestData = require("./entityTestData");
 const randomstring = require("randomstring");
 
 let chai = require("chai");

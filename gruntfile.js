@@ -8,7 +8,7 @@ module.exports = (grunt) => {
     mochaTest: {
       test: {
         options: {
-          reporter: "spec"
+          reporter: "mocha-sonar-reporter"
         },
         src: "test/**/*.test.js"
       }
