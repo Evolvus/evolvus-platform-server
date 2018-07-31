@@ -133,6 +133,7 @@ module.exports = (router) => {
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
       const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader);
       const response = {
         "status": "200",
         "description": "",
@@ -140,13 +141,13 @@ module.exports = (router) => {
       };
       debug("query: " + JSON.stringify(req.query));
       try {
-        let body = _.pick(req.body, workFlowAttributes);
+        let body = _.pick(req.body, userAttributes);
         body.tenantId = tenantId;
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "PENDING_AUTHORIZATION";
 
-        user.update(tenantId, req.params.userId, body, accessLevel).then((updatedUser) => {
+        user.update(tenantId,createdBy,ipAddress, req.params.userId, body, accessLevel,entityId).then((updatedUser) => {
           response.status = "200";
           response.description = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
           response.data = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
@@ -168,7 +169,7 @@ module.exports = (router) => {
       }
     });
 
-  router.route("/private/user/:id")
+  router.route("/private/api/user/:id")
     .put((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
