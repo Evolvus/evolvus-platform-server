@@ -42,12 +42,7 @@ module.exports = (router) => {
         body.entityId = entityId;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-
-<<<<<<< HEAD
         role.save(tenantId, createdBy, ipAddress, accessLevel, entityId, body).then((roles) => {
-=======
-        role.save(tenantId, createdBy,ipAddress, accessLevel, entityId, body).then((roles) => {
->>>>>>> b307cbb74fc4f456d72c8a06de30ca6eed1b31a5
           response.status = "200";
           response.description = `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`;
           response.data = roles;
@@ -97,11 +92,7 @@ module.exports = (router) => {
       var orderby = sortable(sort);
       limit = (+pageSize < +limit) ? pageSize : limit;
       try {
-<<<<<<< HEAD
         Promise.all([role.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, +limit), role.find(tenantId, createdBy, ipAddress, filter, orderby, 0, 0)])
-=======
-        Promise.all([role.find(tenantId, ipAddress,createdBy,filter, orderby, skipCount, +limit), role.find(tenantId,"192.168.1.115","kavyak", filter, orderby, 0, 0)])
->>>>>>> b307cbb74fc4f456d72c8a06de30ca6eed1b31a5
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -154,14 +145,8 @@ module.exports = (router) => {
         let body = _.pick(req.body, roleAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
-<<<<<<< HEAD
-        body.processingStatus = "PENDING_AUTHORIZATION";
-        role.update(tenantId, req.params.roleName, body).then((updatedRoles) => {
-=======
-        let updateRoleName = req.params.roleName;
-        body.processingStatus = "PENDING_AUTHORIZATION";
-        role.update(tenantId, body.roleName, updateRoleName, body).then((updatedRoles) => {
->>>>>>> b307cbb74fc4f456d72c8a06de30ca6eed1b31a5
+        body.processingStatus = "IN_PROGRESS";
+        role.update(tenantId, createdBy, ipAddress, req.params.roleName, body).then((updatedRoles) => {
           response.status = "200";
           response.description = `${req.params.roleName} Role has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
@@ -184,7 +169,7 @@ module.exports = (router) => {
       }
     });
 
-  router.route("/private/:_id")
+  router.route("/private/api/role/:id")
     .put((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
@@ -201,22 +186,22 @@ module.exports = (router) => {
         let body = _.pick(req.body, roleAttributes);
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        role.updateWorkflow(tenantId, createdBy, ipAddress, req.params._id, body).then((updatedRole) => {
+        role.updateWorkflow(tenantId, createdBy, ipAddress, req.params.id, body).then((updatedRole) => {
           response.status = "200";
-          response.description = `${req.params._id} Role has been modified successful and sent for the supervisor authorization.`;
+          response.description = `${req.params.id} Role has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
           res.status(200)
             .json(response);
 
         }).catch((e) => {
           response.status = "400",
-            response.description = `Unable to modify role ${req.params._id}. Due to ${e}`
+            response.description = `Unable to modify role ${req.params.id}. Due to ${e}`
           response.data = e.toString()
           res.status(response.status).json(response);
         });
       } catch (e) {
         response.status = "400",
-          response.description = `Unable to modify role ${req.params._id}. Due to ${e}`
+          response.description = `Unable to modify role ${req.params.id}. Due to ${e}`
         response.data = e.toString()
         res.status(response.status).json(response);
       }
