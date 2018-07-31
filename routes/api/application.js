@@ -7,11 +7,11 @@ const ORDER_BY = process.env.ORDER_BY || {
 const shortid = require('shortid');
 const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESS-LEVEL"
-const LIMIT = process.env.LIMIT || 20;
+const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 const applicationAttributes = ["tenantId", "applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel", "lastUpdatedDate", "wfInstanceId", "processingStatus"];
 
@@ -42,22 +42,20 @@ module.exports = (router) => {
         body.entityId = entityId;
         body.accessLevel = accessLevel;
 
-
         debug(`save API. tenantId :${tenantId},ipAddress :${ipAddress}, createdBy :${createdBy}, body :${JSON.stringify(body) }are parameters`);
         application.save(tenantId, ipAddress, createdBy, body).then((ent) => {
           response.status = "200";
           response.description = `New Application ''${body.applicationName}' has been added successfully and sent for the supervisor authorization`;
           response.data = ent;
           debug("response: " + JSON.stringify(response));
-          res.status(response.status).json(response);
+          res.status(response.status).json(response, null, 2);
         }).catch((e) => {
           response.status = "400";
           response.description = `Unable to add new application ${body.applicationName}. Due to ${e}`;
           response.data = e;
           var reference = shortid.generate();
           debug(`save promise failed due to :${e} and referenceId :${reference}`);
-          debug("failed to save an application" + JSON.stringify(response));
-          res.status(response.status).json(response);
+          res.status(response.status).json(response, null, 2);
         });
       } catch (e) {
         var reference = shortid.generate();
@@ -65,8 +63,7 @@ module.exports = (router) => {
         response.status = "400";
         response.description = `Unable to add new Application ${body.applicationName}. Due to ${e.message}`;
         response.data = e.toString();
-        debug("caught exception" + JSON.stringify(response));
-        res.status(response.status).send(JSON.stringify(response));
+        res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
 
@@ -81,16 +78,17 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data": {}
+        "data": []
       };
       debug("query: " + JSON.stringify(req.query));
       let body = _.pick(req.body, applicationAttributes);
       try {
         body.tenantId = tenantId;
-        body.updatedBy = req.header(userHeader);;
+        body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        debug(`Update API.tenantId :${tenantId}, updateapplicationCode :${updateapplicationCode}, body :${JSON.stringify(body)}, are parameters`);
-        application.update(tenantId, updateapplicationCode, body).then((updatedapplication) => {
+        body.processingStatus = "IN_PROGRESS";
+        debug(`Update API.tenantId :${tenantId},ipAddress :${ipAddress},createdBy :${JSON.stringify(createdBy)}, updateapplicationCode :${updateapplicationCode}, body :${JSON.stringify(body)}, are parameters`);
+        application.update(tenantId, ipAddress, createdBy, updateapplicationCode, body).then((updatedapplication) => {
           response.status = "200";
           response.description = `${updateapplicationCode} application has been modified successfully and sent for the supervisor authorization.`;
           response.data = body;
@@ -102,7 +100,7 @@ module.exports = (router) => {
           response.data = e.toString();
           var reference = shortid.generate();
           debug(`Update promise failed due to :${e} and referenceId :${reference}`);
-          res.status(response.status).json(response);
+          res.status(response.status).json(response, null, 2);
         });
 
       } catch (e) {
@@ -111,7 +109,7 @@ module.exports = (router) => {
         response.status = "400";
         response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
         response.data = e.toString();
-        res.status(response.status).json(response);
+        res.status(response.status).json(response, null, 2);
       }
 
     });
@@ -135,7 +133,7 @@ module.exports = (router) => {
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = pageSize * (pageNo - 1);
       var filterValues = _.pick(req.query, filterAttributes);
-      var filter = _.omitBy(filterValues, function(value, key) {
+      var filter = _.omitBy(filterValu_ides, function(value, key) {
         return value.startsWith("undefined");
       });
       var sort = _.get(req.query, "sort", {});
@@ -166,8 +164,8 @@ module.exports = (router) => {
         var orderby = sortable(sort);
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
 
-        debug(`GET ALL API.tenantId :${tenantId},ipAddress :${JSON.stringify(ipAddress)},createdBy :${JSON.stringify(createdBy)},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
-        Promise.all([application.find(tenantId, ipAddress, createdBy, filter, orderby, skipCount, limitc), application.find(tenantId, ipAddress, createdBy, filter, orderby, 0, 0)])
+        debug(`GET ALL API.tenantId :${tenantId},createdBy :${createdBy},ipAddress :${ipAddress},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
+        Promise.all([application.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limitc), application.find(tenantId, ipAddress, createdBy, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -179,7 +177,6 @@ module.exports = (router) => {
               res.status(response.status).json(response);
             } else {
               response.status = "200";
-              response.data = [];
               response.description = "No applications found";
               response.totalNoOfRecords = result[1].length;
               response.totalNoOfPages = 0;
@@ -208,49 +205,41 @@ module.exports = (router) => {
       }
     });
 
-  router.route("/application/:applicationCode/swe")
+  router.route("/private/api/application/:id")
     .put((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
       const accessLevel = req.header(accessLevelHeader);
-      const entityId = req.header(entityIdHeader);
-      var updateapplicationCode = req.params.applicationCode;
+      const entityId = req.header(entityIdHeader)
       const response = {
         "status": "200",
         "description": "",
-        "data": {}
+        "data": []
       };
       debug("query: " + JSON.stringify(req.query));
-      let body = _.pick(req.body, workFlowAttributes);
       try {
-        body.tenantId = tenantId;
-        body.updatedBy = req.header(userHeader);;
+        let body = _.pick(req.body, applicationAttributes);
+        body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        debug(`Update API.tenantId :${tenantId}, updateapplicationCode :${updateapplicationCode}, body :${JSON.stringify(body)}, are parameters`);
-        application.update(tenantId, updateapplicationCode, body).then((updatedapplication) => {
+        application.updateWorkflow(tenantId, req.params.id, body).then((updateapplication) => {
           response.status = "200";
-          response.description = `${updateapplicationCode} application has been modified successfully and sent for the supervisor authorization.`;
+          response.description = `${req.params.id} application workflow has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
-          debug("response: " + JSON.stringify(response));
-          res.status(response.status).json(response);
+          res.status(200)
+            .json(response);
         }).catch((e) => {
-          response.status = "400";
-          response.description = `Unable to modify application ${updateapplicationCode}. Due to ${e.message}`;
-          response.data = e.toString();
-          var reference = shortid.generate();
-          debug(`Update promise failed due to :${e} and referenceId :${reference}`);
+          response.status = "400",
+            response.description = `Unable to modify application  workflow. Due to ${e}`
+          response.data = e.toString()
           res.status(response.status).json(response);
         });
       } catch (e) {
-        var reference = shortid.generate();
-        debug(`try catch failed due to :${e} , and reference id :${reference}`);
-        response.status = "400";
-        response.description = `Unable to modify application ${body.applicationName}. Due to ${e.message}`;
-        response.data = e.toString();
+        response.status = "400",
+          response.description = `Unable to modify application  workflow . Due to ${e}`
+        response.data = e.toString()
         res.status(response.status).json(response);
       }
-
     });
 };
 
