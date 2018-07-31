@@ -19,6 +19,9 @@ const userAttributes = ["tenantId", "entityId", "accessLevel", "applicationCode"
 const filterAttributes = user.filterAttributes;
 const sortAttributes = user.sortAttributes;
 
+
+var workFlowAttributes = ["wfInstanceId", "processingStatus"];
+
 module.exports = (router) => {
 
   router.route('/user/')
@@ -137,7 +140,7 @@ module.exports = (router) => {
       };
       debug("query: " + JSON.stringify(req.query));
       try {
-        let body = _.pick(req.body, userAttributes);
+        let body = _.pick(req.body, workFlowAttributes);
         body.tenantId = tenantId;
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
@@ -164,6 +167,45 @@ module.exports = (router) => {
         res.status(400).json(response);
       }
     });
+
+  router.route("/private/user/:id")
+    .put((req, res, next) => {
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader)
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": []
+      };
+      debug("query: " + JSON.stringify(req.query));
+      try {
+        let body = _.pick(req.body, workFlowAttributes);
+        body.updatedBy = req.header(userHeader);
+        body.lastUpdatedDate = new Date().toISOString();
+        user.updateWorkflow(tenantId, req.params.id, body).then((updatedUser) => {
+          response.status = "200";
+          response.description = `${req.params.id} User workflow status has been updated successfully `;
+          response.data = body;
+          res.status(200)
+            .json(response);
+
+        }).catch((e) => {
+          response.status = "400";
+          response.description = `Unable to update User workflow status due to ${e}`;
+          response.data = e.toString()
+          res.status(400).json(response);
+        });
+      } catch (e) {
+        response.status = "400";
+        response.description = `Unable to update User workflow status due to ${e}`;
+        response.data = e.toString();
+        res.status(400).json(response);
+      }
+    });
+
 };
 
 function sortable(sort) {
