@@ -37,8 +37,7 @@ module.exports = (router) => {
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
         body.tenantId = tenantId;
-
-        entity.save(tenantId, createdBy, entityId, accessLevel, body).then((ent) => {
+        entity.save(tenantId, createdBy, ipAddress, entityId, accessLevel, body).then((ent) => {
           response.status = "200";
           response.description = `New entiy ${body.name.toUpperCase()} has been added successfully  and sent for the supervisor authorization.`;
           response.data = ent;
@@ -110,7 +109,7 @@ module.exports = (router) => {
           var sort = _.get(req.query, "sort", {});
           var orderby = sortable(sort);
           limit = (+pageSize < limit) ? pageSize : limit;
-          Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, limit), entity.find(tenantId, entityId, accessLevel, filter, {}, 0, 0)])
+          Promise.all([entity.find(tenantId, createdBy, ipAddress, entityId, accessLevel, filter, orderby, skipCount, limit), entity.find(tenantId, createdBy, ipAddress, entityId, accessLevel, filter, {}, 0, 0)])
             .then((result) => {
               if (result[0].length > 0) {
                 response.status = "200";
@@ -166,7 +165,7 @@ module.exports = (router) => {
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "PENDING_AUTHORIZATION";
-        entity.update(tenantId, req.params.entityCode, body).then((updatedEntity) => {
+        entity.update(tenantId, createdBy, ipAddress, req.params.entityCode, body).then((updatedEntity) => {
           response.status = "200";
           response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
@@ -187,32 +186,7 @@ module.exports = (router) => {
       }
     });
 
-<<<<<<< HEAD
-    router.route("/entity/:entityCode/swe")
-      .put((req, res, next) => {
-        const tenantId = req.header(tenantHeader);
-        const createdBy = req.header(userHeader);
-        const ipAddress = req.header(ipHeader);
-        const accessLevel = req.header(accessLevelHeader);
-        const entityId = req.header(entityIdHeader)
-        const response = {
-          "status": "200",
-          "description": "",
-          "data": []
-        };
-        debug("query: " + JSON.stringify(req.query));
-        try {
-          let body = _.pick(req.body, entityAttributes);
-          body.updatedBy = req.header(userHeader);;
-          body.lastUpdatedDate = new Date().toISOString();
-          entity.update(tenantId, req.params.entityCode, body).then((updatedEntity) => {
-            response.status = "200";
-            response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
-            response.data = body;
-            res.status(200)
-              .json(response);
-=======
-  router.route("/entity/:entityCode/swe")
+  router.route("/private/api/entity/:id")
     .put((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
@@ -227,30 +201,30 @@ module.exports = (router) => {
       debug("query: " + JSON.stringify(req.query));
       try {
         let body = _.pick(req.body, entityAttributes);
-        body.updatedBy = req.header(userHeader);;
+        body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        body.processingStatus = "PENDING_AUTHORIZATION";
-        entity.update(tenantId, req.params.entityCode, body).then((updatedEntity) => {
+        entity.updateWorkflow(tenantId, createdBy, ipAddress, req.params.id, body).then((updatedEntity) => {
           response.status = "200";
-          response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
+          response.description = `${req.params.id} entity has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
           res.status(200)
             .json(response);
->>>>>>> b307cbb74fc4f456d72c8a06de30ca6eed1b31a5
 
         }).catch((e) => {
           response.status = "400",
-            response.description = `Unable to modify entity ${body.name}. Due to ${e}`
+            response.description = `Unable to modify entity ${req.params.name}. Due to ${e}`
           response.data = e.toString()
           res.status(response.status).json(response);
         });
       } catch (e) {
         response.status = "400",
-          response.description = `Unable to modify entity ${req.body.name}. Due to ${e}`
+          response.description = `Unable to modify role ${req.params.name}. Due to ${e}`
         response.data = e.toString()
         res.status(response.status).json(response);
       }
     });
+
+
 };
 
 
