@@ -88,12 +88,13 @@ module.exports = (router) => {
           throw new Error("pageNo must be a number")
         }
         var skipCount = pageSize * (pageNo - 1);
+        if (skipCount < 0) {
+          throw new Error("skipCount must be positive value or 0")
+        }
         var filterValues = _.pick(req.query, filterAttributes);
         var filter = _.omitBy(filterValues, function(value, key) {
           return value.startsWith("undefined");
         });
-        console.log("filter", filterValues);
-
         var invalidFilters = _.difference(_.keys(req.query), filterAttributes);
         let a = _.pull(invalidFilters, 'pageSize', 'pageNo', 'limit', 'sort');
         debug("invalidFilters:", invalidFilters);
@@ -109,7 +110,6 @@ module.exports = (router) => {
           var sort = _.get(req.query, "sort", {});
           var orderby = sortable(sort);
           limit = (+pageSize < limit) ? pageSize : limit;
-          console.log(typeof limit);
           Promise.all([entity.find(tenantId, entityId, accessLevel, filter, orderby, skipCount, limit), entity.find(tenantId, entityId, accessLevel, filter, {}, 0, 0)])
             .then((result) => {
               if (result[0].length > 0) {
@@ -132,7 +132,6 @@ module.exports = (router) => {
               }
             })
             .catch((e) => {
-              console.log(e);
               debug(`failed to fetch all entity ${e}`);
               response.status = "400",
                 response.description = `Unable to fetch all entities`
@@ -140,10 +139,7 @@ module.exports = (router) => {
               res.status(response.status).json(response);
             });
         }
-
-
       } catch (e) {
-        console.log(e);
         debug(`caught exception ${e}`);
         response.status = "400",
           response.description = `Unable to fetch all entities`
