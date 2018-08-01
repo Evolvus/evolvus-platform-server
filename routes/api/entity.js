@@ -44,15 +44,15 @@ module.exports = (router) => {
           res.status(200)
             .json(response);
         }).catch((e) => {
-          response.status = "400",
-            response.description = `Unable to add new Entity ${body.name}. Due to ${e}`,
-            response.data = e;
+          response.status = "400";
+          response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`;
+          response.data = e;
           res.status(response.status).json(response);
         });
       } catch (e) {
-        response.status = "400",
-          response.description = `Unable to add new Entity ${body.name}. Due to ${e}`,
-          response.data = e;
+        response.status = "400";
+        response.description = `Unable to add new Entity ${body.name}. Due to ${e}`;
+        response.data = e;
         res.status(response.status).send(JSON.stringify(response, null, 2));
       }
     });
@@ -91,11 +91,11 @@ module.exports = (router) => {
           throw new Error("skipCount must be positive value or 0")
         }
         var filterValues = _.pick(req.query, filterAttributes);
-        var filter = _.omitBy(filterValues, function(value, key) {
+        var filter = _.omitBy(filterValues, function (value, key) {
           return value.startsWith("undefined");
         });
         var invalidFilters = _.difference(_.keys(req.query), filterAttributes);
-        let a = _.pull(invalidFilters, 'pageSize', 'pageNo', 'limit', 'sort');
+        let a = _.pull(invalidFilters, 'pageSize', 'pageNo', 'limit', 'sort', 'query');
         debug("invalidFilters:", invalidFilters);
         if (a.length !== 0) {
           response.status = "200";
@@ -201,6 +201,8 @@ module.exports = (router) => {
       debug("query: " + JSON.stringify(req.query));
       try {
         let body = _.pick(req.body, entityAttributes);
+        console.log("body",body);
+        
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         entity.updateWorkflow(tenantId, createdBy, ipAddress, req.params.id, body).then((updatedEntity) => {
@@ -211,12 +213,16 @@ module.exports = (router) => {
             .json(response);
 
         }).catch((e) => {
+          console.log(e);
+          
           response.status = "400",
             response.description = `Unable to modify entity ${req.params.name}. Due to ${e}`
           response.data = e.toString()
           res.status(response.status).json(response);
         });
       } catch (e) {
+        console.log(e);
+        
         response.status = "400",
           response.description = `Unable to modify role ${req.params.name}. Due to ${e}`
         response.data = e.toString()

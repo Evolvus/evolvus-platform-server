@@ -145,7 +145,7 @@ module.exports = (router) => {
         body.tenantId = tenantId;
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        body.processingStatus = "PENDING_AUTHORIZATION";
+        body.processingStatus = "IN_PROGRESS";
 
         user.update(tenantId,createdBy,ipAddress, req.params.userId, body, accessLevel,entityId).then((updatedUser) => {
           response.status = "200";
