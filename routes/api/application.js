@@ -13,7 +13,7 @@ const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
 const PAGE_SIZE = 10;
 
-const applicationAttributes = ["tenantId", "applicationName", "description", "enableFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel", "lastUpdatedDate", "wfInstanceId", "processingStatus"];
+const applicationAttributes = ["tenantId", "applicationName", "description", "enabledFlag", "applicationCode", "createdBy", "createdDate", "logo", "favicon", "entityId", "accessLevel", "lastUpdatedDate", "wfInstanceId", "processingStatus"];
 
 var filterAttributes = application.filterAttributes;
 var sortAttributes = application.sortAttributes;
@@ -222,7 +222,8 @@ module.exports = (router) => {
         let body = _.pick(req.body, applicationAttributes);
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        application.updateWorkflow(tenantId, req.params.id, body).then((updateapplication) => {
+        debug(`Update workFlow API.tenantId :${tenantId},ipAddress :${ipAddress},createdBy :${JSON.stringify(createdBy)}, id :${req.params.id}, body :${JSON.stringify(body)}, are parameters`);
+        application.updateWorkflow(tenantId, ipAddress, createdBy, req.params.id, body).then((updateapplication) => {
           response.status = "200";
           response.description = `${req.params.id} application workflow has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
