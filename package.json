@@ -17,10 +17,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@evolvus/evolvus-application": "^1.0.9",
+    "@evolvus/evolvus-application": "^1.0.11",
     "@evolvus/evolvus-contact": "^1.0.4",
     "@evolvus/evolvus-entity": "^1.0.9",
-    "@evolvus/evolvus-lookup": "^1.0.3",
+    "@evolvus/evolvus-lookup": "^1.0.6",
     "@evolvus/evolvus-master-currency": "^1.0.3",
     "@evolvus/evolvus-master-time-zone": "^1.0.3",
     "@evolvus/evolvus-menu": "^1.0.5",

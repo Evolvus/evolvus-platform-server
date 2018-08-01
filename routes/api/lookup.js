@@ -5,16 +5,16 @@ const lookup = require("@evolvus/evolvus-lookup");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
-const LIMIT = process.env.LIMIT || 20;
+const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
-const lookupAttributes = ["lookupCode", "value", "enabled", "createdBy", "wfInstanceId", "wfInstanceStatus", "createdDate", "lastUpdatedDate"];
+const lookupAttributes = ["lookupCode", "value", "valueOne", "wfInstanceId", "processingStatus", "valueTwo", "valueThree", "valueFour", "valueFive", "valueSix", "valueSeven", "valueEight", "valueNine", "valueTen", "lastUpdatedDate", "enableFlag", "createdBy", "wfInstanceId", "wfInstanceStatus", "createdDate"];
 const filterAttributes = lookup.filterAttributes;
 const sortAttributes = lookup.sortAttributes;
-
+const workFlowAttributes = ["wfInstanceId", "processingStatus"];
 
 module.exports = (router) => {
 
@@ -89,6 +89,7 @@ module.exports = (router) => {
       };
       let body = _.pick(req.body, lookupAttributes);
       try {
+        body.tenantId = tenantId;
         body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
@@ -114,6 +115,50 @@ module.exports = (router) => {
           response.description = `Unable to add new lookup ${body.lookupCode}. Due to ${e.message}`,
           response.data = e.toString()
         res.status(response.status).send(JSON.stringify(response, null, 2));
+      }
+    });
+
+  router.route("/private/:_id")
+    .put((req, res, next) => {
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      // const accessLevel = req.header(accessLevelHeader);
+      // const entityId = req.header(entityIdHeader)
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": []
+      };
+      debug("query: " + JSON.stringify(req.query));
+      try {
+        let body = _.pick(req.body, lookupAttributes);
+        body.updatedBy = req.header(userHeader);
+        body.lastUpdatedDate = new Date().toISOString();
+        debug(`calling updateWorkflow method. tenantId :${tenantId},_id :${req.params._id},body :${JSON.stringify(body)} are paramters`)
+        lookup.updateWorkflow(tenantId, req.params._id, body).then((updatedlookup) => {
+          response.status = "200";
+          response.description = `${req.params._id} lookup has been modified successful and sent for the supervisor authorization.`;
+          response.data = body;
+          res.status(200)
+            .json(response);
+
+        }).catch((e) => {
+          var reference = shortid.generate();
+          response.status = "400",
+            response.description = `Unable to modify lookup. Due to ${e}`
+          response.data = e.toString()
+          debug(`calling updateWorkflow failed due to :${e},and referenceId :${reference}`)
+          res.status(response.status).json(response);
+        });
+      } catch (e) {
+        console.log(e, "e");
+        var reference = shortid.generate();
+        response.status = "400",
+          response.description = `Unable to modify lookup . Due to ${e}`
+        response.data = e.toString();
+        debug(`try catch failed due to :${e},and referenceId :${reference}`)
+        res.status(response.status).json(response);
       }
     });
 };
