@@ -15,7 +15,6 @@ RUN ls -a
 
 WORKDIR /usr/ng-sandstorm/
 COPY package*.json ./
-COPY .npmrc ./
 RUN npm install --only=production
 
 COPY . .
