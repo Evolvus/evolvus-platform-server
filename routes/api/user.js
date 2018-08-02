@@ -16,6 +16,7 @@ const ORDER_BY = process.env.ORDER_BY || {
 const userAttributes = ["tenantId", "entityId", "accessLevel", "applicationCode", "contact", "role", "userId", "designation", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token",
   "masterTimeZone", "masterCurrency", "dailyLimit", "individualTransactionLimit", "loginStatus"
 ];
+const bulkUserAttributes = ["phoneNumber", "mobileNumber", "emailId", "city", "state", "country"];
 const filterAttributes = user.filterAttributes;
 const sortAttributes = user.sortAttributes;
 
@@ -147,7 +148,7 @@ module.exports = (router) => {
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "IN_PROGRESS";
 
-        user.update(tenantId,createdBy,ipAddress, req.params.userId, body, accessLevel,entityId).then((updatedUser) => {
+        user.update(tenantId, createdBy, ipAddress, req.params.userId, body, accessLevel, entityId).then((updatedUser) => {
           response.status = "200";
           response.description = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
           response.data = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
@@ -203,6 +204,55 @@ module.exports = (router) => {
         response.status = "400";
         response.description = `Unable to update User workflow status due to ${e}`;
         response.data = e.toString();
+        res.status(400).json(response);
+      }
+    });
+
+  router.route("/user/bulk")
+    .post((req, res, next) => {
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader);
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": {}
+      };
+      try {
+        let object = _.pick(req.body, userAttributes);
+        let contact = _.pick(req.body, bulkUserAttributes)
+        object.createdDate = new Date().toISOString();
+        object.lastUpdatedDate = object.createdDate;
+        object.createdBy = createdBy;
+        object.userPassword = "evolvus*123";
+        if (!_.isEmpty(contact)) {
+          object.contact = contact;
+        }
+        if (object.role != null) {
+          object.role = {
+            roleName: object.role
+          };
+        }
+        user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
+          response.status = "200";
+          response.description = `User ${req.body.userName} saved successfullly`;
+          response.data = savedUser;
+          debug("response: " + JSON.stringify(response));
+          res.status(200).json(response);
+        }).catch((e) => {
+          response.status = "400";
+          response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
+          response.data = {};
+          debug("response: " + JSON.stringify(response));
+          res.status(400).json(response);
+        });
+      } catch (e) {
+        response.status = "400";
+        response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
+        response.data = {};
+        debug("response: " + JSON.stringify(response));
         res.status(400).json(response);
       }
     });
