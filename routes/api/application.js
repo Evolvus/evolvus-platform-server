@@ -178,6 +178,7 @@ module.exports = (router) => {
             } else {
               response.status = "200";
               response.description = "No applications found";
+              response.data = [];
               response.totalNoOfRecords = result[1].length;
               response.totalNoOfPages = 0;
               debug("response: " + JSON.stringify(response));
