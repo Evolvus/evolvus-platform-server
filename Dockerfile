@@ -1,28 +1,16 @@
 FROM node:8.9 as node
 
-WORKDIR /usr/ng-sandstorm/
 RUN npm install pm2 -g
 ENV PM2_PUBLIC_KEY XXXX
 ENV PM2_SECRET_KEY YYYY
-RUN git clone https://github.com/Evolvus/evolvus-sandstorm-ng-ui.git
-
-WORKDIR /usr/ng-sandstorm/evolvus-sandstorm-ng-ui/
-RUN npm install -g @angular/cli typescript uws
-RUN npm  i --save
-RUN ng build --prod --build-optimizer
-RUN ls -a
-
-
-WORKDIR /usr/ng-sandstorm/
-COPY package*.json ./
+COPY . /usr/app-platform-server/
+COPY package.json /usr/app-platform-server
+#COPY .npmrc ./
+WORKDIR /usr/app-platform-server/
 RUN npm install --only=production
-
-COPY . .
-
-RUN cp -r /usr/ng-sandstorm/evolvus-sandstorm-ng-ui/dist/ui-console/*.* /usr/ng-sandstorm/public
 
 #default environment variables
 ENV NODE_ENV production
 ENV PORT 8086
 EXPOSE 8086
-CMD ["pm2-runtime", "npm", "--", "start"]
+CMD ["pm2-runtime", "server.js","-i max"]
