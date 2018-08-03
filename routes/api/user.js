@@ -46,8 +46,8 @@ module.exports = (router) => {
       var filter = _.omitBy(filterValues, function(value, key) {
         return value.startsWith("undefined");
       });
-      var orderby = sortable(sort);
       var sort = _.get(req.query, "sort", {});
+      var orderby = sortable(sort);
 
       limit = +pageSize > +limit ? +limit : +pageSize;
 
