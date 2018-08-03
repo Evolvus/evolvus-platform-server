@@ -9,5 +9,6 @@ module.exports = (router) => {
   require("./masterTimeZone")(router);
   require("./lookup")(router);
   require("./supportedDateFormats")(router);
+  require("./fileUpload")(router);
 
 };
