@@ -26,7 +26,7 @@
     "@evolvus/evolvus-menu": "^1.0.5",
     "@evolvus/evolvus-role": "^1.0.13",
     "@evolvus/evolvus-supported-date-formats": "^1.0.3",
-    "@evolvus/evolvus-user": "^1.0.16",
+    "@evolvus/evolvus-user": "^1.0.18",
     "body-parser": "^1.18.2",
     "debug": "^3.1.0",
     "express": "^4.16.3",
