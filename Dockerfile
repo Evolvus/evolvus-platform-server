@@ -13,4 +13,4 @@ RUN npm install --only=production
 ENV NODE_ENV production
 ENV PORT 8086
 EXPOSE 8086
-CMD ["pm2-runtime", "server.js","-i max"]
+CMD ["pm2-runtime", "server.js"]
