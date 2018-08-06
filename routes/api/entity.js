@@ -39,7 +39,7 @@ module.exports = (router) => {
         body.tenantId = tenantId;
         entity.save(tenantId, createdBy, ipAddress, entityId, accessLevel, body).then((ent) => {
           response.status = "200";
-          response.description = `New entiy ${body.name.toUpperCase()} has been added successfully  and sent for the supervisor authorization.`;
+          response.description = `New entity ${body.name.toUpperCase()} has been added successfully  and sent for the supervisor authorization.`;
           response.data = ent;
           res.status(200)
             .json(response);
@@ -132,17 +132,17 @@ module.exports = (router) => {
             })
             .catch((e) => {
               debug(`failed to fetch all entity ${e}`);
-              response.status = "400",
-                response.description = `Unable to fetch all entities`
-              response.data = e.toString()
+              response.status = "400";
+                response.description = `Unable to fetch all entities`;
+              response.data = e.toString();
               res.status(response.status).json(response);
             });
         }
       } catch (e) {
         debug(`caught exception ${e}`);
-        response.status = "400",
-          response.description = `Unable to fetch all entities`
-        response.data = e.toString()
+        response.status = "400";
+          response.description = `Unable to fetch all entities`;
+        response.data = e.toString();
         res.status(response.status).json(response);
       }
     });
@@ -173,15 +173,15 @@ module.exports = (router) => {
             .json(response);
 
         }).catch((e) => {
-          response.status = "400",
-            response.description = `Unable to modify entity ${body.name}. Due to ${e}`
-          response.data = e.toString()
+          response.status = "400";
+            response.description = `Unable to modify entity ${body.name}. Due to ${e}`;
+          response.data = e.toString();
           res.status(response.status).json(response);
         });
       } catch (e) {
-        response.status = "400",
-          response.description = `Unable to modify entity ${req.body.name}. Due to ${e}`
-        response.data = e.toString()
+        response.status = "400";
+          response.description = `Unable to modify entity ${req.body.name}. Due to ${e}`;
+        response.data = e.toString();
         res.status(response.status).json(response);
       }
     });
@@ -202,7 +202,7 @@ module.exports = (router) => {
       try {
         let body = _.pick(req.body, entityAttributes);
         console.log("body",body);
-        
+
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         entity.updateWorkflow(tenantId, createdBy, ipAddress, req.params.id, body).then((updatedEntity) => {
@@ -214,18 +214,18 @@ module.exports = (router) => {
 
         }).catch((e) => {
           console.log(e);
-          
-          response.status = "400",
-            response.description = `Unable to modify entity ${req.params.name}. Due to ${e}`
-          response.data = e.toString()
+
+          response.status = "400";
+            response.description = `Unable to modify entity ${req.params.name}. Due to ${e}`;
+          response.data = e.toString();
           res.status(response.status).json(response);
         });
       } catch (e) {
         console.log(e);
-        
-        response.status = "400",
-          response.description = `Unable to modify role ${req.params.name}. Due to ${e}`
-        response.data = e.toString()
+
+        response.status = "400";
+          response.description = `Unable to modify role ${req.params.name}. Due to ${e}`;
+        response.data = e.toString();
         res.status(response.status).json(response);
       }
     });
