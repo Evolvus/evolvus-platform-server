@@ -25,6 +25,7 @@
     "@evolvus/evolvus-master-currency": "^1.0.3",
     "@evolvus/evolvus-master-time-zone": "^1.0.3",
     "@evolvus/evolvus-menu": "^1.0.5",
+    "@evolvus/evolvus-mongo-dao": "^1.0.1",
     "@evolvus/evolvus-role": "^1.0.13",
     "@evolvus/evolvus-supported-date-formats": "^1.0.3",
     "@evolvus/evolvus-user": "^1.0.18",
