@@ -147,7 +147,7 @@ module.exports = (router) => {
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "IN_PROGRESS";
-
+        body.activationStatus = "INACTIVE";
         user.update(tenantId, createdBy, ipAddress, req.params.userId, body, accessLevel, entityId).then((updatedUser) => {
           response.status = "200";
           response.description = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
@@ -187,7 +187,7 @@ module.exports = (router) => {
         let body = _.pick(req.body, workFlowAttributes);
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        user.updateWorkflow(tenantId, req.params.id, body).then((updatedUser) => {
+        user.updateWorkflow(tenantId, ipAddress, createdBy, req.params.id, body).then((updatedUser) => {
           response.status = "200";
           response.description = `${req.params.id} User workflow status has been updated successfully `;
           response.data = body;
