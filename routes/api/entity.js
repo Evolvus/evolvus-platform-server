@@ -45,7 +45,7 @@ module.exports = (router) => {
             .json(response);
         }).catch((e) => {
           response.status = "400";
-          response.description = `Unable to add new Entity ${body.name}. Due to ${e.message}`;
+          response.description = `Unable to add new Entity ${body.name}. Due to ${e}`;
           response.data = e;
           res.status(response.status).json(response);
         });
