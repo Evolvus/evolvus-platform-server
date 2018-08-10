@@ -14,7 +14,7 @@ const debug = require("debug")("evolvus-platform-server:server");
 const express = require("express");
 const bodyParser = require("body-parser");
 const path = require("path");
-const connection=require("@evolvus/evolvus-mongo-dao").connection;
+const connection = require("@evolvus/evolvus-mongo-dao").connection;
 
 const _ = require("lodash");
 const healthCheck = require("@evolvus/evolvus-node-health-check");
@@ -24,10 +24,10 @@ let body = _.pick(healthCheckAttributes);
 const app = express();
 const router = express.Router();
 
-var dbConnection=connection.connect("PLATFORM").then((res,err)=>{
-  if(err){
+var dbConnection = connection.connect("PLATFORM").then((res, err) => {
+  if (err) {
     debug(`CONNECTION PROBLEM DUE TO :${err}`);
-  }else {
+  } else {
     debug("connected to mongodb");
     body.status = "working";
     body.saveTime = new Date().toISOString();
@@ -47,6 +47,7 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Credentials", "true");
   next();
 });
+
 app.use(express.static(path.join(__dirname, "public")));
 app.set("view engine", "html");
 app.set("views", path.join(__dirname, "views"));
