@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.12"></a>
+## [1.0.12](https://github.com/Evolvus/evolvus-platform-server/compare/v1.0.9...v1.0.12) (2018-08-08)
+
+
+
 <a name="1.0.9"></a>
 ## [1.0.9](https://github.com/Evolvus/evolvus-platform-server/compare/v1.0.8...v1.0.9) (2018-08-06)
 
