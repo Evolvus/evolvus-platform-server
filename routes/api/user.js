@@ -20,9 +20,6 @@ const bulkUserAttributes = ["phoneNumber", "mobileNumber", "emailId", "city", "s
 const filterAttributes = user.filterAttributes;
 const sortAttributes = user.sortAttributes;
 
-
-var workFlowAttributes = ["wfInstanceId", "processingStatus"];
-
 module.exports = (router) => {
 
   router.route('/user/')
@@ -184,7 +181,7 @@ module.exports = (router) => {
       };
       debug("query: " + JSON.stringify(req.query));
       try {
-        let body = _.pick(req.body, workFlowAttributes);
+        let body = _.pick(req.body, userAttributes);
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         user.updateWorkflow(tenantId, ipAddress, createdBy, req.params.id, body).then((updatedUser) => {
