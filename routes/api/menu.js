@@ -84,6 +84,7 @@ module.exports = (router) => {
       };
       debug("query: " + JSON.stringify(req.query));
       let body = _.pick(req.body, menuAttributes);
+      body.createdBy = createdBy;
       body.createdDate = new Date().toISOString();
       body.lastUpdatedDate = body.createdDate;
       try {
