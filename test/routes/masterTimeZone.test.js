@@ -8,7 +8,7 @@ process.env.MONGO_DB_URL = "mongodb://10.10.69.204:27017/TestApi";
 const debug = require("debug")("evolvus-platform-server.test.routes.api");
 const app = require("../../server")
   .app;
-const applicationTestData = require("./applicationTestData");
+const masterTimeZoneTestData = require("./masterTimeZoneTestData");
 const randomstring = require("randomstring");
 
 let chai = require("chai");
@@ -21,16 +21,16 @@ var serverUrl = "http://localhost:" + PORT;
 
 describe("Testing routes", () => {
   before((done) => {
-    app.on('application_started', done());
+    app.on('masterTimeZone_started', done());
   });
 
-  describe("Testing save application api", () => {
+  describe("Testing save masterTimeZone api", () => {
 
-    it("should save application and return same attribute values", (done) => {
+    it("should save masterTimeZone and return same attribute values", (done) => {
       chai.request(serverUrl)
-        .post("/api/application")
+        .post("/api/masterTimeZone")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user").set("X-IP-HEADER", "192.168.1.86")
-        .send(applicationTestData.validObject1)
+        .send(masterTimeZoneTestData.validObject1)
         .end((err, res) => {
           if (err) {
             debug(`error in the test ${err}`);
@@ -43,49 +43,30 @@ describe("Testing routes", () => {
         });
     });
 
-    // it("should not save application and return status 400", (done) => {
-    //   chai.request(serverUrl)
-    //     .post("/api/application")
-    //     .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
-    //     .send({
-    //       "name": "Docket"
-    //     })
-    //     .end((err, res) => {
-    //       if (err) {
-    //         debug(`error in the test ${err}`);
-    //         done(err);
-    //       } else {
-    //         res.should.have.status(400);
-    //         done();
-    //       }
-    //     });
-    // });
+    //   it("should not save masterTimeZone and return status 400 and return data as zoneCode is required ", (done) => {
+    //     chai.request(serverUrl)
+    //       .post("/api/masterTimeZone")
+    //       .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+    //       .send(masterTimeZoneTestData.validObject2)
+    //       .end((err, res) => {
+    //         if (err) {
+    //           debug(`error in the test ${err}`);
+    //           done(err);
+    //         } else {
+    //           res.should.have.status(400);
+    //           res.body.should.be.a("object");
+    //           res.body.should.have.property('data').eql('zoneCode is required');
+    //           done();
+    //         }
+    //       });
+    //   });
 
-    // it("should not save application and return status 400 and return data as applicationCode is required ", (done) => {
-    //   chai.request(serverUrl)
-    //     .post("/api/application")
-    //     .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
-    //     .send(applicationTestData.validObject2)
-    //     .end((err, res) => {
-    //       if (err) {
-    //         debug(`error in the test ${err}`);
-    //         done(err);
-    //       } else {
-    //         res.should.have.status(400);
-    //         res.body.should.be.a("object");
-    //         res.body.should.have.property('data').eql('applicationCode is required');
-    //         done();
-    //       }
-    //     });
-    // });
-
-    it("should not save application and return status 400", (done) => {
+    it("should not save masterTimeZone and return status 400", (done) => {
       chai.request(serverUrl)
-        .post("/api/application")
+        .post("/api/masterTimeZone")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .send({
-          "applicationCode": "Dockethhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
-          "applicationName": "DOCKET AUDIT SERVER"
+          "zoneCode": "IST"
         })
         .end((err, res) => {
           if (err) {
@@ -100,11 +81,11 @@ describe("Testing routes", () => {
 
   });
 
-  describe("Testing Get application api", () => {
+  describe("Testing Get masterTimeZone api", () => {
 
-    it("Should return all the application", (done) => {
+    it("Should return all the masterTimeZone", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/masterTimeZone/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .end((err, res) => {
           if (err) {
@@ -119,12 +100,12 @@ describe("Testing routes", () => {
           }
         });
     });
-    it("Should return all the application basedon filterCondition", (done) => {
+    it("Should return all the masterTimeZone basedon filterCondition", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/masterTimeZone/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "applicationCode": "FLUX"
+          "zoneCode": "IST"
         })
         .end((err, res) => {
           if (err) {
@@ -139,12 +120,12 @@ describe("Testing routes", () => {
           }
         });
     });
-    it("Should return all the applications based on filterCondition", (done) => {
+    it("Should return all the masterTimeZones based on filterCondition", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/masterTimeZone/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "enableFlag": "0"
+          "zoneCode": "IST"
         })
         .end((err, res) => {
           if (err) {
@@ -160,12 +141,12 @@ describe("Testing routes", () => {
         });
     });
 
-    it("Should return all the applications based pageSize and PageNo", (done) => {
+    it("Should return all the masterTimeZones based pageSize and PageNo", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/masterTimeZone/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "enableFlag": "0",
+          "zoneCode": "IST",
           "pageSize": "5",
           "pageNo": "1"
         })
@@ -185,10 +166,10 @@ describe("Testing routes", () => {
 
     it("Should throw the error if skip count is negative value", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/masterTimeZone/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "enableFlag": "0",
+          "zoneCode": "IST",
           "pageSize": "-2",
           "pageNo": "2"
         })
@@ -205,12 +186,12 @@ describe("Testing routes", () => {
         });
     });
 
-    it("Should return all the application based on limit if page size is 0", (done) => {
+    it("Should return all the masterTimeZone based on limit if page size is 0", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/masterTimeZone/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "enableFlag": "0",
+          "zoneCode": "IST",
           "pageSize": "0",
           "pageNo": "1"
         })
@@ -228,9 +209,9 @@ describe("Testing routes", () => {
         });
     });
 
-    it("Should return the applications based on sorting condition", (done) => {
+    it("Should return the masterTimeZones based on sorting condition", (done) => {
       chai.request(serverUrl)
-        .get("/api/application")
+        .get("/api/masterTimeZone")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "sort": "-lastUpdatedDate"
@@ -251,10 +232,10 @@ describe("Testing routes", () => {
 
     it("Should throws an error like limit must be a number", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/masterTimeZone/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "enableFlag": "0",
+          "zoneCode": "IST",
           "pageSize": "10",
           "pageNo": "1",
           "limit": "fdkglud"
@@ -274,11 +255,11 @@ describe("Testing routes", () => {
 
     it("Should throws an error like pageSize must be a number", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/masterTimeZone/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "pageSize": "guyasgdjh",
-          "peocessingstatus": "PENDING_AUTHORIZATION"
+          "zoneCode": "IST"
         })
         .end((err, res) => {
           if (err) {
@@ -294,12 +275,12 @@ describe("Testing routes", () => {
     });
   });
 
-  describe("Testing Update application api", () => {
-    it("Should update the application based on applicationCode", (done) => {
+  describe("Testing Update masterTimeZone api", () => {
+    it("Should update the masterTimeZone based on zoneCode", (done) => {
       chai.request(serverUrl)
-        .put("/api/application/FLUX")
+        .put("/api/masterTimeZone/IST")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
-        .send(applicationTestData.validObject1)
+        .send(masterTimeZoneTestData.validObject1)
         .end((err, res) => {
           if (err) {
             debug(`error in test ${err}`);
@@ -307,8 +288,8 @@ describe("Testing routes", () => {
           } else {
             res.should.have.status(200);
             res.body.should.be.a("object");
-            res.body.data.should.have.property("enabledFlag")
-              .eql("false");
+            res.body.data.should.have.property("zoneCode")
+              .eql("IST");
             done();
           }
         });
