@@ -1,6 +1,7 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:user");
 const _ = require("lodash");
 const user = require("@evolvus/evolvus-user");
+const shortid = require('shortid');
 
 const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
@@ -49,6 +50,7 @@ module.exports = (router) => {
       limit = +pageSize > +limit ? +limit : +pageSize;
 
       try {
+        debug(`user get API: Query parameters are: tenantId:${tenantId},entityId:${entityId},accessLevel:${accessLevel},createdBy:${createdBy},ipAddress:${ipAddress},orderby:${JSON.stringify(orderby)},filter:${JSON.stringify(filter)},skipCount:${skipCount},limit:${limit}`)
         Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, skipCount, limit), user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
@@ -69,17 +71,19 @@ module.exports = (router) => {
               res.status(200).json(response);
             }
           }).catch((e) => {
-            debug(`failed to fetch all Users ${e}`);
+            var reference = shortid.generate();
+            debug(`user find promise failed due to ${e} and referenceId:${reference}`);
             response.status = "400";
             response.description = `Unable to fetch all Users due to ${e}`;
             response.data = e.toString();
             res.status(400).json(response);
           });
       } catch (e) {
+        var reference = shortid.generate();
         response.status = "400";
         response.description = `Unable to fetch all Users due to ${e}`;
         response.data = e.toString();
-        debug("response: " + JSON.stringify(response));
+        debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         res.status(400).json(response);
       }
     });
@@ -103,6 +107,7 @@ module.exports = (router) => {
         object.lastUpdatedDate = object.createdDate;
         object.createdBy = createdBy;
         object.userPassword = "evolvus*123";
+        debug(`user save API: nput parameters are:tenantId:${tenantId},ipAddress:${ipAddress},createdBy:${createdBy},accessLevel:${accessLevel},userObject:${JSON.stringify(object)}`);
         user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
           response.status = "200";
           response.description = `New User '${req.body.userName}' has been added successfully and sent for the supervisor authorization.`;
@@ -110,17 +115,19 @@ module.exports = (router) => {
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
         }).catch((e) => {
+          var reference = shortid.generate();
           response.status = "400";
           response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
           response.data = {};
-          debug("response: " + JSON.stringify(response));
+          debug(`user save promise failed due to ${e} and referenceId:${reference}`);
           res.status(400).json(response);
         });
       } catch (e) {
+        var reference = shortid.generate();
+        debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
         response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
         response.data = {};
-        debug("response: " + JSON.stringify(response));
         res.status(400).json(response);
       }
     });
@@ -145,6 +152,7 @@ module.exports = (router) => {
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "IN_PROGRESS";
         body.activationStatus = "INACTIVE";
+        debug(`user update API:Input parameters are:tenantId:${tenantId},createdBy:${createdBy},ipAddress:${ipAddress},userId:${req.params.userId},body:${JSON.stringify(body)},accessLevel:${accessLevel},entityId:${entityId}`);
         user.update(tenantId, createdBy, ipAddress, req.params.userId, body, accessLevel, entityId).then((updatedUser) => {
           response.status = "200";
           response.description = `'${req.params.userId}' User has been modified successfully and sent for the supervisor authorization.`;
@@ -152,17 +160,19 @@ module.exports = (router) => {
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
         }).catch((e) => {
+          var reference = shortid.generate();
           response.status = "400";
           response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
           response.data = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
-          debug("response: " + JSON.stringify(response));
+          debug(`user update promise failed due to ${e} and referenceId:${reference}`);
           res.status(400).json(response);
         });
       } catch (e) {
+        var reference = shortid.generate();
+        debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
         response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
         response.data = e.toString();
-        debug("response: " + JSON.stringify(response));
         res.status(400).json(response);
       }
     });
@@ -184,20 +194,23 @@ module.exports = (router) => {
         let body = _.pick(req.body, userAttributes);
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
+        debug(`user workflow update API:Input parameters are: tenantId:${tenantId},ipAddress:${ipAddress},createdBy:${createdBy},id:${req.params.id},updateObject:${JSON.stringify(body)}`);
         user.updateWorkflow(tenantId, ipAddress, createdBy, req.params.id, body).then((updatedUser) => {
           response.status = "200";
           response.description = `${req.params.id} User workflow status has been updated successfully `;
           response.data = body;
-          res.status(200)
-            .json(response);
-
+          res.status(200).json(response);
         }).catch((e) => {
+          var reference = shortid.generate();
+          debug(`user update workflow promise failed due to ${e} and referenceId:${reference}`);
           response.status = "400";
           response.description = `Unable to update User workflow status due to ${e}`;
           response.data = e.toString()
           res.status(400).json(response);
         });
       } catch (e) {
+        var reference = shortid.generate();
+        debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
         response.description = `Unable to update User workflow status due to ${e}`;
         response.data = e.toString();
@@ -239,17 +252,19 @@ module.exports = (router) => {
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
         }).catch((e) => {
+          var reference = shortid.generate();
+          debug(`bulk user save promise failed due to ${e} and referenceId:${reference}`);
           response.status = "400";
           response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
           response.data = {};
-          debug("response: " + JSON.stringify(response));
           res.status(400).json(response);
         });
       } catch (e) {
+        var reference = shortid.generate();
+        debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
         response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
         response.data = {};
-        debug("response: " + JSON.stringify(response));
         res.status(400).json(response);
       }
     });
