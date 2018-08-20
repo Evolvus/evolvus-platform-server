@@ -1,6 +1,6 @@
-const debug = require("debug")("evolvus-platform-server:routes:api:supportedDateFormats");
+const debug = require("debug")("evolvus-platform-server:routes:api:masterTimeZone");
 const _ = require("lodash");
-const supportedDateFormats = require('@evolvus/evolvus-master-time-zone');
+const masterTimeZone = require("@evolvus/evolvus-master-time-zone");
 const shortid = require('shortid');
 const LIMIT = process.env.LIMIT || 10;
 const tenantHeader = "X-TENANT-ID";
@@ -10,49 +10,47 @@ const PAGE_SIZE = 10;
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
-const supportedDateFormatsAttributes = ["formatCode", "wfInstanceId", "processingStatus", "timeFormat", "description", "createdDate", "lastUpdatedDate", "createdBy", "updatedBy", "objVersion", "enableFlag"];
+const masterTimeZoneAttributes = ["zoneCode", "zoneName", "offsetValue", "createdDate", "lastUpdatedDate", "createdBy", "updatedBy", "enableFlag", "offSet", "wfInstanceId", "processingStatus", "objVersion"];
 
-const filterAttributes = supportedDateFormats.filterAttributes;
-const sortAttributes = supportedDateFormats.sortAttributes;
+const filterAttributes = masterTimeZone.filterAttributes;
+const sortAttributes = masterTimeZone.sortAttributes;
 var workFlowAttributes = ["wfInstanceId", "processingStatus"];
 
 
-
 module.exports = (router) => {
-
-  router.route('/supportedDateFormats')
+  router.route('/masterTimeZone')
     .post((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
       // const accessLevel = req.header(accessLevelHeader);
-      //const entityId = req.header(entityIdHeader)
+      // const entityId = req.header(entityIdHeader)
       const response = {
         "status": "200",
         "description": "",
         "data": {}
       };
-      let body = _.pick(req.body, supportedDateFormatsAttributes);
+      let body = _.pick(req.body, masterTimeZoneAttributes);
 
       try {
         body.tenantId = tenantId;
         body.createdBy = createdBy;
         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
-        //body.entityId = entityId;
-        //body.accessLevel = accessLevel;
+        // body.entityId = entityId;
+        // body.accessLevel = accessLevel;
 
         debug(`save API. tenantId :${tenantId}, createdBy :${createdBy},ipAddress :${ipAddress}, body :${JSON.stringify(body) }are parameters`);
-        supportedDateFormats.save(tenantId, createdBy, ipAddress, body).then((ent) => {
+        masterTimeZone.save(tenantId, createdBy, ipAddress, body).then((ent) => {
           response.status = "200";
-          response.description = `New supportedDateFormats has been added successfully and sent for the supervisor authorization`;
+          response.description = `New masterTimeZone ''${body.zoneName}' has been added successfully and sent for the supervisor authorization`;
           response.data = ent;
           debug("response: " + JSON.stringify(response));
           res.status(response.status).json(response);
         }).catch((e) => {
           response.status = "400";
-          response.description = `Unable to add new supportedDateFormats . Due to ${e}`;
-          response.data = {};
+          response.description = `Unable to add new masterTimeZone ${body.zoneName}. Due to ${e}`;
+          response.data = e;
           var reference = shortid.generate();
           debug(`save promise failed due to :${e} and referenceId :${reference}`);
           res.status(response.status).json(response);
@@ -61,43 +59,42 @@ module.exports = (router) => {
         var reference = shortid.generate();
         debug(`try catch failed due to :${e} , and reference id :${reference}`);
         response.status = "400";
-        response.description = `Unable to add new supportedDateFormats . Due to ${e}`;
-        response.data = {};
+        response.description = `Unable to add new masterTimeZone ${body.zoneName}. Due to ${e.message}`;
+        response.data = e.toString();
         res.status(response.status).json(response);
       }
     });
 
-  router.route('/supportedDateFormats')
+  router.route("/masterTimeZone/:zoneCode")
     .put((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
-      //  const accessLevel = req.header(accessLevelHeader);
-      //  const entityId = req.header(entityIdHeader);
-
+      // const accessLevel = req.header(accessLevelHeader);
+      // const entityId = req.header(entityIdHeader);
+      var updatezoneCode = req.params.zoneCode;
       const response = {
         "status": "200",
         "description": "",
         "data": []
       };
       debug("query: " + JSON.stringify(req.query));
-      let body = _.pick(req.body, supportedDateFormatsAttributes);
+      let body = _.pick(req.body, masterTimeZoneAttributes);
       try {
         body.tenantId = tenantId;
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "IN_PROGRESS";
-        var updateformatCode = body.formatCode;
-        debug(`Update API.tenantId :${tenantId},createdBy :${JSON.stringify(createdBy)},ipAddress :${ipAddress}, updateformatCode :${updateformatCode}, body :${JSON.stringify(body)}, are parameters`);
-        supportedDateFormats.update(tenantId, createdBy, ipAddress, updateformatCode, body).then((updatedsupportedDateFormats) => {
+        debug(`Update API.tenantId :${tenantId},createdBy :${JSON.stringify(createdBy)},ipAddress :${ipAddress}, updatezoneCode :${updatezoneCode}, body :${JSON.stringify(body)}, are parameters`);
+        masterTimeZone.update(tenantId, createdBy, ipAddress, updatezoneCode, body).then((updatedmasterTimeZone) => {
           response.status = "200";
-          response.description = `${updateformatCode} supportedDateFormats has been modified successfully and sent for the supervisor authorization.`;
+          response.description = `${updatezoneCode} masterTimeZone has been modified successfully and sent for the supervisor authorization.`;
           response.data = body;
           debug("response: " + JSON.stringify(response));
           res.status(response.status).json(response);
         }).catch((e) => {
           response.status = "400";
-          response.description = `Unable to modify supportedDateFormats ${updateformatCode}. Due to ${e.message}`;
+          response.description = `Unable to modify masterTimeZone ${updatezoneCode}. Due to ${e.message}`;
           response.data = e.toString();
           var reference = shortid.generate();
           debug(`Update promise failed due to :${e} and referenceId :${reference}`);
@@ -108,7 +105,7 @@ module.exports = (router) => {
         var reference = shortid.generate();
         debug(`try catch failed due to :${e} , and reference id :${reference}`);
         response.status = "400";
-        response.description = `Unable to modify supportedDateFormats . Due to ${e.message}`;
+        response.description = `Unable to modify masterTimeZone ${body.zoneName}. Due to ${e.message}`;
         response.data = e.toString();
         res.status(response.status).json(response);
       }
@@ -116,13 +113,13 @@ module.exports = (router) => {
     });
 
 
-  router.route('/supportedDateFormats/')
+  router.route('/masterTimeZone/')
     .get((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
-      /// const accessLevel = req.header(accessLevelHeader);
-      // const entityId = req.header(entityIdHeader)
+      // const accessLevel = req.header(accessLevelHeader);
+      // const entityId = req.header(entityIdHeader);
       const response = {
         "status": "200",
         "description": "",
@@ -156,7 +153,7 @@ module.exports = (router) => {
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
 
         debug(`GET ALL API.tenantId :${tenantId},createdBy :${createdBy},ipAddress :${ipAddress},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
-        Promise.all([supportedDateFormats.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limitc), supportedDateFormats.find(tenantId, ipAddress, createdBy, filter, orderby, 0, 0)])
+        Promise.all([masterTimeZone.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limitc), masterTimeZone.find(tenantId, ipAddress, createdBy, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
@@ -168,7 +165,7 @@ module.exports = (router) => {
               res.status(response.status).json(response);
             } else {
               response.status = "200";
-              response.description = "No supportedDateFormatss found";
+              response.description = "No masterTimeZones found";
               response.totalNoOfRecords = result[1].length;
               response.data = [];
               response.totalNoOfPages = 0;
@@ -181,29 +178,29 @@ module.exports = (router) => {
             var reference = shortid.generate();
             debug(`Get All promise failed due to :${e} and referenceId :${reference}`);
             response.status = "400";
-            response.description = `Unable to fetch all supportedDateFormatss`;
+            response.description = `Unable to fetch all masterTimeZones`;
             response.data = e.toString();
-            debug(`failed to fetch all supportedDateFormatss ${e}`);
+            debug(`failed to fetch all masterTimeZones ${e}`);
             res.status(response.status).json(response);
           });
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch failed due to :${e} , and reference id :${reference}`);
         response.status = "400";
-        response.description = `Unable to fetch all supportedDateFormatss`;
+        response.description = `Unable to fetch all masterTimeZones`;
         response.data = e.toString();
         debug(`caught exception ${e}`);
         res.status(response.status).json(response);
       }
     });
 
-  router.route("/private/api/supportedDateFormats/:id")
+  router.route("/private/api/masterTimeZone/:id")
     .put((req, res, next) => {
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
       // const accessLevel = req.header(accessLevelHeader);
-      // const entityId = req.header(entityIdHeader)
+      // const entityId = req.header(entityIdHeader);
       var id = req.params.id;
       const response = {
         "status": "200",
@@ -212,25 +209,25 @@ module.exports = (router) => {
       };
       debug("query: " + JSON.stringify(req.query));
       try {
-        let body = _.pick(req.body, supportedDateFormatsAttributes);
+        let body = _.pick(req.body, masterTimeZoneAttributes);
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         debug(`Update workFlow API.tenantId :${tenantId},createdBy :${JSON.stringify(createdBy)},ipAddress :${ipAddress}, id :${id}, body :${JSON.stringify(body)}, are parameters`);
-        supportedDateFormats.updateWorkflow(tenantId, createdBy, ipAddress, id, body).then((updatesupportedDateFormats) => {
+        masterTimeZone.updateWorkflow(tenantId, createdBy, ipAddress, id, body).then((updatemasterTimeZone) => {
           response.status = "200";
-          response.description = `${id} supportedDateFormats workflow has been modified successful and sent for the supervisor authorization.`;
+          response.description = `${id} masterTimeZone workflow has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
           res.status(200)
             .json(response);
         }).catch((e) => {
           response.status = "400",
-            response.description = `Unable to modify supportedDateFormats  workflow. Due to ${e}`
+            response.description = `Unable to modify masterTimeZone  workflow. Due to ${e}`
           response.data = e.toString()
           res.status(response.status).json(response);
         });
       } catch (e) {
         response.status = "400",
-          response.description = `Unable to modify supportedDateFormats  workflow . Due to ${e}`
+          response.description = `Unable to modify masterTimeZone  workflow . Due to ${e}`
         response.data = e.toString()
         res.status(response.status).json(response);
       }
