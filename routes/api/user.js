@@ -110,14 +110,14 @@ module.exports = (router) => {
         debug(`user save API: nput parameters are:tenantId:${tenantId},ipAddress:${ipAddress},createdBy:${createdBy},accessLevel:${accessLevel},userObject:${JSON.stringify(object)}`);
         user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
           response.status = "200";
-          response.description = `New User '${req.body.userName}' has been added successfully and sent for the supervisor authorization.`;
+          response.description = `New User '${req.body.userId}' has been added successfully and sent for the supervisor authorization.`;
           response.data = savedUser;
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
         }).catch((e) => {
           var reference = shortid.generate();
           response.status = "400";
-          response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
+          response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
           response.data = {};
           debug(`user save promise failed due to ${e} and referenceId:${reference}`);
           res.status(400).json(response);
@@ -126,7 +126,7 @@ module.exports = (router) => {
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
-        response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
+        response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
         response.data = {};
         res.status(400).json(response);
       }
@@ -247,7 +247,7 @@ module.exports = (router) => {
         }
         user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
           response.status = "200";
-          response.description = `User ${req.body.userName} saved successfullly`;
+          response.description = `User ${req.body.userId} saved successfullly`;
           response.data = savedUser;
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
@@ -255,7 +255,7 @@ module.exports = (router) => {
           var reference = shortid.generate();
           debug(`bulk user save promise failed due to ${e} and referenceId:${reference}`);
           response.status = "400";
-          response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
+          response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
           response.data = {};
           res.status(400).json(response);
         });
@@ -263,12 +263,149 @@ module.exports = (router) => {
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
-        response.description = `Unable to add new User '${req.body.userName}'. Due to '${e}'`;
+        response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
         response.data = {};
         res.status(400).json(response);
       }
     });
 
+  router.route("/induscollect/user")
+    .post((req, res, next) => {
+      const tenantId = req.body.corporateId;
+      const createdBy = _.get(req.body, "createdBy", "IndusCollect");
+      const ipAddress = _.get(req.body, "ipAddress", req.ip);
+      const accessLevel = _.get(req.body, "accessLevel", "0");
+      const entityId = _.get(req.body, "entityId", "H001B001");
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": {}
+      };
+      try {
+        let object = _.pick(req.body, userAttributes);
+        object.tenantId = tenantId;
+        object.entityId = entityId;
+        object.tenantName = req.body.corporateName;
+        object.createdDate = new Date().toISOString();
+        object.lastUpdatedDate = object.createdDate;
+        object.createdBy = createdBy;
+        object.userPassword = "evolvus*123";
+        object.enabledFlag = "false";
+        let contact = {
+          "emailId": req.body.emailId,
+          "country": "India",
+          "state": "Maharashtra",
+          "city": "Mumbai"
+        };
+        object.contact = contact;
+        if (object.role != null) {
+          object.role = {
+            roleName: object.role
+          };
+        }
+        debug(`user save API: input parameters are:tenantId:${tenantId},ipAddress:${ipAddress},createdBy:${createdBy},accessLevel:${accessLevel},userObject:${JSON.stringify(object)}`);
+        user.saveUser(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
+          response.status = "200";
+          response.description = `New User '${req.body.userId}' has been added successfully.`;
+          response.data = savedUser;
+          debug("response: " + JSON.stringify(response));
+          res.status(200).json(response);
+        }).catch((e) => {
+          var reference = shortid.generate();
+          response.status = "400";
+          response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
+          response.data = {};
+          debug(`user save promise failed due to ${e} and referenceId:${reference}`);
+          res.status(400).json(response);
+        });
+      } catch (e) {
+        var reference = shortid.generate();
+        debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
+        response.status = "400";
+        response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
+        response.data = {};
+        res.status(400).json(response);
+      }
+    });
+
+  router.route("/induscollect/user/:userId")
+    .put((req, res, next) => {
+      const tenantId = req.body.corporateId;
+      const createdBy = _.get(req.body, "createdBy", "IndusCollect");
+      const ipAddress = _.get(req.body, "ipAddress", req.ip);
+      const accessLevel = _.get(req.body, "accessLevel", "0");
+      const entityId = _.get(req.body, "entityId", "H001B001");
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": {}
+      };
+      debug("query: " + JSON.stringify(req.query));
+      try {
+        let body = _.pick(req.body, ["userName", "designation", "emailId", "role", "entityId"]);
+        body.tenantId = tenantId;
+        body.updatedBy = req.header(userHeader);
+        body.lastUpdatedDate = new Date().toISOString();
+        debug(`user update API:Input parameters are:tenantId:${tenantId},createdBy:${createdBy},ipAddress:${ipAddress},userId:${req.params.userId},body:${JSON.stringify(body)},accessLevel:${accessLevel},entityId:${entityId}`);
+        user.updateUser(tenantId, createdBy, ipAddress, req.params.userId, body, accessLevel, entityId).then((updatedUser) => {
+          response.status = "200";
+          response.description = `'${req.params.userId}' User has been modified successfully.`;
+          response.data = `'${req.params.userId}' User has been modified successfully.`;
+          debug("response: " + JSON.stringify(response));
+          res.status(200).json(response);
+        }).catch((e) => {
+          console.log(e);
+          var reference = shortid.generate();
+          response.status = "400";
+          response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
+          response.data = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
+          debug(`user update promise failed due to ${e} and referenceId:${reference}`);
+          res.status(400).json(response);
+        });
+      } catch (e) {
+        console.log(e);
+        var reference = shortid.generate();
+        debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
+        response.status = "400";
+        response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
+        response.data = e.toString();
+        res.status(400).json(response);
+      }
+    });
+
+  router.route("/induscollect/user/:userId/activate")
+    .put((req, res, next) => {
+      const userId = _.get(req.params, "userId");
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": {}
+      };
+      try {
+        let body = _.pick(req.body, "action");
+        user.activate(userId, req.body.action).then((updatedUser) => {
+          response.status = "200";
+          response.description = updatedUser;
+          response.data = updatedUser;
+          debug("response: " + JSON.stringify(response));
+          res.status(200).json(response);
+        }).catch((e) => {
+          var reference = shortid.generate();
+          response.status = "400";
+          response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
+          response.data = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
+          debug(`user update promise failed due to ${e} and referenceId:${reference}`);
+          res.status(400).json(response);
+        });
+      } catch (e) {
+        var reference = shortid.generate();
+        debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
+        response.status = "400";
+        response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
+        response.data = e.toString();
+        res.status(400).json(response);
+      }
+    });
 };
 
 function sortable(sort) {
