@@ -8,9 +8,9 @@ module.exports.validObject1 = {
   "createdBy": "Srihari",
   "createdDate": new Date()
     .toISOString(),
-  "enableFlag": "0",
   "logo": "",
   "favicon": "",
+  "enabledFlag": "false",
   "description": "SUCESS dsada",
   "updatedBy": "Srihari",
   "lastUpdatedDate": "2018-07-05T12:25:22.895Z"
@@ -24,7 +24,7 @@ module.exports.validObject2 = {
   "createdBy": "Srihari",
   "createdDate": new Date()
     .toISOString(),
-  "enableFlag": "1",
+  "enabledFlag": "false",
   "logo": "",
   "favicon": "",
   "description": "This is application object",
@@ -41,7 +41,7 @@ module.exports.validObject3 = {
   "createdBy": "Srihari",
   "createdDate": new Date()
     .toISOString(),
-  "enableFlag": "1",
+  "enabledFlag": "false",
   "logo": "",
   "favicon": "",
   "description": "This is application object",
@@ -58,7 +58,7 @@ module.exports.validObject4 = {
   "createdBy": "Srihari",
   "createdDate": new Date()
     .toISOString(),
-  "enableFlag": "1",
+  "enabledFlag": "false",
   "logo": "",
   "favicon": "",
   "description": "This is application object",
@@ -75,7 +75,7 @@ module.exports.validObject5 = {
   "createdBy": "Srihari",
   "createdDate": new Date()
     .toISOString(),
-  "enableFlag": "1",
+  "enabledFlag": "false",
   "logo": "",
   "favicon": "",
   "description": "This is application object",
@@ -92,7 +92,7 @@ module.exports.validObject6 = {
   "createdBy": "Srihari",
   "createdDate": new Date()
     .toISOString(),
-  "enableFlag": "1",
+  "enabledFlag": "false",
   "logo": "",
   "favicon": "",
   "description": "This is application object",
@@ -109,7 +109,7 @@ module.exports.validObject7 = {
   "createdBy": "Srihari",
   "createdDate": new Date()
     .toISOString(),
-  "enableFlag": "0",
+  "enabledFlag": "false",
   "logo": "",
   "favicon": "",
   "description": "This is application object",
@@ -126,7 +126,7 @@ module.exports.validObject8 = {
   "createdBy": "Srihari",
   "createdDate": new Date()
     .toISOString(),
-  "enableFlag": "0",
+  "enabledFlag": "false",
   "logo": "",
   "favicon": "",
   "description": "This is application object",

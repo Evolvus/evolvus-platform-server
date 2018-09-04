@@ -8,7 +8,7 @@ process.env.MONGO_DB_URL = "mongodb://10.10.69.204:27017/TestApi";
 const debug = require("debug")("evolvus-platform-server.test.routes.api");
 const app = require("../../server")
   .app;
-const applicationTestData = require("./applicationTestData");
+const contactTestData = require("./contactTestData");
 const randomstring = require("randomstring");
 
 let chai = require("chai");
@@ -21,16 +21,17 @@ var serverUrl = "http://localhost:" + PORT;
 
 describe("Testing routes", () => {
   before((done) => {
-    app.on('application_started', done());
+    app.on('contact_started', done());
   });
 
-  describe("Testing save application api", () => {
 
-    it("should save application and return same attribute values", (done) => {
+  describe("Testing save contact api", () => {
+
+    it("should save contact and return same attribute values", (done) => {
       chai.request(serverUrl)
-        .post("/api/application")
+        .post("/api/contact")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user").set("X-IP-HEADER", "192.168.1.86")
-        .send(applicationTestData.validObject1)
+        .send(contactTestData.validObject1)
         .end((err, res) => {
           if (err) {
             debug(`error in the test ${err}`);
@@ -43,12 +44,12 @@ describe("Testing routes", () => {
         });
     });
 
-    // it("should not save application and return status 400", (done) => {
+    // it("should not save contact and return status 400", (done) => {
     //   chai.request(serverUrl)
-    //     .post("/api/application")
+    //     .post("/api/contact")
     //     .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
     //     .send({
-    //       "name": "Docket"
+    //       "country": "INDIA"
     //     })
     //     .end((err, res) => {
     //       if (err) {
@@ -61,11 +62,11 @@ describe("Testing routes", () => {
     //     });
     // });
 
-    // it("should not save application and return status 400 and return data as applicationCode is required ", (done) => {
+    // it("should not save contact and return status 400 and return data as emailID is required ", (done) => {
     //   chai.request(serverUrl)
-    //     .post("/api/application")
+    //     .post("/api/contact")
     //     .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
-    //     .send(applicationTestData.validObject2)
+    //     .send(contactTestData.validObject2)
     //     .end((err, res) => {
     //       if (err) {
     //         debug(`error in the test ${err}`);
@@ -73,19 +74,19 @@ describe("Testing routes", () => {
     //       } else {
     //         res.should.have.status(400);
     //         res.body.should.be.a("object");
-    //         res.body.should.have.property('data').eql('applicationCode is required');
+    //         res.body.should.have.property('data').eql('emailId is required');
     //         done();
     //       }
     //     });
     // });
 
-    it("should not save application and return status 400", (done) => {
+    it("should not save contact and return status 400", (done) => {
       chai.request(serverUrl)
-        .post("/api/application")
+        .post("/api/contact")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .send({
-          "applicationCode": "Dockethhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh",
-          "applicationName": "DOCKET AUDIT SERVER"
+          "phoneNumber": "56565656456545455656",
+          "faxnumber": "7896441233255465458"
         })
         .end((err, res) => {
           if (err) {
@@ -100,11 +101,12 @@ describe("Testing routes", () => {
 
   });
 
-  describe("Testing Get application api", () => {
 
-    it("Should return all the application", (done) => {
+  describe("Testing Get contact api", () => {
+
+    it("Should return all the contact", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/contact/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .end((err, res) => {
           if (err) {
@@ -119,32 +121,12 @@ describe("Testing routes", () => {
           }
         });
     });
-    it("Should return all the application basedon filterCondition", (done) => {
+    it("Should return all the contact basedon filterCondition", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/contact/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "applicationCode": "FLUX"
-        })
-        .end((err, res) => {
-          if (err) {
-            debug(`error in test ${err}`);
-            done(err);
-          } else {
-            res.should.have.status(200);
-            res.body.should.be.a("object");
-            res.body.data.should.be.a('array');
-            res.body.data.length.should.be.eql(1);
-            done();
-          }
-        });
-    });
-    it("Should return all the applications based on filterCondition", (done) => {
-      chai.request(serverUrl)
-        .get("/api/application/")
-        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
-        .query({
-          "enableFlag": "0"
+          "emailId": "xyz@gmail.com"
         })
         .end((err, res) => {
           if (err) {
@@ -160,12 +142,12 @@ describe("Testing routes", () => {
         });
     });
 
-    it("Should return all the applications based pageSize and PageNo", (done) => {
+    it("Should return all the contacts based pageSize and PageNo", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/contact/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "enableFlag": "0",
+          "emailId": "xyz@gmail.com",
           "pageSize": "5",
           "pageNo": "1"
         })
@@ -185,10 +167,10 @@ describe("Testing routes", () => {
 
     it("Should throw the error if skip count is negative value", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/contact/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "enableFlag": "0",
+          "emailId": "xyz@gmail.com",
           "pageSize": "-2",
           "pageNo": "2"
         })
@@ -205,12 +187,12 @@ describe("Testing routes", () => {
         });
     });
 
-    it("Should return all the application based on limit if page size is 0", (done) => {
+    it("Should return all the contact based on limit if page size is 0", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/contact/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "enableFlag": "0",
+          "emailId": "xyz@gmail.com",
           "pageSize": "0",
           "pageNo": "1"
         })
@@ -228,9 +210,9 @@ describe("Testing routes", () => {
         });
     });
 
-    it("Should return the applications based on sorting condition", (done) => {
+    it("Should return the contacts based on sorting condition", (done) => {
       chai.request(serverUrl)
-        .get("/api/application")
+        .get("/api/contact")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "sort": "-lastUpdatedDate"
@@ -251,10 +233,10 @@ describe("Testing routes", () => {
 
     it("Should throws an error like limit must be a number", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/contact/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "enableFlag": "0",
+          "emailId": "xyz@gmail.com",
           "pageSize": "10",
           "pageNo": "1",
           "limit": "fdkglud"
@@ -274,11 +256,11 @@ describe("Testing routes", () => {
 
     it("Should throws an error like pageSize must be a number", (done) => {
       chai.request(serverUrl)
-        .get("/api/application/")
+        .get("/api/contact/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "pageSize": "guyasgdjh",
-          "peocessingstatus": "PENDING_AUTHORIZATION"
+          "emailId": "xyz@gmail.com"
         })
         .end((err, res) => {
           if (err) {
@@ -292,26 +274,27 @@ describe("Testing routes", () => {
           }
         });
     });
-  });
 
-  describe("Testing Update application api", () => {
-    it("Should update the application based on applicationCode", (done) => {
-      chai.request(serverUrl)
-        .put("/api/application/FLUX")
-        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
-        .send(applicationTestData.validObject1)
-        .end((err, res) => {
-          if (err) {
-            debug(`error in test ${err}`);
-            done(err);
-          } else {
-            res.should.have.status(200);
-            res.body.should.be.a("object");
-            res.body.data.should.have.property("enabledFlag")
-              .eql("false");
-            done();
-          }
-        });
+    describe("Testing Update contact api", () => {
+      it("Should update the contact based on emailId", (done) => {
+        chai.request(serverUrl)
+          .put("/api/contact/xyz@gmail.com")
+          .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+          .send(contactTestData.validObject1)
+          .end((err, res) => {
+            if (err) {
+              debug(`error in test ${err}`);
+              done(err);
+            } else {
+              res.should.have.status(200);
+              res.body.should.be.a("object");
+              res.body.data.should.have.property("emailId")
+                .eql("xyz@gmail.com");
+              done();
+            }
+          });
+      });
     });
+
   });
 });
