@@ -279,7 +279,8 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data": {}
+        "data": {},
+        "uniquereferenceid": null
       };
       try {
         let object = _.pick(req.body, userAttributes);
@@ -308,6 +309,7 @@ module.exports = (router) => {
           response.status = "200";
           response.description = `New User '${req.body.userId}' has been added successfully.`;
           response.data = savedUser;
+          response.uniquereferenceid = savedUser.uniquereferenceid;
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
         }).catch((e) => {
@@ -338,7 +340,8 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data": {}
+        "data": {},
+        "uniquereferenceid": null
       };
       debug("query: " + JSON.stringify(req.query));
       try {
@@ -351,10 +354,10 @@ module.exports = (router) => {
           response.status = "200";
           response.description = `'${req.params.userId}' User has been modified successfully.`;
           response.data = `'${req.params.userId}' User has been modified successfully.`;
+          response.uniquereferenceid = updatedUser.id;
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
         }).catch((e) => {
-          console.log(e);
           var reference = shortid.generate();
           response.status = "400";
           response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
@@ -363,7 +366,6 @@ module.exports = (router) => {
           res.status(400).json(response);
         });
       } catch (e) {
-        console.log(e);
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
@@ -379,14 +381,16 @@ module.exports = (router) => {
       const response = {
         "status": "200",
         "description": "",
-        "data": {}
+        "data": {},
+        "uniquereferenceid": null
       };
       try {
         let body = _.pick(req.body, "action");
         user.activate(userId, req.body.action).then((updatedUser) => {
           response.status = "200";
-          response.description = updatedUser;
-          response.data = updatedUser;
+          response.description = updatedUser.data;
+          response.data = updatedUser.data;
+          response.uniquereferenceid = updatedUser.id;
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
         }).catch((e) => {
