@@ -275,7 +275,7 @@ module.exports = (router) => {
       const createdBy = _.get(req.body, "createdBy", "IndusCollect");
       const ipAddress = _.get(req.body, "ipAddress", req.ip);
       const accessLevel = _.get(req.body, "accessLevel", "0");
-      const entityId = _.get(req.body, "entityId", "H001B001");
+      const entityId = _.get(req.body, "branchId", "H001B001");
       const response = {
         "status": "200",
         "description": "",
@@ -336,7 +336,6 @@ module.exports = (router) => {
       const createdBy = _.get(req.body, "createdBy", "IndusCollect");
       const ipAddress = _.get(req.body, "ipAddress", req.ip);
       const accessLevel = _.get(req.body, "accessLevel", "0");
-      const entityId = _.get(req.body, "entityId", "H001B001");
       const response = {
         "status": "200",
         "description": "",
@@ -345,19 +344,22 @@ module.exports = (router) => {
       };
       debug("query: " + JSON.stringify(req.query));
       try {
-        let body = _.pick(req.body, ["userName", "designation", "emailId", "role", "entityId"]);
+        let body = _.pick(req.body, ["userName", "designation", "emailId", "role", "branchId"]);
         body.tenantId = tenantId;
+        if(body.branchId!= null) {
+          body.entityId=body.branchId;
+        }
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        debug(`user update API:Input parameters are:tenantId:${tenantId},createdBy:${createdBy},ipAddress:${ipAddress},userId:${req.params.userId},body:${JSON.stringify(body)},accessLevel:${accessLevel},entityId:${entityId}`);
-        user.updateUser(tenantId, createdBy, ipAddress, req.params.userId, body, accessLevel, entityId).then((updatedUser) => {
+        debug(`user update API:Input parameters are:tenantId:${tenantId},createdBy:${createdBy},ipAddress:${ipAddress},userId:${req.params.userId},body:${JSON.stringify(body)},accessLevel:${accessLevel}`);
+        user.updateUser(tenantId, createdBy, ipAddress, req.params.userId, body, accessLevel).then((updatedUser) => {
           response.status = "200";
           response.description = `'${req.params.userId}' User has been modified successfully.`;
           response.data = `'${req.params.userId}' User has been modified successfully.`;
           response.uniquereferenceid = updatedUser.id;
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
-        }).catch((e) => {
+        }).catch((e) => {          
           var reference = shortid.generate();
           response.status = "400";
           response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
