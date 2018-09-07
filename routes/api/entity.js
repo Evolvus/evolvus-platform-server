@@ -165,7 +165,6 @@ module.exports = (router) => {
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "IN_PROGRESS";
-        body.activationStatus = "INACTIVE";
         entity.update(tenantId, createdBy, ipAddress, req.params.entityCode, body).then((updatedEntity) => {
           response.status = "200";
           response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;

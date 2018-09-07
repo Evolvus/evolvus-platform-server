@@ -153,7 +153,6 @@ module.exports = (router) => {
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "IN_PROGRESS";
-        body.activationStatus = "INACTIVE";
         debug(`Update API.tenantId :${tenantId},createdBy :${createdBy},ipAddress :${ipAddress},roleName :${req.params.roleName}, body :${JSON.stringify(body)}, are parameters`);
         role.update(tenantId, createdBy, ipAddress, req.params.roleName, body).then((updatedRoles) => {
           response.status = "200";
