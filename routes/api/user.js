@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:user");
 const _ = require("lodash");
-const user = require("@evolvus/evolvus-user");
+const user = require("@teamtagevo/evolvus-user");
 const shortid = require('shortid');
 
 const LIMIT = process.env.LIMIT || 20;
@@ -293,9 +293,9 @@ module.exports = (router) => {
         object.enabledFlag = "false";
         let contact = {
           "emailId": req.body.emailId,
-          "country": "India",
-          "state": "Maharashtra",
-          "city": "Mumbai"
+          "country": "",
+          "state": "",
+          "city": ""
         };
         object.contact = contact;
         if (object.role != null) {
@@ -345,8 +345,8 @@ module.exports = (router) => {
       try {
         let body = _.pick(req.body, ["userName", "designation", "emailId", "role", "branchId"]);
         body.tenantId = tenantId;
-        if(body.branchId!= null) {
-          body.entityId=body.branchId;
+        if (body.branchId != null) {
+          body.entityId = body.branchId;
         }
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
@@ -358,7 +358,7 @@ module.exports = (router) => {
           response.uniquereferenceid = updatedUser.id;
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
-        }).catch((e) => {          
+        }).catch((e) => {
           var reference = shortid.generate();
           response.status = "400";
           response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
