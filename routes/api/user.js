@@ -1,6 +1,6 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:user");
 const _ = require("lodash");
-const user = require("@teamtagevo/evolvus-user");
+const user = require("@evolvus/evolvus-user");
 const shortid = require('shortid');
 
 const LIMIT = process.env.LIMIT || 20;
