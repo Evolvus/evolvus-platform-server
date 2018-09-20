@@ -13,6 +13,7 @@ const PAGE_SIZE = 20;
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
+var mainBranch = process.env.ENTITY_ID || "H001B001";
 
 const userAttributes = ["tenantId", "entityId", "accessLevel", "applicationCode", "contact", "role", "userId", "designation", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token",
   "masterTimeZone", "masterCurrency", "dailyLimit", "individualTransactionLimit", "loginStatus"
@@ -274,7 +275,7 @@ module.exports = (router) => {
       const createdBy = _.get(req.body, "createdBy", "IndusCollect");
       const ipAddress = _.get(req.body, "ipAddress", req.ip);
       const accessLevel = _.get(req.body, "accessLevel", "0");
-      const entityId = _.get(req.body, "branchId", "H001B001");
+      const entityId = _.get(req.body, "branchId", mainBranch);
       const response = {
         "status": "200",
         "description": "",
@@ -291,11 +292,11 @@ module.exports = (router) => {
         object.createdBy = createdBy;
         object.userPassword = "evolvus*123";
         object.enabledFlag = "false";
+        object.userName = _.get(req.body, "userName", req.body.userId);
+        object.activationStatus = "INACTIVE";
+        object.processingStatus = "AUTHORIZED";
         let contact = {
-          "emailId": req.body.emailId,
-          "country": "",
-          "state": "",
-          "city": ""
+          "emailId": req.body.emailId
         };
         object.contact = contact;
         if (object.role != null) {
@@ -304,7 +305,7 @@ module.exports = (router) => {
           };
         }
         debug(`user save API: input parameters are:tenantId:${tenantId},ipAddress:${ipAddress},createdBy:${createdBy},accessLevel:${accessLevel},userObject:${JSON.stringify(object)}`);
-        user.saveUser(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
+        user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
           response.status = "200";
           response.description = `New User '${req.body.userId}' has been added successfully.`;
           response.data = savedUser;
@@ -332,6 +333,7 @@ module.exports = (router) => {
   router.route("/induscollect/user/:userId")
     .put((req, res, next) => {
       const tenantId = req.body.corporateId;
+      const entityId = mainBranch;
       const createdBy = _.get(req.body, "createdBy", "IndusCollect");
       const ipAddress = _.get(req.body, "ipAddress", req.ip);
       const accessLevel = _.get(req.body, "accessLevel", "0");
@@ -348,14 +350,23 @@ module.exports = (router) => {
         if (body.branchId != null) {
           body.entityId = body.branchId;
         }
+        if (body.role != null) {
+          body.role = {
+            roleName: body.role
+          }
+        }
+        body.contact = {};
+        if (body.emailId != null) {
+          body.contact.emailId = body.emailId
+        }
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
         debug(`user update API:Input parameters are:tenantId:${tenantId},createdBy:${createdBy},ipAddress:${ipAddress},userId:${req.params.userId},body:${JSON.stringify(body)},accessLevel:${accessLevel}`);
-        user.updateUser(tenantId, createdBy, ipAddress, req.params.userId, body, accessLevel).then((updatedUser) => {
+        user.update(tenantId, createdBy, ipAddress, req.params.userId, body, accessLevel, entityId).then((updatedUser) => {
           response.status = "200";
           response.description = `'${req.params.userId}' User has been modified successfully.`;
           response.data = `'${req.params.userId}' User has been modified successfully.`;
-          response.uniquereferenceid = updatedUser.id;
+          response.uniquereferenceid = updatedUser.uniquereferenceid;
           debug("response: " + JSON.stringify(response));
           res.status(200).json(response);
         }).catch((e) => {
@@ -379,6 +390,11 @@ module.exports = (router) => {
   router.route("/induscollect/user/:userId/activate")
     .put((req, res, next) => {
       const userId = _.get(req.params, "userId");
+      const tenantId = req.body.corporateId;
+      const entityId = mainBranch;
+      const createdBy = _.get(req.body, "createdBy", "IndusCollect");
+      const ipAddress = _.get(req.body, "ipAddress", req.ip);
+      const accessLevel = _.get(req.body, "accessLevel", "0");
       const response = {
         "status": "200",
         "description": "",
@@ -386,27 +402,52 @@ module.exports = (router) => {
         "uniquereferenceid": null
       };
       try {
-        let body = _.pick(req.body, "action");
-        user.activate(userId, req.body.action).then((updatedUser) => {
-          response.status = "200";
-          response.description = updatedUser.data;
-          response.data = updatedUser.data;
-          response.uniquereferenceid = updatedUser.id;
-          debug("response: " + JSON.stringify(response));
-          res.status(200).json(response);
-        }).catch((e) => {
-          var reference = shortid.generate();
-          response.status = "400";
-          response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
-          response.data = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
-          debug(`user update promise failed due to ${e} and referenceId:${reference}`);
-          res.status(400).json(response);
-        });
+        let body = _.pick(req.body, ["action", "corporateId"]);
+        body.action = (body.action != null) ? body.action.toUpperCase() : null;
+        if (body.action !== "ACTIVE" && body.action !== "INACTIVE") {
+          throw new Error("Action must be ACTIVE or INACTIVE");
+        }
+        let flag = (body.action == "ACTIVE") ? "true" : "false";
+        let object = {
+          "activationStatus": body.action,
+          "enabledFlag": flag
+        };
+        let filter = {
+          "userId": req.params.userId.toUpperCase(),
+          "tenantId": req.body.corporateId
+        };
+        Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, ORDER_BY, 0, 1), user.update(tenantId, createdBy, ipAddress, userId, object, accessLevel, entityId)])
+          .then((result) => {
+            if (result[0][0] != null) {
+              if (result[0][0].activationStatus === body.action) {
+                response.description = `User is already ${body.action}`;
+                response.uniquereferenceid = result[0][0].uniquereferenceid;
+                debug("response: " + JSON.stringify(response));
+                res.status(200).json(response);
+              } else {
+                response.status = "200";
+                response.description = "User status changed successfully.";
+                response.data = "User status changed successfully.";
+                response.uniquereferenceid = result[0][1].uniquereferenceid;
+                debug("response: " + JSON.stringify(response));
+                res.status(200).json(response);
+              }
+            } else {
+              throw new Error("User not found");
+            }
+          }).catch((e) => {
+            var reference = shortid.generate();
+            response.status = "400";
+            response.description = `Unable to modify the status of User ${req.params.userId} . Due to  ${e}`;
+            response.data = `Unable to modify the status of User ${req.params.userId} . Due to  ${e}`;
+            debug(`user update promise failed due to ${e} and referenceId:${reference}`);
+            res.status(400).json(response);
+          });
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
-        response.description = `Unable to modify User ${req.params.userId} . Due to  ${e}`;
+        response.description = `Unable to modify the status of User ${req.params.userId} . Due to  ${e}`;
         response.data = e.toString();
         res.status(400).json(response);
       }
