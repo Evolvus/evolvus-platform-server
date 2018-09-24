@@ -2,6 +2,7 @@ const debug = require("debug")("evolvus-platform-server:routes:api:user");
 const _ = require("lodash");
 const user = require("@evolvus/evolvus-user");
 const shortid = require('shortid');
+const axios = require("axios");
 
 const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
@@ -14,6 +15,8 @@ const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
 var mainBranch = process.env.ENTITY_ID || "H001B001";
+var timeOut=process.env.TIME_OUT || 5000;
+var corporateURL = process.env.CORPORATE_URL || "http://192.168.1.174:8080/flux-services/corporate/status/";
 
 const userAttributes = ["tenantId", "entityId", "accessLevel", "applicationCode", "contact", "role", "userId", "designation", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token",
   "masterTimeZone", "masterCurrency", "dailyLimit", "individualTransactionLimit", "loginStatus"
@@ -283,43 +286,62 @@ module.exports = (router) => {
         "uniquereferenceid": null
       };
       try {
-        let object = _.pick(req.body, userAttributes);
-        object.tenantId = tenantId;
-        object.entityId = entityId;
-        object.tenantName = req.body.corporateName;
-        object.createdDate = new Date().toISOString();
-        object.lastUpdatedDate = object.createdDate;
-        object.createdBy = createdBy;
-        object.userPassword = "evolvus*123";
-        object.enabledFlag = "false";
-        object.userName = _.get(req.body, "userName", req.body.userId);
-        object.activationStatus = "INACTIVE";
-        object.processingStatus = "AUTHORIZED";
-        let contact = {
-          "emailId": req.body.emailId
-        };
-        object.contact = contact;
-        if (object.role != null) {
-          object.role = {
-            roleName: object.role
-          };
-        }
-        debug(`user save API: input parameters are:tenantId:${tenantId},ipAddress:${ipAddress},createdBy:${createdBy},accessLevel:${accessLevel},userObject:${JSON.stringify(object)}`);
-        user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
-          response.status = "200";
-          response.description = `New User '${req.body.userId}' has been added successfully.`;
-          response.data = savedUser;
-          response.uniquereferenceid = savedUser.uniquereferenceid;
-          debug("response: " + JSON.stringify(response));
-          res.status(200).json(response);
-        }).catch((e) => {
-          var reference = shortid.generate();
+        var instance = axios.create({
+          baseURL: corporateURL,
+          timeout: timeOut
+        });
+        instance.get(req.body.corporateId).then((resp) => {          
+          if (resp.data != null && resp.data.data != null && resp.data.data.exist == true) {
+            let object = _.pick(req.body, userAttributes);
+            object.tenantId = tenantId;
+            object.entityId = entityId;
+            object.tenantName = req.body.corporateName;
+            object.createdDate = new Date().toISOString();
+            object.lastUpdatedDate = object.createdDate;
+            object.createdBy = createdBy;
+            object.userPassword = "evolvus*123";
+            object.enabledFlag = "false";
+            object.userName = _.get(req.body, "userName", req.body.userId);
+            object.activationStatus = "INACTIVE";
+            object.processingStatus = "AUTHORIZED";
+            let contact = {
+              "emailId": req.body.emailId
+            };
+            object.contact = contact;
+            if (object.role != null) {
+              object.role = {
+                roleName: object.role
+              };
+            }
+            debug(`user save API: input parameters are:tenantId:${tenantId},ipAddress:${ipAddress},createdBy:${createdBy},accessLevel:${accessLevel},userObject:${JSON.stringify(object)}`);
+            user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
+              response.status = "200";
+              response.description = `New User '${req.body.userId}' has been added successfully.`;
+              response.data = savedUser;
+              response.uniquereferenceid = savedUser.uniquereferenceid;
+              debug("response: " + JSON.stringify(response));
+              res.status(200).json(response);
+            }).catch((e) => {
+              var reference = shortid.generate();
+              response.status = "400";
+              response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
+              response.data = {};
+              debug(`user save promise failed due to ${e} and referenceId:${reference}`);
+              res.status(400).json(response);
+            });
+          } else {
+            response.status = "400";
+            response.description = "Corporate not found";
+            response.data = {};
+            res.status(400).send(response);
+          }
+        }).catch((error) => {
           response.status = "400";
-          response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
-          response.data = {};
-          debug(`user save promise failed due to ${e} and referenceId:${reference}`);
+          response.description = "Server Error.Please contact Administrator";
+          response.data ={};
           res.status(400).json(response);
         });
+
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
@@ -417,7 +439,7 @@ module.exports = (router) => {
           "tenantId": req.body.corporateId
         };
         Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, ORDER_BY, 0, 1), user.update(tenantId, createdBy, ipAddress, userId, object, accessLevel, entityId)])
-          .then((result) => {
+          .then((result) => {            
             if (result[0][0] != null) {
               if (result[0][0].activationStatus === body.action) {
                 response.description = `User is already ${body.action}`;
@@ -428,7 +450,7 @@ module.exports = (router) => {
                 response.status = "200";
                 response.description = "User status changed successfully.";
                 response.data = "User status changed successfully.";
-                response.uniquereferenceid = result[0][1].uniquereferenceid;
+                response.uniquereferenceid = result[0][0].uniquereferenceid;
                 debug("response: " + JSON.stringify(response));
                 res.status(200).json(response);
               }
