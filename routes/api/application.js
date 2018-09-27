@@ -41,7 +41,6 @@ module.exports = (router) => {
         body.lastUpdatedDate = body.createdDate;
         body.entityId = entityId;
         body.accessLevel = accessLevel;
-
         debug(`save API. tenantId :${tenantId},ipAddress :${ipAddress}, createdBy :${createdBy}, body :${JSON.stringify(body) }are parameters`);
         application.save(tenantId, ipAddress, createdBy, body).then((ent) => {
           response.status = "200";
@@ -91,7 +90,7 @@ module.exports = (router) => {
         application.update(tenantId, ipAddress, createdBy, updateapplicationCode, body).then((updatedapplication) => {
           response.status = "200";
           response.description = `${updateapplicationCode} application has been modified successfully and sent for the supervisor authorization.`;
-          response.data = body;
+          response.data = updatedapplication;
           debug("response: " + JSON.stringify(response));
           res.status(response.status).json(response);
         }).catch((e) => {
@@ -102,7 +101,6 @@ module.exports = (router) => {
           debug(`Update promise failed due to :${e} and referenceId :${reference}`);
           res.status(response.status).json(response, null, 2);
         });
-
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch failed due to :${e} , and reference id :${reference}`);
