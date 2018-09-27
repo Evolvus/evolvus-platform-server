@@ -91,7 +91,7 @@ module.exports = (router) => {
           throw new Error("skipCount must be positive value or 0")
         }
         var filterValues = _.pick(req.query, filterAttributes);
-        var filter = _.omitBy(filterValues, function(value, key) {
+        var filter = _.omitBy(filterValues, function (value, key) {
           return value.startsWith("undefined");
         });
         var invalidFilters = _.difference(_.keys(req.query), filterAttributes);
@@ -159,28 +159,30 @@ module.exports = (router) => {
         "description": "",
         "data": []
       };
+      console.log(req.params.entityCode);
       debug("query: " + JSON.stringify(req.query));
       try {
         let body = _.pick(req.body, entityAttributes);
         body.updatedBy = req.header(userHeader);;
         body.lastUpdatedDate = new Date().toISOString();
         body.processingStatus = "IN_PROGRESS";
-        entity.update(tenantId, createdBy, ipAddress, req.params.entityCode, body).then((updatedEntity) => {
+        entityCode = req.params.entityCode.toUpperCase();
+        entity.update(tenantId, createdBy, ipAddress, entityCode, body).then((updatedEntity) => {
           response.status = "200";
-          response.description = `${body.name} Entity has been modified successful and sent for the supervisor authorization.`;
+          response.description = `${req.params.entityCode} Entity has been modified successful and sent for the supervisor authorization.`;
           response.data = body;
           res.status(200)
             .json(response);
 
         }).catch((e) => {
           response.status = "400";
-          response.description = `Unable to modify entity ${body.name}. Due to ${e}`;
+          response.description = `Unable to modify entity ${req.params.entityCode}. Due to ${e}`;
           response.data = e.toString();
           res.status(response.status).json(response);
         });
       } catch (e) {
         response.status = "400";
-        response.description = `Unable to modify entity ${req.body.name}. Due to ${e}`;
+        response.description = `Unable to modify entity ${req.params.entityCode}. Due to ${e}`;
         response.data = e.toString();
         res.status(response.status).json(response);
       }
