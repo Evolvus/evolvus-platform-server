@@ -15,8 +15,8 @@ const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
 var mainBranch = process.env.ENTITY_ID || "H001B001";
-var timeOut=process.env.TIME_OUT || 5000;
-var corporateURL = process.env.CORPORATE_URL || "http://192.168.1.174:8080/flux-services/corporate/status/";
+var timeOut = process.env.TIME_OUT || 5000;
+var corporateURL = process.env.CORPORATE_URL || "http://localhost:8282/flux-services/corporate/status/";
 
 const userAttributes = ["tenantId", "entityId", "accessLevel", "applicationCode", "contact", "role", "userId", "designation", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token",
   "masterTimeZone", "masterCurrency", "dailyLimit", "individualTransactionLimit", "loginStatus"
@@ -24,6 +24,11 @@ const userAttributes = ["tenantId", "entityId", "accessLevel", "applicationCode"
 const bulkUserAttributes = ["phoneNumber", "mobileNumber", "emailId", "city", "state", "country"];
 const filterAttributes = user.filterAttributes;
 const sortAttributes = user.sortAttributes;
+
+var instance = axios.create({
+  baseURL: corporateURL,
+  timeout: timeOut
+});
 
 module.exports = (router) => {
 
@@ -45,7 +50,7 @@ module.exports = (router) => {
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = (pageNo - 1) * pageSize;
       var filterValues = _.pick(req.query, filterAttributes);
-      var filter = _.omitBy(filterValues, function(value, key) {
+      var filter = _.omitBy(filterValues, function (value, key) {
         return value.startsWith("undefined");
       });
       var sort = _.get(req.query, "sort", {});
@@ -286,11 +291,7 @@ module.exports = (router) => {
         "uniquereferenceid": null
       };
       try {
-        var instance = axios.create({
-          baseURL: corporateURL,
-          timeout: timeOut
-        });
-        instance.get(req.body.corporateId).then((resp) => {          
+        instance.get(req.body.corporateId).then((resp) => {
           if (resp.data != null && resp.data.data != null && resp.data.data.exist == true) {
             let object = _.pick(req.body, userAttributes);
             object.tenantId = tenantId;
@@ -338,7 +339,7 @@ module.exports = (router) => {
         }).catch((error) => {
           response.status = "400";
           response.description = "Server Error.Please contact Administrator";
-          response.data ={};
+          response.data = {};
           res.status(400).json(response);
         });
 
@@ -429,42 +430,69 @@ module.exports = (router) => {
         if (body.action !== "ACTIVE" && body.action !== "INACTIVE") {
           throw new Error("Action must be ACTIVE or INACTIVE");
         }
-        let flag = (body.action == "ACTIVE") ? "true" : "false";
-        let object = {
-          "activationStatus": body.action,
-          "enabledFlag": flag
-        };
-        let filter = {
-          "userId": req.params.userId.toUpperCase(),
-          "tenantId": req.body.corporateId
-        };
-        Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, ORDER_BY, 0, 1), user.update(tenantId, createdBy, ipAddress, userId, object, accessLevel, entityId)])
-          .then((result) => {            
-            if (result[0][0] != null) {
-              if (result[0][0].activationStatus === body.action) {
-                response.description = `User is already ${body.action}`;
-                response.uniquereferenceid = result[0][0].uniquereferenceid;
-                debug("response: " + JSON.stringify(response));
-                res.status(200).json(response);
-              } else {
-                response.status = "200";
-                response.description = "User status changed successfully.";
-                response.data = "User status changed successfully.";
-                response.uniquereferenceid = result[0][0].uniquereferenceid;
-                debug("response: " + JSON.stringify(response));
-                res.status(200).json(response);
-              }
+        instance.get(body.corporateId).then((resp) => {
+          var result = resp.data;
+          if (result != null && result.data != null) {
+            if (result.data.status != null && (result.data.status.toUpperCase() == "ACTIVE" || body.action.toUpperCase() == "INACTIVE")) {
+              let flag = (body.action == "ACTIVE") ? "true" : "false";
+              let object = {
+                "activationStatus": body.action,
+                "enabledFlag": flag
+              };
+              let filter = {
+                "userId": req.params.userId.toUpperCase(),
+                "tenantId": req.body.corporateId
+              };
+              Promise.all([user.find(tenantId, entityId, accessLevel, createdBy, ipAddress, filter, ORDER_BY, 0, 1), user.update(tenantId, createdBy, ipAddress, userId, object, accessLevel, entityId)])
+                .then((result) => {
+                  if (result[0][0] != null) {
+                    if (result[0][0].activationStatus === body.action) {
+                      response.description = `User is already ${body.action}`;
+                      response.uniquereferenceid = result[0][0].uniquereferenceid;
+                      debug("response: " + JSON.stringify(response));
+                      res.status(200).json(response);
+                    } else {
+                      response.status = "200";
+                      response.description = "User status changed successfully.";
+                      response.data = "User status changed successfully.";
+                      response.uniquereferenceid = result[0][0].uniquereferenceid;
+                      debug("response: " + JSON.stringify(response));
+                      res.status(200).json(response);
+                    }
+                  } else {
+                    throw new Error("User not found");
+                  }
+                }).catch((e) => {
+                  var reference = shortid.generate();
+                  response.status = "400";
+                  response.description = `Unable to modify the status of User ${req.params.userId} . Due to  ${e}`;
+                  response.data = `Unable to modify the status of User ${req.params.userId} . Due to  ${e}`;
+                  debug(`user update promise failed due to ${e} and referenceId:${reference}`);
+                  res.status(400).json(response);
+                });
             } else {
-              throw new Error("User not found");
+              response.status = "400";
+              response.description = "Not able to modify the user status.Due to Corporate not found or it is INACTIVE";
+              response.data = {};
+              debug("response: "+ JSON.stringify(response));
+              res.status(400).json(response);
             }
-          }).catch((e) => {
-            var reference = shortid.generate();
+          } else {
             response.status = "400";
-            response.description = `Unable to modify the status of User ${req.params.userId} . Due to  ${e}`;
-            response.data = `Unable to modify the status of User ${req.params.userId} . Due to  ${e}`;
-            debug(`user update promise failed due to ${e} and referenceId:${reference}`);
+            response.description = "Server Error.Please contact Administrator";
+            response.data = {};
+            debug("response: "+ JSON.stringify(response));
             res.status(400).json(response);
-          });
+          }
+        }).catch((e) => {  
+          var reference = shortid.generate();        
+          response.status = "400";
+          response.description = "Server Error.Please contact Administrator";
+          response.data = {};
+          debug(`Find corporate status promise failed due to ${e} and referenceId is ${reference}`);
+          res.status(400).json(response);
+        });
+
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
@@ -474,6 +502,40 @@ module.exports = (router) => {
         res.status(400).json(response);
       }
     });
+
+  router.route("/user/verify").get((req, res, next) => {
+    try {
+      const response = {
+        "status": "200",
+        "description": "",
+        "data": {}
+      };
+      var query = _.pick(req.query, ["applicationCode", "userId"]);
+      user.verify(query.applicationCode, query.userId)
+        .then(user => {
+          response.data = user;
+          if (user) {
+            response.description = `User with userId ${req.query.userId} exists`;
+          } else {
+            response.description = `User with userId ${req.query.userId} doesn't exist`;
+          }
+          res.status(200).json(response);
+        })
+        .catch(e => {
+          debug("error", e);
+          response.status = "404";
+          response.data = e;
+          response.description = `${e.toString()}`;
+          res.status(404).json(response);
+        });
+    } catch (e) {
+      debug("error e:", e);
+      response.status = "404";
+      response.data = e;
+      response.description = `${e.toString()}`;
+      res.status(404).json(response);
+    }
+  });
 };
 
 function sortable(sort) {
