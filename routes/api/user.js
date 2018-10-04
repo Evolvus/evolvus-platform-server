@@ -50,7 +50,7 @@ module.exports = (router) => {
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = (pageNo - 1) * pageSize;
       var filterValues = _.pick(req.query, filterAttributes);
-      var filter = _.omitBy(filterValues, function (value, key) {
+      var filter = _.omitBy(filterValues, function(value, key) {
         return value.startsWith("undefined");
       });
       var sort = _.get(req.query, "sort", {});
@@ -474,18 +474,18 @@ module.exports = (router) => {
               response.status = "400";
               response.description = "Not able to modify the user status.Due to Corporate not found or it is INACTIVE";
               response.data = {};
-              debug("response: "+ JSON.stringify(response));
+              debug("response: " + JSON.stringify(response));
               res.status(400).json(response);
             }
           } else {
             response.status = "400";
             response.description = "Server Error.Please contact Administrator";
             response.data = {};
-            debug("response: "+ JSON.stringify(response));
+            debug("response: " + JSON.stringify(response));
             res.status(400).json(response);
           }
-        }).catch((e) => {  
-          var reference = shortid.generate();        
+        }).catch((e) => {
+          var reference = shortid.generate();
           response.status = "400";
           response.description = "Server Error.Please contact Administrator";
           response.data = {};
