@@ -29,7 +29,7 @@
     "@evolvus/evolvus-node-health-check": "^2.0.1",
     "@evolvus/evolvus-role": "^1.0.20",
     "@evolvus/evolvus-supported-date-formats": "^1.0.6",
-    "@evolvus/evolvus-user": "^1.1.14",
+    "@evolvus/evolvus-user": "^1.1.15",
     "@godaddy/terminus": "^2.4.1",
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",
