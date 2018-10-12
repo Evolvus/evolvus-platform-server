@@ -35,7 +35,6 @@ module.exports = (router) => {
         "data": {}
       };
       let body = _.pick(req.body, roleAttributes);
-      console.log("body", body)
       try {
         body.associatedUsers = 5;
         body.tenantId = tenantId;
@@ -52,7 +51,6 @@ module.exports = (router) => {
           res.status(200)
             .json(response);
         }).catch((e) => {
-          console.log(e);
           response.status = "400";
           response.description = `Unable to add new role ${body.roleName}. Due to ${e}`;
           response.data = {};

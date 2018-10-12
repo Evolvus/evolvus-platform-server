@@ -32,7 +32,7 @@ var dbConnection = connection.connect("PLATFORM").then((res, err) => {
     body.status = "working";
     body.saveTime = new Date().toISOString();
     healthCheck.save(body).then((ent) => {
-      debug("healthcheck object saved")
+      debug("healthcheck object saved");
     }).catch((e) => {
       debug(`unable to save Healthcheck object due to ${e}`);
     });
@@ -92,7 +92,7 @@ function onHealthCheck() {
       reject("CONNECTION PROBLEM");
     });
   });
-};
+}
 
 const server = http.createServer(app);
 

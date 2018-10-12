@@ -1,4 +1,4 @@
-var PORT = process.env.PORT || 8080;
+var PORT = process.env.PORT || 8086;
 const mongoose = require("mongoose");
 
 process.env.MONGO_DB_URL = "mongodb://10.10.69.204:27017/TestPlatform_Dev";
@@ -8,8 +8,8 @@ process.env.MONGO_DB_URL = "mongodb://10.10.69.204:27017/TestPlatform_Dev";
 const debug = require("debug")("evolvus-platform-server.test.routes.api");
 const app = require("../../server")
   .app;
-const entityTestData = require("./entityTestData");
-const randomstring = require("randomstring");
+const roleTestData = require("./roleTestData");
+//const randomstring = require("randomstring");
 
 let chai = require("chai");
 let chaiHttp = require("chai-http");
@@ -24,34 +24,30 @@ describe("Testing routes", () => {
     app.on('application_started', done());
   });
 
-  describe("Testing save entityId api", () => {
+  describe("Testing save role api", () => {
 
-    it("should save entity and return same attribute values", (done) => {
+    it("should save role and return same attribute values", (done) => {
       chai.request(serverUrl)
-        .post("/api/entity")
+        .post("/api/role")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
-        .send(entityTestData.validObject3)
+        .send(roleTestData.validObject1)
         .end((err, res) => {
           if (err) {
             debug(`error in the test ${err}`);
             done(err);
           } else {
             res.should.have.status(200);
-            res.body.should.be.a("object");
-            res.body.should.have.property('description').eql('SUCCESS');
-            res.body.data.should.have.property('name')
-              .eql(entityTestData.validObject3.name.toUpperCase());
             done();
           }
         });
     });
 
-    it("should not save entity and return status 400", (done) => {
+    it("should not save role and return status 400", (done) => {
       chai.request(serverUrl)
-        .post("/api/entity")
+        .post("/api/role")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .send({
-          "name": "Docket"
+          "roleName": "Tester"
         })
         .end((err, res) => {
           if (err) {
@@ -64,11 +60,11 @@ describe("Testing routes", () => {
         });
     });
 
-    it("should not save entity and return status 400 and return data as entityCode is required ", (done) => {
+    it("should not save role and return status 400 and return description as applicationCode is undefined ", (done) => {
       chai.request(serverUrl)
-        .post("/api/entity")
+        .post("/api/role")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
-        .send(entityTestData.validObject2)
+        .send(roleTestData.invalidObject1)
         .end((err, res) => {
           if (err) {
             debug(`error in the test ${err}`);
@@ -76,18 +72,18 @@ describe("Testing routes", () => {
           } else {
             res.should.have.status(400);
             res.body.should.be.a("object");
-            res.body.should.have.property('data').eql('entityCode is required');
+            res.body.should.have.property('description').eql('Unable to add new role ADMIN_EIGHT. Due to Error: No Application with undefined found');
             done();
           }
         });
     });
 
-    it("should not save entity and return status 400", (done) => {
+    it("should not save role and return status 400", (done) => {
       chai.request(serverUrl)
         .post("/api/entity")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .send({
-          "name": "Dockethhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
+          "applicationCode": "Dockethhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
         })
         .end((err, res) => {
           if (err) {
@@ -101,11 +97,12 @@ describe("Testing routes", () => {
     });
 
   });
-  describe("Testing Get entity api", () => {
 
-    it("Should return all the entity", (done) => {
+  describe("Testing Get role api", () => {
+
+    it("Should return all the roles", (done) => {
       chai.request(serverUrl)
-        .get("/api/entity/")
+        .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .end((err, res) => {
           if (err) {
@@ -120,9 +117,10 @@ describe("Testing routes", () => {
           }
         });
     });
-    it("Should return all the entity basedon filterCondition", (done) => {
+
+    it("Should return all the roles basedon filterCondition", (done) => {
       chai.request(serverUrl)
-        .get("/api/entity/")
+        .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "processingStatus": "PENDING_AUTHORIZATION"
@@ -140,13 +138,14 @@ describe("Testing routes", () => {
           }
         });
     });
-    it("Should return all the entity based on filterCondition", (done) => {
+
+    it("Should return all the roles based on filterCondition", (done) => {
       chai.request(serverUrl)
-        .get("/api/entity/")
+        .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "processingStatus": "PENDING_AUTHORIZATION",
-          "enableFlag": "1"
+          "enableFlag": "true"
         })
         .end((err, res) => {
           if (err) {
@@ -162,9 +161,9 @@ describe("Testing routes", () => {
         });
     });
 
-    it("Should return all the entity based pageSize and PageNo", (done) => {
+    it("Should return all the roles based pageSize and PageNo", (done) => {
       chai.request(serverUrl)
-        .get("/api/entity/")
+        .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "processingStatus": "PENDING_AUTHORIZATION",
@@ -187,7 +186,7 @@ describe("Testing routes", () => {
 
     it("Should throw the error if skip count is negative value", (done) => {
       chai.request(serverUrl)
-        .get("/api/entity/")
+        .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "processingStatus": "PENDING_AUTHORIZATION",
@@ -207,9 +206,9 @@ describe("Testing routes", () => {
         });
     });
 
-    it("Should return all the entity based on limit if page size is 0", (done) => {
+    it("Should return all the roles based on limit if page size is 0", (done) => {
       chai.request(serverUrl)
-        .get("/api/entity/")
+        .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "processingStatus": "PENDING_AUTHORIZATION",
@@ -230,9 +229,9 @@ describe("Testing routes", () => {
         });
     });
 
-    it("Should return the entitys based on sorting condition", (done) => {
+    it("Should return the roles based on sorting condition", (done) => {
       chai.request(serverUrl)
-        .get("/api/entity")
+        .get("/api/role")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "sort": "-processingStatus,-lastUpdatedDate"
@@ -253,7 +252,7 @@ describe("Testing routes", () => {
 
     it("Should throws an error like limit must be a number", (done) => {
       chai.request(serverUrl)
-        .get("/api/entity/")
+        .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "processingStatus": "PENDING_AUTHORIZATION",
@@ -276,7 +275,7 @@ describe("Testing routes", () => {
 
     it("Should throws an error like pageSize must be a number", (done) => {
       chai.request(serverUrl)
-        .get("/api/entity/")
+        .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "pageSize": "guyasgdjh",
@@ -294,14 +293,36 @@ describe("Testing routes", () => {
           }
         });
     });
-  });
 
-  describe("Testing Update entity api", () => {
-    it("Should update the entity based on entityCode", (done) => {
+    it("Should throws an error like pageNo must be a number", (done) => {
       chai.request(serverUrl)
-        .put("/api/entity/ +ENTITY5")
+        .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
-        .send(entityTestData.validObject5)
+        .query({
+          "pageNo": "guyasgdjh",
+          "peocessingstatus": "PENDING_AUTHORIZATION"
+        })
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property("data").eql("Error: pageNo must be a number");
+            done();
+          }
+        });
+    });
+
+    it("Should return the role based on wfInstanceId", (done) => {
+      chai.request(serverUrl)
+        .get("/api/role/")
+        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+        .query({
+          "wfInstanceId": "s71Hbc6Q8",
+          "enableFlag": "true"
+        })
         .end((err, res) => {
           if (err) {
             debug(`error in test ${err}`);
@@ -309,11 +330,136 @@ describe("Testing routes", () => {
           } else {
             res.should.have.status(200);
             res.body.should.be.a("object");
-            res.body.data.should.have.property('name')
-              .eql("karnataka");
+            res.body.data.should.be.a('array');
+            res.body.data.length.should.be.eql(1);
             done();
           }
         });
     });
+
+    it("Should return the role based on applicationCode", (done) => {
+      chai.request(serverUrl)
+        .get("/api/role/")
+        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "IVL").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+        .query({
+          "applicationCode": "DOCKET"
+        })
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            res.body.should.be.a("object");
+            res.body.data.should.be.a('array');
+            res.body.data.length.should.be.eql(4);
+            done();
+          }
+        });
+    });
+
+    it("Should return the error `No role found` if the applicationCode is not exists", (done) => {
+      chai.request(serverUrl)
+        .get("/api/role/")
+        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "IVL").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+        .query({
+          "applicationCode": "dhgfhyyh"
+        })
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            res.body.should.be.a("object");
+            res.body.should.have.property("description").eql("No role found");
+            done();
+          }
+        });
+    });
+
+    it("Should return the role based on roleName", (done) => {
+      chai.request(serverUrl)
+        .get("/api/role/")
+        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "IVL").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+        .query({
+          "roleName": "ADMIN_ONE"
+        })
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            res.body.should.be.a("object");
+            res.body.data.should.be.a('array');
+            res.body.data.length.should.be.eql(1);
+            done();
+          }
+        });
+    });
+
+    it("Should return error if the roleName is not exists", (done) => {
+      chai.request(serverUrl)
+        .get("/api/role/")
+        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "IVL").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+        .query({
+          "roleName": "dgdgh"
+        })
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            res.body.should.be.a("object");
+            res.body.should.have.property("description").eql("No role found");
+            done();
+          }
+        });
+    });
+
+  });
+
+  describe("Testing Update role api", () => {
+
+    it("Should update the role based on roleName", (done) => {
+      chai.request(serverUrl)
+        .put("/api/role/ADMIN_ONE")
+        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+        .send(roleTestData.updateObject)
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(200);
+            res.body.should.be.a("object");
+            res.body.should.have.property('description')
+              .to.eql("ADMIN_ONE Role has been modified successful and sent for the supervisor authorization.");
+            done();
+          }
+        });
+    });
+
+    it("Should not update the role if the roleName is not exists", (done) => {
+      chai.request(serverUrl)
+        .put("/api/role/sdfgdgh")
+        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+        .send(roleTestData.updateObject)
+        .end((err, res) => {
+          if (err) {
+            debug(`error in test ${err}`);
+            done(err);
+          } else {
+            res.should.have.status(400);
+            res.body.should.be.a("object");
+            res.body.should.have.property('description')
+              .to.eql(`Unable to modify role sdfgdgh. Due to Role SDFGDGH,  already exists `);
+            done();
+          }
+        });
+    });
+
   });
 });
