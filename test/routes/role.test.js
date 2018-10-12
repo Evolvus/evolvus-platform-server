@@ -112,7 +112,7 @@ describe("Testing routes", () => {
             res.should.have.status(200);
             res.body.should.be.a("object");
             res.body.data.should.be.a('array');
-            res.body.data.length.should.be.eql(2);
+            res.body.data.length.should.be.eql(4);
             done();
           }
         });
@@ -133,7 +133,7 @@ describe("Testing routes", () => {
             res.should.have.status(200);
             res.body.should.be.a("object");
             res.body.data.should.be.a('array');
-            res.body.data.length.should.be.eql(2);
+            res.body.data.length.should.be.eql(1);
             done();
           }
         });
@@ -144,8 +144,7 @@ describe("Testing routes", () => {
         .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "processingStatus": "PENDING_AUTHORIZATION",
-          "enableFlag": "true"
+          "processingStatus": "PENDING_AUTHORIZATION"
         })
         .end((err, res) => {
           if (err) {
@@ -244,7 +243,7 @@ describe("Testing routes", () => {
             res.should.have.status(200);
             res.body.should.be.a("object");
             res.body.data.should.be.a('array');
-            res.body.data.length.should.be.eql(2);
+            res.body.data.length.should.be.eql(4);
             done();
           }
         });
@@ -320,8 +319,7 @@ describe("Testing routes", () => {
         .get("/api/role/")
         .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "wfInstanceId": "s71Hbc6Q8",
-          "enableFlag": "true"
+          "wfInstanceId": "s71Hbc6Q8"
         })
         .end((err, res) => {
           if (err) {
@@ -340,9 +338,9 @@ describe("Testing routes", () => {
     it("Should return the role based on applicationCode", (done) => {
       chai.request(serverUrl)
         .get("/api/role/")
-        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "IVL").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
-          "applicationCode": "DOCKET"
+          "applicationCode": "SANDSTORM"
         })
         .end((err, res) => {
           if (err) {
@@ -352,7 +350,7 @@ describe("Testing routes", () => {
             res.should.have.status(200);
             res.body.should.be.a("object");
             res.body.data.should.be.a('array');
-            res.body.data.length.should.be.eql(4);
+            res.body.data.length.should.be.eql(3);
             done();
           }
         });
@@ -381,7 +379,7 @@ describe("Testing routes", () => {
     it("Should return the role based on roleName", (done) => {
       chai.request(serverUrl)
         .get("/api/role/")
-        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "IVL").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
+        .set('X-ENTITY-ID', 'H001B001').set("X-TENANT-ID", "T001").set("X-ACCESS-LEVEL", "1").set("X-USER", "user")
         .query({
           "roleName": "ADMIN_ONE"
         })
@@ -453,9 +451,6 @@ describe("Testing routes", () => {
             done(err);
           } else {
             res.should.have.status(400);
-            res.body.should.be.a("object");
-            res.body.should.have.property('description')
-              .to.eql(`Unable to modify role sdfgdgh. Due to Role SDFGDGH,  already exists `);
             done();
           }
         });

@@ -35,6 +35,7 @@ module.exports = (router) => {
         "data": {}
       };
       let body = _.pick(req.body, roleAttributes);
+      console.log("SAVE OBJECT", body);
       try {
         body.associatedUsers = 5;
         body.tenantId = tenantId;
@@ -44,6 +45,7 @@ module.exports = (router) => {
         body.lastUpdatedDate = body.createdDate;
         debug(`save API. tenantId :${tenantId}, createdBy :${createdBy},ipAddress :${ipAddress},accessLevel: ${accessLevel},entityId: ${entityId}, body :${JSON.stringify(body) }are parameters`);
         role.save(tenantId, createdBy, ipAddress, accessLevel, entityId, body).then((roles) => {
+          console.log("SAVE RESULT", roles);
           response.status = "200";
           response.description = `New role ${body.roleName.toUpperCase()} has been added successfully for the application ${body.applicationCode} and sent for the supervisor authorization.`;
           response.data = roles;
@@ -51,6 +53,7 @@ module.exports = (router) => {
           res.status(200)
             .json(response);
         }).catch((e) => {
+          console.log("Save Error", e);
           response.status = "400";
           response.description = `Unable to add new role ${body.roleName}. Due to ${e}`;
           response.data = {};
@@ -59,6 +62,7 @@ module.exports = (router) => {
           res.status(response.status).json(response);
         });
       } catch (e) {
+        console.log("TRY CATCH ERROR", e);
         var reference = shortid.generate();
         debug(`try catch failed due to :${e} , and reference id :${reference}`);
         response.status = "400";
@@ -80,49 +84,77 @@ module.exports = (router) => {
         "description": "",
         "data": {}
       };
-      debug("query: " + JSON.stringify(req.query));
-      var limit = _.get(req.query, "limit", LIMIT);
-      var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
-      var pageNo = _.get(req.query, "pageNo", 1);
-      var skipCount = pageSize * (pageNo - 1);
-      var filterValues = _.pick(req.query, filterAttributes);
-      var filter = _.omitBy(filterValues, function(value, key) {
-        return value.startsWith("undefined");
-      });
-      var sort = _.get(req.query, "sort", {});
-      var orderby = sortable(sort);
-      limit = (+pageSize < +limit) ? pageSize : limit;
       try {
-        debug(`GET ALL API.tenantId :${tenantId},createdBy :${createdBy},ipAddress :${ipAddress},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
-        Promise.all([role.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, +limit), role.find(tenantId, createdBy, ipAddress, filter, orderby, 0, 0)])
-          .then((result) => {
-            if (result[0].length > 0) {
-              response.status = "200";
-              response.description = "SUCCESS";
-              response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
-              response.totalNoOfRecords = result[1].length;
-              response.data = result[0];
-              debug("response: " + JSON.stringify(response));
-              res.status(200)
-                .json(response);
-            } else {
-              response.status = "200";
-              response.data = [];
-              response.totalNoOfRecords = 0;
-              response.totalNoOfPages = 0;
-              response.description = "No role found";
-              debug("response: " + JSON.stringify(response));
-              res.status(response.status)
-                .json(response);
-            }
-          }).catch((e) => {
-            var reference = shortid.generate();
-            debug(`Get All promise failed due to :${e} and referenceId :${reference}`);
-            response.status = "400";
-            response.description = `Unable to fetch all roles`;
-            response.data = e.toString();
-            res.status(response.status).json(response);
-          });
+        debug("query: " + JSON.stringify(req.query));
+        var limit = _.get(req.query, "limit", LIMIT);
+        limit = parseInt(limit);
+        if (isNaN(limit)) {
+          throw new Error("limit must be a number");
+        }
+        var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
+        pageSize = parseInt(pageSize);
+        if (isNaN(pageSize)) {
+          throw new Error("pageSize must be a number");
+        }
+        var pageNo = _.get(req.query, "pageNo", 1);
+        pageNo = parseInt(pageNo);
+        if (isNaN(pageNo)) {
+          throw new Error("pageNo must be a number");
+        }
+        var skipCount = pageSize * (pageNo - 1);
+        if (skipCount < 0) {
+          throw new Error("skipCount must be positive value or 0");
+        }
+        var filterValues = _.pick(req.query, filterAttributes);
+        var filter = _.omitBy(filterValues, function(value, key) {
+          return value.startsWith("undefined");
+        });
+        var invalidFilters = _.difference(_.keys(req.query), filterAttributes);
+        let a = _.pull(invalidFilters, 'pageSize', 'pageNo', 'limit', 'sort', 'query');
+        debug("invalidFilters:", invalidFilters);
+        if (a.length !== 0) {
+          response.status = "200";
+          response.description = "No entity found";
+          response.data = [];
+          response.totalNoOfPagses = 0;
+          response.totalNoOfRecords = 0;
+          res.json(response);
+        } else {
+          var sort = _.get(req.query, "sort", {});
+          var orderby = sortable(sort);
+          limit = (+pageSize < +limit) ? pageSize : limit;
+
+          debug(`GET ALL API.tenantId :${tenantId},createdBy :${createdBy},ipAddress :${ipAddress},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
+          Promise.all([role.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, +limit), role.find(tenantId, createdBy, ipAddress, filter, orderby, 0, 0)])
+            .then((result) => {
+              if (result[0].length > 0) {
+                response.status = "200";
+                response.description = "SUCCESS";
+                response.totalNoOfPages = Math.ceil(result[1].length / pageSize);
+                response.totalNoOfRecords = result[1].length;
+                response.data = result[0];
+                debug("response: " + JSON.stringify(response));
+                res.status(200)
+                  .json(response);
+              } else {
+                response.status = "200";
+                response.data = [];
+                response.totalNoOfRecords = 0;
+                response.totalNoOfPages = 0;
+                response.description = "No role found";
+                debug("response: " + JSON.stringify(response));
+                res.status(response.status)
+                  .json(response);
+              }
+            }).catch((e) => {
+              var reference = shortid.generate();
+              debug(`Get All promise failed due to :${e} and referenceId :${reference}`);
+              response.status = "400";
+              response.description = `Unable to fetch all roles`;
+              response.data = e.toString();
+              res.status(response.status).json(response);
+            });
+        }
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch failed due to :${e} , and reference id :${reference}`);
