@@ -20,14 +20,21 @@ module.exports = (router) => {
 
   router.route('/fileUpload')
     .get((req, res, next) => {
-      const tenantId = req.header(tenantHeader);
-      const createdBy = req.header(userHeader);
-      const ipAddress = req.header(ipHeader);
+      // const tenantId = req.header(tenantHeader);
+      // const createdBy = req.header(userHeader);
+      // const ipAddress = req.header(ipHeader);
       const response = {
         "status": "200",
         "description": "",
         "data": {}
       };
+
+    // get these values from header...
+      const tenantId = "T001";
+      const createdBy = "System";
+      const ipAddress = "127.0.0.1";
+
+      
       debug("query: " + JSON.stringify(req.query));
       var limit = _.get(req.query, "limit", LIMIT);
       var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
@@ -102,9 +109,13 @@ module.exports = (router) => {
 
   router.route("/fileUpload/:fileName")
     .put((req, res, next) => {
-      const tenantId = req.header(tenantHeader);
-      const createdBy = req.header(userHeader);
-      const ipAddress = req.header(ipHeader);
+      
+      // const tenantId = req.header(tenantHeader);
+      // const createdBy = req.header(userHeader);
+      // const ipAddress = req.header(ipHeader);
+      const tenantId = "T001";
+      const createdBy = "System";
+      const ipAddress = "127.0.0.1";
       // const accessLevel = req.header(accessLevelHeader);
       // const entityId = req.header(entityIdHeader);
       var updatefileName = req.params.fileName;
@@ -149,22 +160,33 @@ module.exports = (router) => {
 
   router.route('/fileUpload')
     .post((req, res, next) => {
-      const tenantId = req.header(tenantHeader);
-      const createdBy = req.header(userHeader);
-      const ipAddress = req.header(ipHeader);
+      // const tenantId = req.header(tenantHeader);
+      // const createdBy = req.header(userHeader);
+      // const ipAddress = req.header(ipHeader);
       const response = {
         "status": "200",
         "description": "",
         "data": {}
       };
+      const tenantId = "T001";
+      const createdBy = "System";
+      const ipAddress = "127.0.0.1";
       let body = _.pick(req.body, fileUploadAttributes);
       try {
-        body.tenantId = tenantId;
-        body.createdBy = createdBy;
-        body.createdDate = new Date().toISOString();
+    
+
+        body.entityId="H001B001";
+        body.accessLevel="0"; 
+       
+         body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
+        body.updatedBy=createdBy;
+        body.wfInstanceId="";
+        body.processingStatus="AUTHORIZED";
         debug(`save API. tenantId :${tenantId}, createdBy :${createdBy}, ipAddress :${ipAddress}, body :${JSON.stringify(body)}, are parameters values `);
         fileUpload.save(tenantId, createdBy, ipAddress, body).then((ent) => {
+          console.log("tenantId", tenantId);
+          console.log("body save", body); 
           response.status = "200";
           response.description = "SUCCESS";
           response.data = ent;
