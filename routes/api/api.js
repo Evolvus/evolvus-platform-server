@@ -10,5 +10,6 @@ module.exports = (router) => {
   require("./lookup")(router);
   require("./supportedDateFormats")(router);
   require("./fileUpload")(router);
+  require("./mongoSeed")(router);
 
 };
