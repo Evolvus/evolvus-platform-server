@@ -50,7 +50,7 @@ module.exports = (router) => {
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = (pageNo - 1) * pageSize;
       var filterValues = _.pick(req.query, filterAttributes);
-      var filter = _.omitBy(filterValues, function(value, key) {
+      var filter = _.omitBy(filterValues, function (value, key) {
         return value.startsWith("undefined");
       });
       var sort = _.get(req.query, "sort", {});
@@ -294,6 +294,13 @@ module.exports = (router) => {
         instance.get(req.body.corporateId).then((resp) => {
           if (resp.data != null && resp.data.data != null && resp.data.data.exist == true) {
             let object = _.pick(req.body, userAttributes);
+            if (resp.data.data.status != null && resp.data.data.status.toUpperCase() === "ACTIVE") {
+              object.activationStatus = "ACTIVE";
+              object.enabledFlag = "true";
+            } else {
+              object.activationStatus = "INACTIVE";
+              object.enabledFlag = "false";
+            }
             object.tenantId = tenantId;
             object.entityId = entityId;
             object.tenantName = req.body.corporateName;
@@ -301,9 +308,7 @@ module.exports = (router) => {
             object.lastUpdatedDate = object.createdDate;
             object.createdBy = createdBy;
             object.userPassword = "evolvus*123";
-            object.enabledFlag = "false";
             object.userName = _.get(req.body, "userName", req.body.userId);
-            object.activationStatus = "INACTIVE";
             object.processingStatus = "AUTHORIZED";
             let contact = {
               "emailId": req.body.emailId
