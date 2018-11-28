@@ -310,6 +310,7 @@ module.exports = (router) => {
             object.userPassword = "evolvus*123";
             object.userName = _.get(req.body, "userName", req.body.userId);
             object.processingStatus = "AUTHORIZED";
+            object.flowCode = "AA";
             let contact = {
               "emailId": req.body.emailId
             };
@@ -389,6 +390,7 @@ module.exports = (router) => {
         }
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
+        body.flowCode = "AA";
         debug(`user update API:Input parameters are:tenantId:${tenantId},createdBy:${createdBy},ipAddress:${ipAddress},userId:${req.params.userId},body:${JSON.stringify(body)},accessLevel:${accessLevel}`);
         user.update(tenantId, createdBy, ipAddress, req.params.userId, body, accessLevel, entityId).then((updatedUser) => {
           response.status = "200";
