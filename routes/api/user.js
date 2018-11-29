@@ -348,7 +348,6 @@ module.exports = (router) => {
           response.data = {};
           res.status(400).json(response);
         });
-
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
@@ -440,11 +439,12 @@ module.exports = (router) => {
         instance.get(body.corporateId).then((resp) => {
           var result = resp.data;
           if (result != null && result.data != null) {
-            if (result.data.status != null && (result.data.status.toUpperCase() == "ACTIVE" || body.action.toUpperCase() == "INACTIVE")) {
+            if (result.data.status != null && result.data.status.toUpperCase() == "ACTIVE") {
               let flag = (body.action == "ACTIVE") ? "true" : "false";
               let object = {
                 "activationStatus": body.action,
-                "enabledFlag": flag
+                "enabledFlag": flag,
+                "flowCode": "AA"
               };
               let filter = {
                 "userId": req.params.userId.toUpperCase(),
@@ -499,7 +499,6 @@ module.exports = (router) => {
           debug(`Find corporate status promise failed due to ${e} and referenceId is ${reference}`);
           res.status(400).json(response);
         });
-
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
