@@ -12,7 +12,7 @@ const ipHeader = "X-IP-HEADER";
 const PAGE_SIZE = 20;
 
 const menuAttributes = ["menuGroupCode", "title", "applicationCode", "tenantId", "menuItems", "createdBy", "createdDate", "menuGroupOrder"];
-const filterAttributes = ["applicationCode"];
+const filterAttributes = ["applicationCode","tenantId"];
 
 
 module.exports = (router) => {
