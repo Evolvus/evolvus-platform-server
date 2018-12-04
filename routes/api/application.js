@@ -41,7 +41,7 @@ module.exports = (router) => {
         body.lastUpdatedDate = body.createdDate;
         body.entityId = entityId;
         body.accessLevel = accessLevel;
-        debug(`save API. tenantId :${tenantId},ipAddress :${ipAddress}, createdBy :${createdBy}, body :${JSON.stringify(body) }are parameters`);
+        debug(`save API. tenantId :${tenantId},ipAddress :${ipAddress}, createdBy :${createdBy}, body :${JSON.stringify(body)}are parameters`);
         application.save(tenantId, ipAddress, createdBy, body).then((ent) => {
           response.status = "200";
           response.description = `New Application ''${body.applicationName}' has been added successfully and sent for the supervisor authorization`;
@@ -131,7 +131,7 @@ module.exports = (router) => {
       var pageNo = _.get(req.query, "pageNo", 1);
       var skipCount = pageSize * (pageNo - 1);
       var filterValues = _.pick(req.query, filterAttributes);
-      var filter = _.omitBy(filterValues, function(value, key) {
+      var filter = _.omitBy(filterValues, function (value, key) {
         return value.startsWith("undefined");
       });
       var sort = _.get(req.query, "sort", {});
@@ -155,7 +155,7 @@ module.exports = (router) => {
         }
         var skipCount = pageSizec * (pageNoc - 1);
         var filterValues = _.pick(req.query, filterAttributes);
-        var filter = _.omitBy(filterValues, function(value, key) {
+        var filter = _.omitBy(filterValues, function (value, key) {
           return value.startsWith("undefined");
         });
         var sort = _.get(req.query, "sort", {});
@@ -163,7 +163,7 @@ module.exports = (router) => {
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
 
         debug(`GET ALL API.tenantId :${tenantId},createdBy :${createdBy},ipAddress :${ipAddress},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
-        Promise.all([application.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limitc), application.find(tenantId, ipAddress, createdBy, filter, orderby, 0, 0)])
+        Promise.all([application.find(tenantId, ipAddress, createdBy, filter, orderby, skipCount, limitc), application.find(tenantId, ipAddress, createdBy, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
