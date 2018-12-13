@@ -152,7 +152,7 @@ module.exports = (router) => {
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
 
         debug(`GET ALL API.tenantId :${tenantId},createdBy :${createdBy},ipAddress :${ipAddress},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
-        Promise.all([masterCurrency.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limitc), masterCurrency.find(tenantId, ipAddress, createdBy, filter, orderby, 0, 0)])
+        Promise.all([masterCurrency.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limitc), masterCurrency.find(tenantId, createdBy, ipAddress, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
