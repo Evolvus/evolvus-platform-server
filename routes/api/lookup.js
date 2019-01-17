@@ -20,6 +20,7 @@ module.exports = (router) => {
 
   router.route('/lookup')
     .get((req, res, next) => {
+
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);

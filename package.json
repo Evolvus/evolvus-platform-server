@@ -20,7 +20,7 @@
     "@evolvus/evolvus-application": "^1.0.22",
     "@evolvus/evolvus-contact": "^1.0.11",
     "@evolvus/evolvus-entity": "^1.0.28",
-    "@evolvus/evolvus-file-upload": "^1.0.5",
+    "@evolvus/evolvus-file-upload": "^1.0.6",
     "@evolvus/evolvus-lookup": "^1.0.10",
     "@evolvus/evolvus-master-currency": "^1.0.8",
     "@evolvus/evolvus-master-time-zone": "^1.0.8",

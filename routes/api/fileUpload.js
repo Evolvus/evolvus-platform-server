@@ -5,11 +5,13 @@ const fileUpload = require("@evolvus/evolvus-file-upload");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 20;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
+const entityIdHeader = "X-ENTITY-ID";
+const accessLevelHeader = "X-ACCESS-LEVEL"
 
 const fileUploadAttributes = ["tenantId", "wfInstanceId", "processingStatus", "fileIdentification", "fileName", "fileType", "fileUploadStatus", "totalTransaction", "count", "totalProcessedUserCount", "totalFailedUserCount", "uploadedBy", "successLog", "errorLog", "lastUpdatedDate", "enableFlag", "createdBy", "updatedBy", "uploadDateAndTime", "createdDate"];
 const filterAttributes = fileUpload.filterAttributes;
@@ -20,17 +22,20 @@ module.exports = (router) => {
 
   router.route('/fileUpload')
     .get((req, res, next) => {
-      // const tenantId = req.header(tenantHeader);
+      const tenantId = req.header(tenantHeader);
       // const createdBy = req.header(userHeader);
       // const ipAddress = req.header(ipHeader);
+      // const accessLevel = req.header(accessLevelHeader);
+      // const entityId = req.header(entityIdHeader);
       const response = {
         "status": "200",
         "description": "",
         "data": {}
       };
 
+
     // get these values from header...
-      const tenantId = "T001";
+      // const tenantId = "T001";
       const createdBy = "System";
       const ipAddress = "127.0.0.1";
 
@@ -49,42 +54,66 @@ module.exports = (router) => {
       try {
         debug("query: " + JSON.stringify(req.query));
         var limit = _.get(req.query, "limit", LIMIT);
-        var limitc = parseInt(limit);
-        if (isNaN(limitc)) {
-          throw new Error("limit must be a number")
+        limit = parseInt(limit);
+        if (isNaN(limit)) {
+          throw new Error("limit must be a number");
         }
         var pageSize = _.get(req.query, "pageSize", PAGE_SIZE);
-        var pageSizec = parseInt(pageSize);
-        if (isNaN(pageSizec)) {
-          throw new Error("pageSize must be a number")
+        pageSize = parseInt(pageSize);
+        if (isNaN(pageSize)) {
+          throw new Error("pageSize must be a number");
         }
         var pageNo = _.get(req.query, "pageNo", 1);
-        var pageNoc = parseInt(pageNo);
-        if (isNaN(pageNoc)) {
-          throw new Error("pageNo must be a number")
+        pageNo = parseInt(pageNo);
+        if (isNaN(pageNo)) {
+          throw new Error("pageNo must be a number");
         }
-        var skipCount = pageSizec * (pageNoc - 1);
+        var skipCount = pageSize * (pageNo - 1);
+        if (skipCount < 0) {
+          throw new Error("skipCount must be positive value or 0");
+        }
         var filterValues = _.pick(req.query, filterAttributes);
         var filter = _.omitBy(filterValues, function(value, key) {
           return value.startsWith("undefined");
         });
-        var sort = _.get(req.query, "sort", {});
-        var orderby = sortable(sort);
-        limitc = (+pageSizec < limitc) ? pageSizec : limitc;
+        var invalidFilters = _.difference(_.keys(req.query), filterAttributes);
+        let a = _.pull(invalidFilters, 'pageSize', 'pageNo', 'limit', 'sort', 'query');
+        debug("invalidFilters:", invalidFilters);
+        if (a.length !== 0) {
+          response.status = "200";
+          response.description = "No entity found";
+          response.data = [];
+          response.totalNoOfPagses = 0;
+          response.totalNoOfRecords = 0;
+          res.json(response);
+        } else {
+          var sort = _.get(req.query, "sort", {});
+          var orderby = sortable(sort);
+          limit = (+pageSize < +limit) ? pageSize : limit;
+
+
 
         debug(`get API.tenantId :${tenantId}, createdBy :${createdBy}, ipAddress :${ipAddress}, filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, limit :${limit} are parameters`);
         fileUpload.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limit)
+        Promise.all([fileUpload.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limit), fileUpload.find(tenantId, createdBy, ipAddress, filter, {}, 0, 0)])
           .then((fileUploads) => {
-            if (fileUploads.length > 0) {
+            if (fileUploads[0].length > 0) {
+
               debug("getting successfully", fileUploads)
               response.status = "200";
               response.description = "SUCCESS";
-              response.data = fileUploads;
+              response.totalNoOfPages = Math.ceil(fileUploads[1].length / pageSize);
+              response.totalNoOfRecords = fileUploads[1].length;
+              response.data = fileUploads[0];
+
               res.status(response.status).json(response);
+
             } else {
               response.status = "200";
-              response.data = [];
               response.description = "No fileUpload found";
+              response.data = [];
+                response.totalNoOfPages = 0;
+                response.totalNoOfRecords = 0;
               debug("response: " + JSON.stringify(response));
               res.status(response.status).json(response);
             }
@@ -97,6 +126,7 @@ module.exports = (router) => {
             response.data = e.toString();
             res.status(response.status).json(response);
           });
+        }
       } catch (e) {
         var reference = shortid.generate();
         debug(`try catch failed due to : ${e} and reference id :${reference}`);
@@ -109,15 +139,11 @@ module.exports = (router) => {
 
   router.route("/fileUpload/:fileName")
     .put((req, res, next) => {
-      
-      // const tenantId = req.header(tenantHeader);
-      // const createdBy = req.header(userHeader);
-      // const ipAddress = req.header(ipHeader);
-      const tenantId = "T001";
-      const createdBy = "System";
-      const ipAddress = "127.0.0.1";
-      // const accessLevel = req.header(accessLevelHeader);
-      // const entityId = req.header(entityIdHeader);
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader);
       var updatefileName = req.params.fileName;
       const response = {
         "status": "200",
@@ -130,7 +156,6 @@ module.exports = (router) => {
         body.tenantId = tenantId;
         body.updatedBy = req.header(userHeader);
         body.lastUpdatedDate = new Date().toISOString();
-        body.processingStatus = "IN_PROGRESS";
         debug(`Update API.tenantId :${tenantId},createdBy :${JSON.stringify(createdBy)},ipAddress :${ipAddress}, updatefileName :${updatefileName}, body :${JSON.stringify(body)}, are parameters`);
         fileUpload.update(tenantId, createdBy, ipAddress, updatefileName, body).then((updatedfileUpload) => {
           response.status = "200";
@@ -160,24 +185,26 @@ module.exports = (router) => {
 
   router.route('/fileUpload')
     .post((req, res, next) => {
-      // const tenantId = req.header(tenantHeader);
-      // const createdBy = req.header(userHeader);
-      // const ipAddress = req.header(ipHeader);
+
+      const tenantId = req.header(tenantHeader);
+      const createdBy = req.header(userHeader);
+      const ipAddress = req.header(ipHeader);
+      const accessLevel = req.header(accessLevelHeader);
+      const entityId = req.header(entityIdHeader);
+
       const response = {
         "status": "200",
         "description": "",
         "data": {}
       };
-      const tenantId = "T001";
-      const createdBy = "System";
-      const ipAddress = "127.0.0.1";
+      // const tenantId = "T001";
+      // const createdBy = "System";
+      // const ipAddress = "127.0.0.1";
       let body = _.pick(req.body, fileUploadAttributes);
       try {
-    
 
-        body.entityId="H001B001";
-        body.accessLevel="0"; 
-       
+        body. accessLevel = req.header(accessLevelHeader);
+      body.entityId = req.header(entityIdHeader)
          body.createdDate = new Date().toISOString();
         body.lastUpdatedDate = body.createdDate;
         body.updatedBy=createdBy;
@@ -185,8 +212,6 @@ module.exports = (router) => {
         body.processingStatus="AUTHORIZED";
         debug(`save API. tenantId :${tenantId}, createdBy :${createdBy}, ipAddress :${ipAddress}, body :${JSON.stringify(body)}, are parameters values `);
         fileUpload.save(tenantId, createdBy, ipAddress, body).then((ent) => {
-          console.log("tenantId", tenantId);
-          console.log("body save", body); 
           response.status = "200";
           response.description = "SUCCESS";
           response.data = ent;
@@ -245,7 +270,7 @@ module.exports = (router) => {
           res.status(response.status).json(response);
         });
       } catch (e) {
-        console.log(e, "e");
+
         var reference = shortid.generate();
         response.status = "400",
           response.description = `Unable to modify fileUpload . Due to ${e}`

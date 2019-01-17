@@ -253,6 +253,7 @@ module.exports = (router) => {
             roleName: object.role
           };
         }
+
         user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
           response.status = "200";
           response.description = `User ${req.body.userId} saved successfullly`;
@@ -268,6 +269,7 @@ module.exports = (router) => {
           res.status(400).json(response);
         });
       } catch (e) {
+
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
