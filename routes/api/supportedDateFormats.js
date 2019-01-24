@@ -41,7 +41,6 @@ module.exports = (router) => {
         body.lastUpdatedDate = body.createdDate;
         //body.entityId = entityId;
         //body.accessLevel = accessLevel;
-
         debug(`save API. tenantId :${tenantId}, createdBy :${createdBy},ipAddress :${ipAddress}, body :${JSON.stringify(body) }are parameters`);
         supportedDateFormats.save(tenantId, createdBy, ipAddress, body).then((ent) => {
           response.status = "200";
@@ -156,7 +155,7 @@ module.exports = (router) => {
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
 
         debug(`GET ALL API.tenantId :${tenantId},createdBy :${createdBy},ipAddress :${ipAddress},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
-        Promise.all([supportedDateFormats.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limitc), supportedDateFormats.find(tenantId, ipAddress, createdBy, filter, orderby, 0, 0)])
+        Promise.all([supportedDateFormats.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limitc), supportedDateFormats.find(tenantId, createdBy, ipAddress, filter, orderby, 0, 0)])
           .then((result) => {
             if (result[0].length > 0) {
               response.status = "200";
