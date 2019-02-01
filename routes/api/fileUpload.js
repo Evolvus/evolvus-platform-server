@@ -13,7 +13,7 @@ const PAGE_SIZE = 20;
 const entityIdHeader = "X-ENTITY-ID";
 const accessLevelHeader = "X-ACCESS-LEVEL"
 
-const fileUploadAttributes = ["tenantId", "wfInstanceId", "processingStatus", "fileIdentification", "fileName", "fileType", "fileUploadStatus", "totalTransaction", "count", "totalProcessedUserCount", "totalFailedUserCount", "uploadedBy", "successLog", "errorLog", "lastUpdatedDate", "enableFlag", "createdBy", "updatedBy", "uploadDateAndTime", "createdDate"];
+const fileUploadAttributes = ["tenantId", "wfInstanceId", "processingStatus", "fileIdentification", "fileName", "fileType", "fileUploadStatus", "totalTransaction", "count", "totalProcessedCount", "totalFailedCount", "uploadedBy", "successLog", "errorLog", "lastUpdatedDate", "enableFlag", "createdBy", "updatedBy", "uploadDateAndTime", "createdDate"];
 const filterAttributes = fileUpload.filterAttributes;
 const sortAttributes = fileUpload.sortAttributes;
 const workFlowAttributes = ["wfInstanceId", "processingStatus"];
