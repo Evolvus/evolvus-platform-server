@@ -55,7 +55,6 @@ module.exports = (router) => {
       });
       var sort = _.get(req.query, "sort", {});
       var orderby = sortable(sort);
-
       limit = +pageSize > +limit ? +limit : +pageSize;
 
       try {
@@ -253,7 +252,6 @@ module.exports = (router) => {
             roleName: object.role
           };
         }
-
         user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
           response.status = "200";
           response.description = `User ${req.body.userId} saved successfullly`;
@@ -269,7 +267,6 @@ module.exports = (router) => {
           res.status(400).json(response);
         });
       } catch (e) {
-
         var reference = shortid.generate();
         debug(`try catch promise failed due to ${e} and referenceId:${reference}`);
         response.status = "400";
@@ -293,7 +290,9 @@ module.exports = (router) => {
         "uniquereferenceid": null
       };
       try {
+        debug("Request Body:", JSON.stringify(req.body));
         instance.get(req.body.corporateId).then((resp) => {
+          debug(`Response from ${corporateURL}:`, resp);
           if (resp.data != null && resp.data.data != null && resp.data.data.exist == true) {
             let object = _.pick(req.body, userAttributes);
             if (resp.data.data.status != null && resp.data.data.status.toUpperCase() === "ACTIVE") {
@@ -342,12 +341,15 @@ module.exports = (router) => {
             response.status = "400";
             response.description = "Corporate not found";
             response.data = {};
+            debug("response: " + JSON.stringify(response));
             res.status(400).send(response);
           }
         }).catch((error) => {
+          debug(`failed to create user due to`, error);
           response.status = "400";
           response.description = "Server Error.Please contact Administrator";
           response.data = {};
+          debug("response: " + JSON.stringify(response));
           res.status(400).json(response);
         });
       } catch (e) {
