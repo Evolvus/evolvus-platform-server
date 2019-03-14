@@ -11,8 +11,10 @@ const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
 const masterCurrencyAttributes = ["currencyCode", "currencyName", "decimalDigit", "delimiter", "createdDate", "lastUpdatedDate", "createdBy", "updatedBy", "objVersion", "enableFlag", "wfInstanceId", "processingStatus", "currencyLocale"];
+const filterAttributes= ["currencyCode", "currencyName",  "lastUpdatedDate", "createdBy", "updatedBy", "enableFlag","processingStatus"];
+// const filterAttributes = masterCurrency.filterAttributes;
+// console.log('filterattributess',filterAttributes);
 
-const filterAttributes = masterCurrency.filterAttributes;
 const sortAttributes = masterCurrency.sortableAttributes;
 var workFlowAttributes = ["wfInstanceId", "processingStatus"];
 
@@ -114,6 +116,8 @@ module.exports = (router) => {
 
   router.route('/masterCurrency/')
     .get((req, res, next) => {
+      console.log('insideeeee get');
+      
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
@@ -150,10 +154,11 @@ module.exports = (router) => {
         var sort = _.get(req.query, "sort", {});
         var orderby = sortable(sort);
         limitc = (+pageSizec < limitc) ? pageSizec : limitc;
-
         debug(`GET ALL API.tenantId :${tenantId},createdBy :${createdBy},ipAddress :${ipAddress},filter :${JSON.stringify(filter)}, orderby :${JSON.stringify(orderby)}, skipCount :${skipCount}, +limit :${+limit} are parameters`);
         Promise.all([masterCurrency.find(tenantId, createdBy, ipAddress, filter, orderby, skipCount, limitc), masterCurrency.find(tenantId, createdBy, ipAddress, filter, orderby, 0, 0)])
           .then((result) => {
+            console.log('resulttt',result);
+            
             if (result[0].length > 0) {
               response.status = "200";
               response.description = "SUCCESS";
