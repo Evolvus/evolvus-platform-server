@@ -16,7 +16,7 @@ const ORDER_BY = process.env.ORDER_BY || {
 };
 var mainBranch = process.env.ENTITY_ID || "H001B001";
 var timeOut = process.env.TIME_OUT || 5000;
-var corporateURL = process.env.CORPORATE_URL || "http://localhost:8282/flux-services/corporate/status/";
+var corporateURL = process.env.CORPORATE_URL || "http://localhost:8282/flux-services/corporate/status";
 
 const userAttributes = ["tenantId", "entityId", "accessLevel", "applicationCode", "contact", "role", "userId", "designation", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token",
   "masterTimeZone", "masterCurrency", "dailyLimit", "individualTransactionLimit", "loginStatus"
@@ -289,9 +289,10 @@ module.exports = (router) => {
         "data": {},
         "uniquereferenceid": null
       };
-      try {
+      try {        
         debug("Request Body:", JSON.stringify(req.body));
-        instance.get(req.body.corporateId).then((resp) => {
+        debug("Tenant Id is:",req.body.corporateId);
+        axios.get(`${corporateURL}${req.body.corporateId}`).then((resp) => {
           debug(`Response from ${corporateURL}:`, resp);
           if (resp.data != null && resp.data.data != null && resp.data.data.exist == true) {
             let object = _.pick(req.body, userAttributes);
