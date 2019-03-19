@@ -34,6 +34,8 @@ module.exports = (router) => {
 
   router.route('/user/')
     .get((req, res, next) => {
+      console.log(req.headers, "HEADERS");
+
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
@@ -289,9 +291,9 @@ module.exports = (router) => {
         "data": {},
         "uniquereferenceid": null
       };
-      try {        
+      try {
         debug("Request Body:", JSON.stringify(req.body));
-        debug("Tenant Id is:",req.body.corporateId);
+        debug("Tenant Id is:", req.body.corporateId);
         axios.get(`${corporateURL}${req.body.corporateId}`).then((resp) => {
           debug(`Response from ${corporateURL}:`, resp);
           if (resp.data != null && resp.data.data != null && resp.data.data.exist == true) {
@@ -310,9 +312,11 @@ module.exports = (router) => {
             object.lastUpdatedDate = object.createdDate;
             object.createdBy = createdBy;
             object.userPassword = "evolvus*123";
-            object.userName = _.get(req.body, "userName", req.body.userId);
             object.processingStatus = "AUTHORIZED";
             object.flowCode = "AA";
+            if (req.body.userName == null || (req.body.userName != null && req.body.userName.length == 0)) {
+              object.userName = req.body.userId
+            }
             let contact = {
               "emailId": req.body.emailId
             };
