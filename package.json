@@ -30,7 +30,7 @@
     "@evolvus/evolvus-role": "^1.0.23",
     "@evolvus/evolvus-seed-mongodb": "^1.0.2",
     "@evolvus/evolvus-supported-date-formats": "^1.0.8",
-    "@evolvus/evolvus-user": "^1.1.26",
+    "@evolvus/evolvus-user": "^1.1.27",
     "@godaddy/terminus": "^2.4.1",
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",
