@@ -5,11 +5,11 @@ const lookup = require("@evolvus/evolvus-lookup");
 const ORDER_BY = process.env.ORDER_BY || {
   lastUpdatedDate: -1
 };
-const LIMIT = process.env.LIMIT || 10;
+const LIMIT = process.env.LIMIT || 30;
 const tenantHeader = "X-TENANT-ID";
 const userHeader = "X-USER";
 const ipHeader = "X-IP-HEADER";
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 30;
 
 const lookupAttributes = ["lookupCode", "value", "valueOne", "wfInstanceId", "processingStatus", "valueTwo", "valueThree", "valueFour", "valueFive", "valueSix", "valueSeven", "valueEight", "valueNine", "valueTen", "lastUpdatedDate", "enableFlag", "createdBy", "wfInstanceId", "wfInstanceStatus", "createdDate"];
 const filterAttributes = lookup.filterAttributes;
