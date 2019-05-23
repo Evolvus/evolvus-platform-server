@@ -16,7 +16,7 @@ const ORDER_BY = process.env.ORDER_BY || {
 };
 var mainBranch = process.env.ENTITY_ID || "H001B001";
 var timeOut = process.env.TIME_OUT || 5000;
-var corporateURL = process.env.CORPORATE_URL || "http://localhost:8282/flux-services/corporate/status";
+var corporateURL = process.env.CORPORATE_URL || "http://localhost:8282/flux-services/corporate/status/";
 
 const userAttributes = ["tenantId", "entityId", "accessLevel", "applicationCode", "contact", "role", "userId", "designation", "userName", "userPassword", "saltString", "enabledFlag", "activationStatus", "processingStatus", "createdBy", "createdDate", "lastUpdatedDate", "deletedFlag", "token",
   "masterTimeZone", "masterCurrency", "dailyLimit", "individualTransactionLimit", "loginStatus"
@@ -445,7 +445,7 @@ module.exports = (router) => {
         if (body.action !== "ACTIVE" && body.action !== "INACTIVE") {
           throw new Error("Action must be ACTIVE or INACTIVE");
         }
-        instance.get(body.corporateId).then((resp) => {
+        axios.get(`${corporateURL}${req.body.corporateId}`).then((resp) => {          
           var result = resp.data;
           if (result != null && result.data != null) {
             if (result.data.status != null && result.data.status.toUpperCase() == "ACTIVE") {
@@ -500,7 +500,7 @@ module.exports = (router) => {
             debug("response: " + JSON.stringify(response));
             res.status(400).json(response);
           }
-        }).catch((e) => {
+        }).catch((e) => {          
           var reference = shortid.generate();
           response.status = "400";
           response.description = "Server Error.Please contact Administrator";
