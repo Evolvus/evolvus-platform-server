@@ -1,6 +1,8 @@
 const debug = require("debug")("evolvus-platform-server:routes:api:user");
 const _ = require("lodash");
 const user = require("@evolvus/evolvus-user");
+const entity = require("@evolvus/evolvus-entity");
+var mongoseed = require("@evolvus/evolvus-seed-mongodb");
 const shortid = require('shortid');
 const axios = require("axios");
 
@@ -34,8 +36,6 @@ module.exports = (router) => {
 
   router.route('/user/')
     .get((req, res, next) => {
-      console.log(req.headers, "HEADERS");
-
       const tenantId = req.header(tenantHeader);
       const createdBy = req.header(userHeader);
       const ipAddress = req.header(ipHeader);
@@ -291,55 +291,64 @@ module.exports = (router) => {
         "data": {},
         "uniquereferenceid": null
       };
+      var corporateStatus = "INACTIVE";
       try {
         debug("Request Body:", JSON.stringify(req.body));
         debug("Tenant Id is:", req.body.corporateId);
         axios.get(`${corporateURL}${req.body.corporateId}`).then((resp) => {
           debug(`Response from ${corporateURL}:`, resp);
           if (resp.data != null && resp.data.data != null && resp.data.data.exist == true) {
-            let object = _.pick(req.body, userAttributes);
-            if (resp.data.data.status != null && resp.data.data.status.toUpperCase() === "ACTIVE") {
-              object.activationStatus = "ACTIVE";
-              object.enabledFlag = "true";
-            } else {
-              object.activationStatus = "INACTIVE";
-              object.enabledFlag = "false";
+            if (resp.data.data.status != null) {
+              corporateStatus = resp.data.data.status.toUpperCase();
             }
-            object.tenantId = tenantId;
-            object.entityId = entityId;
-            object.tenantName = req.body.corporateName;
-            object.createdDate = new Date().toISOString();
-            object.lastUpdatedDate = object.createdDate;
-            object.createdBy = createdBy;
-            object.userPassword = "evolvus*123";
-            object.processingStatus = "AUTHORIZED";
-            object.flowCode = "AA";
-            if (req.body.userName == null || (req.body.userName != null && req.body.userName.length == 0)) {
-              object.userName = req.body.userId
-            }
-            let contact = {
-              "emailId": req.body.emailId
-            };
-            object.contact = contact;
-            if (object.role != null) {
-              object.role = {
-                roleName: object.role
+            testSeeddata(tenantId, createdBy, ipAddress, entityId, accessLevel).then((dataAdded) => {
+              debug("Response from testSeeddata : ",dataAdded);
+              let object = _.pick(req.body, userAttributes);
+              object.activationStatus = corporateStatus;
+              object.enabledFlag = (object.activationStatus == "ACTIVE") ? "true" : "false";
+              object.tenantId = tenantId;
+              object.entityId = entityId;
+              object.tenantName = req.body.corporateName;
+              object.createdDate = new Date().toISOString();
+              object.lastUpdatedDate = object.createdDate;
+              object.createdBy = createdBy;
+              object.userPassword = "evolvus*123";
+              object.processingStatus = "AUTHORIZED";
+              object.flowCode = "AA";
+              if (req.body.userName == null || (req.body.userName != null && req.body.userName.length == 0)) {
+                object.userName = req.body.userId
+              }
+              let contact = {
+                "emailId": req.body.emailId
               };
-            }
-            debug(`user save API: input parameters are:tenantId:${tenantId},ipAddress:${ipAddress},createdBy:${createdBy},accessLevel:${accessLevel},userObject:${JSON.stringify(object)}`);
-            user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
-              response.status = "200";
-              response.description = `New User '${req.body.userId}' has been added successfully.`;
-              response.data = savedUser;
-              response.uniquereferenceid = savedUser.uniquereferenceid;
-              debug("response: " + JSON.stringify(response));
-              res.status(200).json(response);
-            }).catch((e) => {
-              var reference = shortid.generate();
+              object.contact = contact;
+              if (object.role != null) {
+                object.role = {
+                  roleName: object.role
+                };
+              }
+              debug(`user save API: input parameters are:tenantId:${tenantId},ipAddress:${ipAddress},createdBy:${createdBy},accessLevel:${accessLevel},userObject:${JSON.stringify(object)}`);
+              user.save(tenantId, ipAddress, createdBy, accessLevel, object).then((savedUser) => {
+                response.status = "200";
+                response.description = `New User '${req.body.userId}' has been added successfully.`;
+                response.data = savedUser;
+                response.uniquereferenceid = savedUser.uniquereferenceid;
+                debug("response: " + JSON.stringify(response));
+                res.status(200).json(response);
+              }).catch((e) => {
+                var reference = shortid.generate();
+                response.status = "400";
+                response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
+                response.data = {};
+                debug(`user save promise failed due to ${e} and referenceId:${reference}`);
+                res.status(400).json(response);
+              });
+            }).catch((error) => {
+              debug(`failed to create user due to`, error);
               response.status = "400";
-              response.description = `Unable to add new User '${req.body.userId}'. Due to '${e}'`;
+              response.description = "Server Error.Please contact Administrator";
               response.data = {};
-              debug(`user save promise failed due to ${e} and referenceId:${reference}`);
+              debug("response: " + JSON.stringify(response));
               res.status(400).json(response);
             });
           } else {
@@ -445,7 +454,7 @@ module.exports = (router) => {
         if (body.action !== "ACTIVE" && body.action !== "INACTIVE") {
           throw new Error("Action must be ACTIVE or INACTIVE");
         }
-        axios.get(`${corporateURL}${req.body.corporateId}`).then((resp) => {          
+        axios.get(`${corporateURL}${req.body.corporateId}`).then((resp) => {
           var result = resp.data;
           if (result != null && result.data != null) {
             if (result.data.status != null && result.data.status.toUpperCase() == "ACTIVE") {
@@ -500,7 +509,7 @@ module.exports = (router) => {
             debug("response: " + JSON.stringify(response));
             res.status(400).json(response);
           }
-        }).catch((e) => {          
+        }).catch((e) => {
           var reference = shortid.generate();
           response.status = "400";
           response.description = "Server Error.Please contact Administrator";
@@ -576,4 +585,40 @@ function sortable(sort) {
   } else {
     return ORDER_BY;
   }
+}
+
+function testSeeddata(tenantId, createdBy, ipAddress, entityId, accessLevel) {
+  return new Promise((resolve, reject) => {
+    try {      
+      entity.find(tenantId, createdBy, ipAddress, entityId, accessLevel, {}, ORDER_BY, 0, 0).then((entities) => {        
+        if (entities == null || _.isEmpty(entities)) {
+          debug(`No seed data found for the tenantId ${tenantId} and the process got initiated`);
+          var ip = process.env.SERVICE_IP || "10.10.69.193";
+          var port = process.env.SERVICE_PORT || "8086";
+          var context = {
+            tenantId: tenantId,
+            entityId: entityId,
+            ip: `${ip}:${port}`,
+            date: new Date().toISOString()
+          };
+          mongoseed.seedMongo(context).then((result) => {
+            debug(result);
+            resolve(result);
+          }).catch(e => {
+            debug(`Error adding seeddata : ${e}`);
+            reject(`Error adding seeddata : ${e}`);
+          });
+        } else {
+          debug(`Seed data exists for the tenant ${tenantId}`);
+          resolve(`Seed data exists for the tenant ${tenantId}`);
+        }
+      }).catch((err) => {
+        debug("Find seed data promise failed due to", err);
+        reject(err);
+      });
+    } catch (error) {
+      debug(`Failed to test seed data due to ${error}`);
+      reject(error);
+    }
+  });
 }
