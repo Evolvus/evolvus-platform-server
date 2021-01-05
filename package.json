@@ -33,7 +33,7 @@
     "@evolvus/evolvus-supported-date-formats": "^1.0.8",
     "@evolvus/evolvus-user": "^1.1.27",
     "@godaddy/terminus": "^2.4.1",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "body-parser": "^1.18.3",
     "debug": "^3.1.0",
     "express": "^4.16.3",
