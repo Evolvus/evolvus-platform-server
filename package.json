@@ -49,7 +49,7 @@
     "grunt-contrib-watch": "^1.0.1",
     "grunt-env": "^0.4.4",
     "grunt-mocha-test": "^0.13.3",
-    "mocha": "^5.1.1",
+    "mocha": "^10.2.0",
     "mocha-sonar-reporter": "^0.1.6",
     "randomstring": "^1.1.5"
   }
